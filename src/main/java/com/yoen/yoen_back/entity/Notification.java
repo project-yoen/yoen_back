@@ -1,6 +1,7 @@
 package com.yoen.yoen_back.entity;
 
 import com.yoen.yoen_back.common.entity.BaseEntity;
+import com.yoen.yoen_back.entity.user.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

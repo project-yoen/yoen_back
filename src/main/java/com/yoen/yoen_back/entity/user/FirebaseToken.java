@@ -1,33 +1,34 @@
-package com.yoen.yoen_back.entity;
-
+package com.yoen.yoen_back.entity.user;
 
 import com.yoen.yoen_back.common.entity.BaseEntity;
+import com.yoen.yoen_back.enums.Platform;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** 여행 참여 신청 엔티티
- * 여행 가입 신청을 한 유저들을 관리하는 테이블
+/** 파이어베이스 토큰 엔티티
  */
+
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "traveljoinrequests")
-public class TravelJoinRequest extends BaseEntity {
+@Table(name = "firebasetokens")
+public class FirebaseToken extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long travelJoinRequestId;
-
-    @JoinColumn(name = "travel_id", nullable = false)
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Travel travel;
+    private Long firebaseTokenId;
 
     @JoinColumn(name = "user_id", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
     private User user;
 
-    private Boolean isAccepted;
+    @Column(nullable = false)
+    private String firebaseToken;
+
+    private Platform platform;
+
+    private String appVersion;
 }

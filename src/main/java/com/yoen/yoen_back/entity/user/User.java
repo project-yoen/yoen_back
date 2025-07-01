@@ -1,4 +1,4 @@
-package com.yoen.yoen_back.entity;
+package com.yoen.yoen_back.entity.user;
 
 import com.yoen.yoen_back.common.entity.BaseEntity;
 import com.yoen.yoen_back.enums.Gender;

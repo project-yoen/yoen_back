@@ -1,24 +1,26 @@
-package com.yoen.yoen_back.entity;
+package com.yoen.yoen_back.entity.travel;
+
 
 import com.yoen.yoen_back.common.entity.BaseEntity;
+import com.yoen.yoen_back.entity.user.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** 여행유저 엔티티
- * 여행에 속한 유저들의 정보를 관리, users와 travels의 중간 테이블 역할
+/** 여행 참여 신청 엔티티
+ * 여행 가입 신청을 한 유저들을 관리하는 테이블
  */
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "travelusers")
-public class TravelUser extends BaseEntity {
+@Table(name = "traveljoinrequests")
+public class TravelJoinRequest extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long travelUserId;
+    private Long travelJoinRequestId;
 
     @JoinColumn(name = "travel_id", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
@@ -28,9 +30,5 @@ public class TravelUser extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private User user;
 
-    @JoinColumn(name = "role_id", nullable = false)
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Role role;
-
-    private String travelNickname;
+    private Boolean isAccepted;
 }

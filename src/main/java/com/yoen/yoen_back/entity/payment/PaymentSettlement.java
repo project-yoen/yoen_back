@@ -1,4 +1,4 @@
-package com.yoen.yoen_back.entity;
+package com.yoen.yoen_back.entity.payment;
 
 import com.yoen.yoen_back.common.entity.BaseEntity;
 import jakarta.persistence.*;
@@ -7,26 +7,24 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-
-/** 사전사용금액 엔티티
+/**
+ * 결제 정산 기록 엔티티
+ * 결제 정산 기록의 중간자 테이블로 결제에 대한 정산 기록들을 매핑
  */
+
 @Getter
 @Setter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "prepayments")
-public class PrePayment extends BaseEntity {
+@Table(name = "paymentsettlements")
+public class PaymentSettlement extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long prePaymentId;
+    private Long patmentSettlementId;
 
-    @JoinColumn(name = "travel_id", nullable = false)
+    @JoinColumn(name = "payment_id", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
-    private Travel travel;
-
-    @JoinColumn(name = "category_id", nullable = false)
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Category category;
+    private Payment payment;
 
     @JoinColumn(name = "settlement_id", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)

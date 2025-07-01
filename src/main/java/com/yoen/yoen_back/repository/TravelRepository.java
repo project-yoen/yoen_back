@@ -1,6 +1,6 @@
 package com.yoen.yoen_back.repository;
 
-import com.yoen.yoen_back.entity.Travel;
+import com.yoen.yoen_back.entity.travel.Travel;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 

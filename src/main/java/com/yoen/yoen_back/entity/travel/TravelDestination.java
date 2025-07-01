@@ -1,4 +1,4 @@
-package com.yoen.yoen_back.entity;
+package com.yoen.yoen_back.entity.travel;
 
 import com.yoen.yoen_back.common.entity.BaseEntity;
 import jakarta.persistence.*;

@@ -1,6 +1,7 @@
-package com.yoen.yoen_back.entity;
+package com.yoen.yoen_back.entity.image;
 
 import com.yoen.yoen_back.common.entity.BaseEntity;
+import com.yoen.yoen_back.entity.travel.Travel;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

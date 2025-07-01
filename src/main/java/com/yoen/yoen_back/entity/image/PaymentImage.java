@@ -1,5 +1,6 @@
-package com.yoen.yoen_back.entity;
+package com.yoen.yoen_back.entity.image;
 
+import com.yoen.yoen_back.entity.payment.Payment;
 import jakarta.persistence.*;
 import lombok.*;
 
