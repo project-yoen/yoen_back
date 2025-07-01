@@ -1,12 +1,11 @@
 package com.yoen.yoen_back.entity;
 
 import com.yoen.yoen_back.common.entity.BaseEntity;
-import com.yoen.yoen_back.enums.Gender;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
 
