@@ -1,4 +1,4 @@
-package com.yoen.yoen_back.repository;
+package com.yoen.yoen_back.repository.travel;
 
 import com.yoen.yoen_back.entity.travel.TravelRecord;
 import org.springframework.data.jpa.repository.JpaRepository;
