@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/** 여행기록_사진 엔티티
+ */
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

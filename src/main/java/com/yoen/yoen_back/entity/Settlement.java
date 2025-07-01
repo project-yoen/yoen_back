@@ -8,6 +8,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/** 정산 엔티티
+ */
 @Getter
 @Setter
 @Entity

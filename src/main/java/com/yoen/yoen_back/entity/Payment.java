@@ -10,6 +10,8 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
+/** 결제 기록 엔티티
+ */
 @Getter
 @Setter
 @Entity

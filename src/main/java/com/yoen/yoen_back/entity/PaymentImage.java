@@ -3,6 +3,8 @@ package com.yoen.yoen_back.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+/** 결제기록_사진 엔티티
+ */
 @Getter
 @Setter
 @Entity

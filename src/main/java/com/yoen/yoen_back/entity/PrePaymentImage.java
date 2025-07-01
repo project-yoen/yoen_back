@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/** 사전사용금액_사진 엔티티
+ */
 @Getter
 @Setter
 @Entity
