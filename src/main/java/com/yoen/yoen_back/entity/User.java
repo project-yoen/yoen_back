@@ -7,9 +7,11 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 import java.time.LocalDate;
 
+/** 유저 엔티티
+ * 유저정보를 관리
+ */
 @Getter
 @Setter
 @Entity

@@ -7,6 +7,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/** 여행유저 엔티티
+ * 여행에 속한 유저들의 정보를 관리, users와 travels의 중간 테이블 역할
+ */
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -19,15 +22,15 @@ public class TravelUser extends BaseEntity {
 
     @JoinColumn(name = "travels_id", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
-    private Travel travelId;
+    private Travel travel;
 
     @JoinColumn(name = "users_id", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
-    private User userId;
+    private User user;
 
     @JoinColumn(name = "roles_id", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
-    private Role roleId;
+    private Role role;
 
     private String travelNickname;
 }

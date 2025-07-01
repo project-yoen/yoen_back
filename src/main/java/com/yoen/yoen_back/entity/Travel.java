@@ -9,6 +9,10 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 
+/** 여행 엔티티
+ * 여행의 정보를 관리
+ */
+
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
