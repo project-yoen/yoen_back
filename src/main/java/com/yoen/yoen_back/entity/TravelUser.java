@@ -20,15 +20,15 @@ public class TravelUser extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long travelUserId;
 
-    @JoinColumn(name = "travels_id", nullable = false)
+    @JoinColumn(name = "travel_id", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
     private Travel travel;
 
-    @JoinColumn(name = "users_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
     private User user;
 
-    @JoinColumn(name = "roles_id", nullable = false)
+    @JoinColumn(name = "role_id", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
     private Role role;
 

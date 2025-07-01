@@ -20,11 +20,11 @@ public class TravelDestination extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long travelDestinationId;
 
-    @JoinColumn(name = "travels_id", nullable = false)
+    @JoinColumn(name = "travel_id", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
     private Travel travel;
 
-    @JoinColumn(name = "destinations_id", nullable = false)
+    @JoinColumn(name = "destination_id", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
     private Destination destination;
 
