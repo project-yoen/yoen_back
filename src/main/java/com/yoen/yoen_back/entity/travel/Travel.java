@@ -31,10 +31,10 @@ public class Travel extends BaseEntity {
 
     private String nation;
 
-    @Column(nullable = false)
+//    @Column(nullable = false)
     private LocalDate startDate;
 
-    @Column(nullable = false)
+//    @Column(nullable = false)
     private LocalDate endDate;
 
     private Long sharedFund;
