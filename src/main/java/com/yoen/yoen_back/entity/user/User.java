@@ -1,5 +1,6 @@
 package com.yoen.yoen_back.entity.user;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.yoen.yoen_back.common.entity.BaseEntity;
 import com.yoen.yoen_back.enums.Gender;
 import jakarta.persistence.*;
@@ -26,6 +27,7 @@ public class User extends BaseEntity {
     private String username;
 
     @Column(nullable = false)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
     private String name;
 
