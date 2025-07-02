@@ -1,7 +1,6 @@
 package com.yoen.yoen_back.entity.user;
 
 import com.yoen.yoen_back.common.entity.BaseEntity;
-import com.yoen.yoen_back.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -21,6 +20,6 @@ public class Role extends BaseEntity {
     private Long roleId;
 
     @Enumerated(EnumType.STRING)
-    private UserRole name;
+    private String name;
 
 }
