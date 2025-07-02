@@ -41,9 +41,9 @@ public class TravelService {
         Travel tv = travelRepository.save(travel);
         Optional<User> user = userRepository.findById(userId);
 
-        user.ifPresent(user1 -> {
-            TravelUser tu = TravelUser.builder().travel(tv).user(user1).role().build();
-            travelUserRepository.save(tu);
-        });
+//        user.ifPresent(user1 -> {
+//            TravelUser tu = TravelUser.builder().travel(tv).user(user1).role().build();
+//            travelUserRepository.save(tu);
+//        });
     }
 }
