@@ -6,10 +6,7 @@ import com.yoen.yoen_back.entity.travel.TravelRecord;
 import com.yoen.yoen_back.service.TravelService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -32,6 +29,18 @@ public class TravelController {
     @GetMapping("/payment")
     public ResponseEntity<List<Payment>> payment(@RequestParam("travelId") Long travelId) {
         return ResponseEntity.ok(travelService.getAllPaymentsByTravelId(travelId));
+    }
+
+
+    // 미완
+    @PostMapping("/setTravel")
+    public ResponseEntity<Object> setTravel(@RequestBody Travel travel) {
+        try {
+//            travelService.setTravel(travel);
+            return ResponseEntity.ok("Travel Saved Successfully");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
 }

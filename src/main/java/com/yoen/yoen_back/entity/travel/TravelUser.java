@@ -4,10 +4,7 @@ import com.yoen.yoen_back.common.entity.BaseEntity;
 import com.yoen.yoen_back.entity.user.Role;
 import com.yoen.yoen_back.entity.user.User;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 /** 여행유저 엔티티
  * 여행에 속한 유저들의 정보를 관리, users와 travels의 중간 테이블 역할
@@ -15,6 +12,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
 @Entity
 @Table(name = "travelusers")
 public class TravelUser extends BaseEntity {
@@ -35,4 +34,6 @@ public class TravelUser extends BaseEntity {
     private Role role;
 
     private String travelNickname;
+
 }
+
