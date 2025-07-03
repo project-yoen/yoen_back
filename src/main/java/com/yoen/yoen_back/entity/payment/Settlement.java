@@ -4,10 +4,7 @@ import com.yoen.yoen_back.common.entity.BaseEntity;
 import com.yoen.yoen_back.entity.travel.TravelUser;
 import com.yoen.yoen_back.enums.PaymentMethod;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 /** 정산 엔티티
  */
@@ -15,6 +12,8 @@ import lombok.Setter;
 @Setter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
 @Table(name = "settlements")
 public class Settlement extends BaseEntity {
     @Id

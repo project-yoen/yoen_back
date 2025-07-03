@@ -2,10 +2,7 @@ package com.yoen.yoen_back.entity;
 
 import com.yoen.yoen_back.common.entity.BaseEntity;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 /** 카테고리 엔티티
  */
@@ -13,6 +10,8 @@ import lombok.Setter;
 @Setter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
 @Table(name = "categories")
 public class Category extends BaseEntity {
 

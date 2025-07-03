@@ -3,10 +3,7 @@ package com.yoen.yoen_back.entity.payment;
 import com.yoen.yoen_back.common.entity.BaseEntity;
 import com.yoen.yoen_back.entity.travel.TravelUser;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -18,6 +15,8 @@ import java.time.LocalDateTime;
 @Setter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
 @Table(name = "settlementusers")
 public class SettlementUser extends BaseEntity {
     @Id

@@ -3,10 +3,7 @@ package com.yoen.yoen_back.entity.image;
 import com.yoen.yoen_back.common.entity.BaseEntity;
 import com.yoen.yoen_back.entity.travel.Travel;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 /**사진 엔티티
  * 사진 정보를 관리
@@ -15,6 +12,8 @@ import lombok.Setter;
 @Setter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
 @Table(name = "images")
 public class Image extends BaseEntity {
     @Id

@@ -4,10 +4,7 @@ package com.yoen.yoen_back.entity.travel;
 import com.yoen.yoen_back.common.entity.BaseEntity;
 import com.yoen.yoen_back.entity.user.User;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 /** 여행 참여 신청 엔티티
  * 여행 가입 신청을 한 유저들을 관리하는 테이블
@@ -15,6 +12,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
 @Entity
 @Table(name = "traveljoinrequests")
 public class TravelJoinRequest extends BaseEntity {

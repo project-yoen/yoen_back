@@ -2,10 +2,7 @@ package com.yoen.yoen_back.entity.payment;
 
 import com.yoen.yoen_back.common.entity.BaseEntity;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 /**
  * 결제 정산 기록 엔티티
@@ -16,6 +13,8 @@ import lombok.Setter;
 @Setter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
 @Table(name = "paymentsettlements")
 public class PaymentSettlement extends BaseEntity {
     @Id

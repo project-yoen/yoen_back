@@ -4,10 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.yoen.yoen_back.common.entity.BaseEntity;
 import com.yoen.yoen_back.enums.Gender;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+
 import java.time.LocalDate;
 
 /** 유저 엔티티
@@ -18,6 +16,8 @@ import java.time.LocalDate;
 @Entity
 @Table(name = "users")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
 public class User extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

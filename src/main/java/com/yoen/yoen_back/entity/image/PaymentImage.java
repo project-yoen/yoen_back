@@ -10,6 +10,8 @@ import lombok.*;
 @Setter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
 @Table(name = "paymentimages")
 public class PaymentImage {
     @Id

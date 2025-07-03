@@ -3,10 +3,7 @@ package com.yoen.yoen_back.entity;
 import com.yoen.yoen_back.common.entity.BaseEntity;
 import com.yoen.yoen_back.entity.user.User;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 /** 알림 엔티티
  * 알림을 관리
@@ -15,6 +12,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
 @Entity
 @Table(name = "notifications")
 public class Notification extends BaseEntity {

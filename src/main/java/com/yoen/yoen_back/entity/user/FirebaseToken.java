@@ -3,10 +3,7 @@ package com.yoen.yoen_back.entity.user;
 import com.yoen.yoen_back.common.entity.BaseEntity;
 import com.yoen.yoen_back.enums.Platform;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 /** 파이어베이스 토큰 엔티티
  */
@@ -14,6 +11,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
 @Entity
 @Table(name = "firebasetokens")
 public class FirebaseToken extends BaseEntity {
