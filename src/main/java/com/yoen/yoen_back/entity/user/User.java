@@ -3,6 +3,7 @@ package com.yoen.yoen_back.entity.user;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.yoen.yoen_back.common.entity.BaseEntity;
 import com.yoen.yoen_back.enums.Gender;
+import com.yoen.yoen_back.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -37,6 +38,7 @@ public class User extends BaseEntity {
     private String nickname;
 
     @Enumerated(EnumType.STRING)
+    private Role role;
     @Column(nullable = false)
     private Gender gender;
     private LocalDate birthday;
