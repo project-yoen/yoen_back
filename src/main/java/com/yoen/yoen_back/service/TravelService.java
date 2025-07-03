@@ -1,6 +1,7 @@
 package com.yoen.yoen_back.service;
 
-import com.yoen.yoen_back.dto.PaymentDto;
+import com.yoen.yoen_back.dto.PaymentRequestDto;
+import com.yoen.yoen_back.dto.TravelRecordRequestDto;
 import com.yoen.yoen_back.entity.payment.Payment;
 import com.yoen.yoen_back.entity.travel.Travel;
 import com.yoen.yoen_back.entity.travel.TravelRecord;
@@ -61,15 +62,29 @@ public class TravelService {
         return travelUserRepository.save(travelUser);
     }
 
-    public Payment setPayment (Long userId, PaymentDto paymentDto) {
-        Travel travel = travelRepository.getReferenceById(paymentDto.travelId());
-        LocalDateTime parsedTime = LocalDateTime.parse(paymentDto.payTime(), formatter);
+    public TravelRecord setTravelRecord (Long userId, TravelRecordRequestDto travelRecordRequestDto) {
+        Travel tv = travelRepository.getReferenceById(travelRecordRequestDto.travelId());
+        TravelUser tu = travelUserRepository.getReferenceById(travelRecordRequestDto.travelUserId());
+        LocalDateTime parsedTime = LocalDateTime.parse(travelRecordRequestDto.recordTime(), formatter);
+        TravelRecord travelRecord = TravelRecord.builder()
+                .travel(tv)
+                .travelUser(tu)
+                .title(travelRecordRequestDto.title())
+                .content(travelRecordRequestDto.content())
+                .recordTime(parsedTime)
+                .build();
+        return travelRecordRepository.save(travelRecord);
+    }
+
+    public Payment setPayment (Long userId, PaymentRequestDto paymentRequestDto) {
+        Travel travel = travelRepository.getReferenceById(paymentRequestDto.travelId());
+        LocalDateTime parsedTime = LocalDateTime.parse(paymentRequestDto.payTime(), formatter);
         Payment payment = Payment.builder().
                 travel(travel).
                 payTime(parsedTime).
-                category(paymentDto.category()).
-                payerType(paymentDto.payerType()).
-                paymentAccount(paymentDto.paymentAccount()).
+                category(paymentRequestDto.category()).
+                payerType(paymentRequestDto.payerType()).
+                paymentAccount(paymentRequestDto.paymentAccount()).
                 build();
 
         return paymentRepository.save(payment);

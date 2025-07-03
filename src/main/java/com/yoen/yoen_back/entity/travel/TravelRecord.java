@@ -2,10 +2,8 @@ package com.yoen.yoen_back.entity.travel;
 
 import com.yoen.yoen_back.common.entity.BaseEntity;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+
 import java.time.LocalDateTime;
 
 /** 여행 기록 엔티티
@@ -16,6 +14,8 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Table(name = "travelrecords")
 public class TravelRecord extends BaseEntity {
     @Id

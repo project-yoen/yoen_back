@@ -1,7 +1,8 @@
 package com.yoen.yoen_back.controller;
 
 import com.yoen.yoen_back.dto.ApiResponse;
-import com.yoen.yoen_back.dto.PaymentDto;
+import com.yoen.yoen_back.dto.PaymentRequestDto;
+import com.yoen.yoen_back.dto.TravelRecordRequestDto;
 import com.yoen.yoen_back.entity.payment.Payment;
 import com.yoen.yoen_back.entity.travel.Travel;
 import com.yoen.yoen_back.entity.travel.TravelRecord;
@@ -49,13 +50,22 @@ public class TravelController {
     }
 
     @PostMapping("/setPayment/{userId}")
-    public ResponseEntity<ApiResponse<Payment>> setPayment(@PathVariable Long userId, @RequestBody PaymentDto payment) {
+    public ResponseEntity<ApiResponse<Payment>> setPayment(@PathVariable Long userId, @RequestBody PaymentRequestDto dto) {
         try {
-            Payment pay = travelService.setPayment(userId, payment);
+            Payment pay = travelService.setPayment(userId, dto);
             return ResponseEntity.ok(ApiResponse.success(pay));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.failure(e.getMessage()));
         }
     }
 
+    @PostMapping("/setTravelRecord/{userId}")
+    public ResponseEntity<ApiResponse<TravelRecord>> setTravelRecord(@PathVariable Long userId, @RequestBody TravelRecordRequestDto dto) {
+        try {
+            TravelRecord tr = travelService.setTravelRecord(userId, dto);
+            return ResponseEntity.ok(ApiResponse.success(tr));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.failure(e.getMessage()));
+        }
+    }
 }
