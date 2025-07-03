@@ -4,8 +4,8 @@ import com.yoen.yoen_back.entity.payment.Payment;
 import com.yoen.yoen_back.entity.travel.Travel;
 import com.yoen.yoen_back.entity.travel.TravelRecord;
 import com.yoen.yoen_back.entity.travel.TravelUser;
-import com.yoen.yoen_back.entity.user.Role;
 import com.yoen.yoen_back.entity.user.User;
+import com.yoen.yoen_back.enums.Role;
 import com.yoen.yoen_back.repository.payment.PaymentRepository;
 import com.yoen.yoen_back.repository.travel.TravelRecordRepository;
 import com.yoen.yoen_back.repository.travel.TravelRepository;
@@ -16,7 +16,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -46,8 +45,7 @@ public class TravelService {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
-        Role role = roleRepository.findById(1L)
-                .orElseThrow(() -> new IllegalArgumentException("Role not found with ID: 1"));
+        Role role = Role.Writer;
         TravelUser travelUser = TravelUser.builder()
                 .travel(tv)
                 .user(user)

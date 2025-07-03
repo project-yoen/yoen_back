@@ -1,8 +1,8 @@
 package com.yoen.yoen_back.entity.travel;
 
 import com.yoen.yoen_back.common.entity.BaseEntity;
-import com.yoen.yoen_back.entity.user.Role;
 import com.yoen.yoen_back.entity.user.User;
+import com.yoen.yoen_back.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,7 +15,10 @@ import lombok.*;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Entity
-@Table(name = "travelusers")
+@Table(name = "travelusers",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"travel_id", "user_id"})
+        })
 public class TravelUser extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,11 +32,9 @@ public class TravelUser extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private User user;
 
-    @JoinColumn(name = "role_id", nullable = false)
-    @ManyToOne(fetch = FetchType.LAZY)
+    @Enumerated(EnumType.STRING)
     private Role role;
 
     private String travelNickname;
-
 }
 
