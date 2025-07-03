@@ -1,6 +1,7 @@
 package com.yoen.yoen_back.controller;
 
 import com.yoen.yoen_back.dto.ApiResponse;
+import com.yoen.yoen_back.dto.PaymentDto;
 import com.yoen.yoen_back.entity.payment.Payment;
 import com.yoen.yoen_back.entity.travel.Travel;
 import com.yoen.yoen_back.entity.travel.TravelRecord;
@@ -36,11 +37,22 @@ public class TravelController {
 
     // 미완, 일단 userId는 추후 뺼건데, travelUserNickname은 또 입력받아여해서 아마 dto를 써야할것 같음
     // 그리고 일단 보여주기 식 TravelUser 반환을 하는데 이것도 나중에 void나 일반 문자열출력으로 수정
+    // dto, jwt 인증 구현 전까지는 PathVariable userId로 개발
     @PostMapping("/setTravel/{userId}")
     public ResponseEntity<ApiResponse<TravelUser>> setTravel(@PathVariable Long userId, @RequestBody Travel travel) {
         try {
             TravelUser tu = travelService.setTravel(userId, travel);
             return ResponseEntity.ok(ApiResponse.success(tu));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.failure(e.getMessage()));
+        }
+    }
+
+    @PostMapping("/setPayment/{userId}")
+    public ResponseEntity<ApiResponse<Payment>> setPayment(@PathVariable Long userId, @RequestBody PaymentDto payment) {
+        try {
+            Payment pay = travelService.setPayment(userId, payment);
+            return ResponseEntity.ok(ApiResponse.success(pay));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.failure(e.getMessage()));
         }

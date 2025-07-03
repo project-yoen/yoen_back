@@ -1,5 +1,6 @@
 package com.yoen.yoen_back.service;
 
+import com.yoen.yoen_back.dto.PaymentDto;
 import com.yoen.yoen_back.entity.payment.Payment;
 import com.yoen.yoen_back.entity.travel.Travel;
 import com.yoen.yoen_back.entity.travel.TravelRecord;
@@ -15,6 +16,8 @@ import com.yoen.yoen_back.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
@@ -26,6 +29,10 @@ public class TravelService {
     private final TravelUserRepository travelUserRepository;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+
+    DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+
+
 
     public List<Travel> getAllTravels() {
         return travelRepository.findAll();
@@ -52,5 +59,19 @@ public class TravelService {
                 .role(role)
                 .build();
         return travelUserRepository.save(travelUser);
+    }
+
+    public Payment setPayment (Long userId, PaymentDto paymentDto) {
+        Travel travel = travelRepository.getReferenceById(paymentDto.travelId());
+        LocalDateTime parsedTime = LocalDateTime.parse(paymentDto.payTime(), formatter);
+        Payment payment = Payment.builder().
+                travel(travel).
+                payTime(parsedTime).
+                category(paymentDto.category()).
+                payerType(paymentDto.payerType()).
+                paymentAccount(paymentDto.paymentAccount()).
+                build();
+
+        return paymentRepository.save(payment);
     }
 }
