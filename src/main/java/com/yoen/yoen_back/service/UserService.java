@@ -1,7 +1,7 @@
 package com.yoen.yoen_back.service;
 
 import com.yoen.yoen_back.entity.user.User;
-import com.yoen.yoen_back.repository.user.UserRepository;
+import com.yoen.yoen_back.repository.jpa.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

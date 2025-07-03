@@ -1,4 +1,4 @@
-package com.yoen.yoen_back.repository.image;
+package com.yoen.yoen_back.repository.jpa.image;
 
 import com.yoen.yoen_back.entity.image.PaymentImage;
 import org.springframework.data.jpa.repository.JpaRepository;

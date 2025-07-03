@@ -8,12 +8,11 @@ import com.yoen.yoen_back.entity.travel.TravelRecord;
 import com.yoen.yoen_back.entity.travel.TravelUser;
 import com.yoen.yoen_back.entity.user.User;
 import com.yoen.yoen_back.enums.Role;
-import com.yoen.yoen_back.repository.payment.PaymentRepository;
-import com.yoen.yoen_back.repository.travel.TravelRecordRepository;
-import com.yoen.yoen_back.repository.travel.TravelRepository;
-import com.yoen.yoen_back.repository.travel.TravelUserRepository;
-import com.yoen.yoen_back.repository.user.RoleRepository;
-import com.yoen.yoen_back.repository.user.UserRepository;
+import com.yoen.yoen_back.repository.jpa.payment.PaymentRepository;
+import com.yoen.yoen_back.repository.jpa.travel.TravelRecordRepository;
+import com.yoen.yoen_back.repository.jpa.travel.TravelRepository;
+import com.yoen.yoen_back.repository.jpa.travel.TravelUserRepository;
+import com.yoen.yoen_back.repository.jpa.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -29,7 +28,6 @@ public class TravelService {
     private final PaymentRepository paymentRepository;
     private final TravelUserRepository travelUserRepository;
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
 
     DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 

@@ -1,7 +1,6 @@
 package com.yoen.yoen_back.controller;
 
 import com.yoen.yoen_back.entity.user.User;
-import com.yoen.yoen_back.repository.user.UserRepository;
 import com.yoen.yoen_back.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
