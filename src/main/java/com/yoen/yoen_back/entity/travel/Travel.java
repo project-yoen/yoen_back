@@ -1,6 +1,7 @@
 package com.yoen.yoen_back.entity.travel;
 
 import com.yoen.yoen_back.common.entity.BaseEntity;
+import com.yoen.yoen_back.enums.Nation;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -29,7 +30,8 @@ public class Travel extends BaseEntity {
     @Column(nullable = false)
     private Long numOfPeople;
 
-    private String nation;
+    @Enumerated(EnumType.STRING)
+    private Nation nation;
 
 //    @Column(nullable = false)
     private LocalDate startDate;
