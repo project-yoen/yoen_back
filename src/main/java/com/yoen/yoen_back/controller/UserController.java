@@ -1,5 +1,6 @@
 package com.yoen.yoen_back.controller;
 
+import com.yoen.yoen_back.dto.ApiResponse;
 import com.yoen.yoen_back.entity.user.User;
 import com.yoen.yoen_back.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -20,14 +21,14 @@ public class UserController {
 //    public ResponseEntity<?> signIn(@RequestParam String email, @RequestParam String password) {}
 
 
-    @GetMapping("/test")
-    public ResponseEntity<List<User>> test() {
-        return ResponseEntity.ok(userService.test());
+    @GetMapping("/getAllUser")
+    public ResponseEntity<ApiResponse<List<User>>> test() {
+        return ResponseEntity.ok(ApiResponse.success(userService.test()));
     }
 
     @PostMapping("/signUp")
-    public ResponseEntity<?> signUp(@RequestBody User user) {
+    public ResponseEntity<ApiResponse<String>> signUp(@RequestBody User user) {
         userService.signUp(user);
-        return ResponseEntity.ok("Sign Up Success");
+        return ResponseEntity.ok(ApiResponse.success("Sign Up Success"));
     }
 }

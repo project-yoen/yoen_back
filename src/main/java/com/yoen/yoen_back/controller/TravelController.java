@@ -21,18 +21,18 @@ public class TravelController {
     private final TravelService travelService;
 
     @GetMapping
-    public ResponseEntity<List<Travel>> travel() {
-        return ResponseEntity.ok(travelService.getAllTravels());
+    public ResponseEntity<ApiResponse<List<Travel>>> travel() {
+        return ResponseEntity.ok(ApiResponse.success(travelService.getAllTravels()));
     }
 
     @GetMapping("/record")
-    public ResponseEntity<List<TravelRecord>> travelRecord(@RequestParam("travelId") Long travelId) {
-        return ResponseEntity.ok(travelService.getAllTravelRecordsByTravelId(travelId));
+    public ResponseEntity<ApiResponse<List<TravelRecord>>> travelRecord(@RequestParam("travelId") Long travelId) {
+        return ResponseEntity.ok(ApiResponse.success(travelService.getAllTravelRecordsByTravelId(travelId)));
     }
 
     @GetMapping("/payment")
-    public ResponseEntity<List<Payment>> payment(@RequestParam("travelId") Long travelId) {
-        return ResponseEntity.ok(travelService.getAllPaymentsByTravelId(travelId));
+    public ResponseEntity<ApiResponse<List<Payment>>> payment(@RequestParam("travelId") Long travelId) {
+        return ResponseEntity.ok(ApiResponse.success(travelService.getAllPaymentsByTravelId(travelId)));
     }
 
 
