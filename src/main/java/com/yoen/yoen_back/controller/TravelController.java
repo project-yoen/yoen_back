@@ -41,31 +41,19 @@ public class TravelController {
     // dto, jwt 인증 구현 전까지는 PathVariable userId로 개발
     @PostMapping("/setTravel/{userId}")
     public ResponseEntity<ApiResponse<TravelUser>> setTravel(@PathVariable Long userId, @RequestBody Travel travel) {
-        try {
-            TravelUser tu = travelService.setTravel(userId, travel);
-            return ResponseEntity.ok(ApiResponse.success(tu));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(ApiResponse.failure(e.getMessage()));
-        }
+        TravelUser tu = travelService.setTravel(userId, travel);
+        return ResponseEntity.ok(ApiResponse.success(tu));
     }
 
     @PostMapping("/setPayment/{userId}")
     public ResponseEntity<ApiResponse<Payment>> setPayment(@PathVariable Long userId, @RequestBody PaymentRequestDto dto) {
-        try {
-            Payment pay = travelService.setPayment(userId, dto);
-            return ResponseEntity.ok(ApiResponse.success(pay));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(ApiResponse.failure(e.getMessage()));
-        }
+        Payment pay = travelService.setPayment(userId, dto);
+        return ResponseEntity.ok(ApiResponse.success(pay));
     }
 
     @PostMapping("/setTravelRecord/{userId}")
     public ResponseEntity<ApiResponse<TravelRecord>> setTravelRecord(@PathVariable Long userId, @RequestBody TravelRecordRequestDto dto) {
-        try {
-            TravelRecord tr = travelService.setTravelRecord(userId, dto);
-            return ResponseEntity.ok(ApiResponse.success(tr));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(ApiResponse.failure(e.getMessage()));
-        }
+        TravelRecord tr = travelService.setTravelRecord(userId, dto);
+        return ResponseEntity.ok(ApiResponse.success(tr));
     }
 }
