@@ -1,5 +1,6 @@
 package com.yoen.yoen_back.service;
 
+import com.yoen.yoen_back.common.utils.Formatter;
 import com.yoen.yoen_back.dto.PaymentRequestDto;
 import com.yoen.yoen_back.dto.TravelRecordRequestDto;
 import com.yoen.yoen_back.entity.payment.Payment;
@@ -29,7 +30,6 @@ public class TravelService {
     private final TravelUserRepository travelUserRepository;
     private final UserRepository userRepository;
 
-    DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
     public List<Travel> getAllTravels() {
         return travelRepository.findAll();
@@ -58,31 +58,32 @@ public class TravelService {
         return travelUserRepository.save(travelUser);
     }
 
-    public TravelRecord setTravelRecord (Long userId, TravelRecordRequestDto travelRecordRequestDto) {
-        Travel tv = travelRepository.getReferenceById(travelRecordRequestDto.travelId());
-        TravelUser tu = travelUserRepository.getReferenceById(travelRecordRequestDto.travelUserId());
-        LocalDateTime parsedTime = LocalDateTime.parse(travelRecordRequestDto.recordTime(), formatter);
+    public TravelRecord setTravelRecord (Long userId, TravelRecordRequestDto dto) {
+        Travel tv = travelRepository.getReferenceById(dto.travelId());
+        TravelUser tu = travelUserRepository.getReferenceById(dto.travelUserId());
         TravelRecord travelRecord = TravelRecord.builder()
                 .travel(tv)
                 .travelUser(tu)
-                .title(travelRecordRequestDto.title())
-                .content(travelRecordRequestDto.content())
-                .recordTime(parsedTime)
+                .title(dto.title())
+                .content(dto.content())
+                .recordTime(Formatter.getDateTime(dto.recordTime()))
                 .build();
         return travelRecordRepository.save(travelRecord);
     }
 
-    public Payment setPayment (Long userId, PaymentRequestDto paymentRequestDto) {
-        Travel travel = travelRepository.getReferenceById(paymentRequestDto.travelId());
-        LocalDateTime parsedTime = LocalDateTime.parse(paymentRequestDto.payTime(), formatter);
+    public Payment setPayment (Long userId, PaymentRequestDto dto) {
+        Travel travel = travelRepository.getReferenceById(dto.travelId());
         Payment payment = Payment.builder().
                 travel(travel).
-                payTime(parsedTime).
-                category(paymentRequestDto.category()).
-                payerType(paymentRequestDto.payerType()).
-                paymentAccount(paymentRequestDto.paymentAccount()).
+                payTime(Formatter.getDateTime(dto.payTime())).
+                category(dto.category()).
+                payerType(dto.payerType()).
+                paymentAccount(dto.paymentAccount()).
                 build();
 
         return paymentRepository.save(payment);
     }
+
+
+
 }
