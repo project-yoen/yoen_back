@@ -1,6 +1,7 @@
 package com.yoen.yoen_back.service;
 
 import com.yoen.yoen_back.common.utils.Formatter;
+import com.yoen.yoen_back.dao.redis.TravelJoinCodeRedisDao;
 import com.yoen.yoen_back.dto.PaymentRequestDto;
 import com.yoen.yoen_back.dto.TravelRecordRequestDto;
 import com.yoen.yoen_back.entity.payment.Payment;
@@ -30,7 +31,7 @@ public class TravelService {
     private final PaymentRepository paymentRepository;
     private final TravelUserRepository travelUserRepository;
     private final UserRepository userRepository;
-
+    private final TravelJoinCodeRedisDao travelJoinCodeRedisDao;
 
     public List<Travel> getAllTravels() {
         return travelRepository.findAll();
@@ -87,5 +88,17 @@ public class TravelService {
     }
 
 
+    public String getJoinCode (User user, Long travelId) {
+        if(!travelJoinCodeRedisDao.existsTravelId(travelId)){
+            Long code = getUniqueJoinCode();
+            travelJoinCodeRedisDao.saveBidirectionalMapping(code, travelId);
+        }
+        return travelJoinCodeRedisDao.getCodeByTravelId(travelId)
+                .orElseThrow(() -> new IllegalStateException("해당 여행의 참여 코드가 존재하지 않습니다."));
+    }
+
+    public Long getUniqueJoinCode() {
+        return 123123L;
+    }
 
 }
