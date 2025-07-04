@@ -1,5 +1,6 @@
 package com.yoen.yoen_back.controller;
 
+import com.yoen.yoen_back.common.security.CustomUserDetails;
 import com.yoen.yoen_back.dto.ApiResponse;
 import com.yoen.yoen_back.dto.PaymentRequestDto;
 import com.yoen.yoen_back.dto.TravelRecordRequestDto;
@@ -10,6 +11,7 @@ import com.yoen.yoen_back.entity.travel.TravelUser;
 import com.yoen.yoen_back.service.TravelService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -55,5 +57,11 @@ public class TravelController {
     public ResponseEntity<ApiResponse<TravelRecord>> setTravelRecord(@PathVariable Long userId, @RequestBody TravelRecordRequestDto dto) {
         TravelRecord tr = travelService.setTravelRecord(userId, dto);
         return ResponseEntity.ok(ApiResponse.success(tr));
+    }
+
+    @GetMapping("/code")
+    public ResponseEntity<ApiResponse<String>> getCode(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam("travelId") Long travelId) {
+        String cd = travelService.getJoinCode(userDetails.user(), travelId);
+        return ResponseEntity.ok(ApiResponse.success(cd));
     }
 }
