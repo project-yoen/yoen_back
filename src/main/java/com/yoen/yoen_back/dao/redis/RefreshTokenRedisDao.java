@@ -16,21 +16,18 @@ public class RefreshTokenRedisDao {
 
     public void save(String userId, String refreshToken) {
         redisTemplate.opsForValue().set(
-                getKey(userId),
+                "refresh_token:" + userId,
                 refreshToken,
                 Duration.ofDays(REFRESH_TOKEN_TTL_DAYS)
         );
     }
 
     public String get(String userId) {
-        return redisTemplate.opsForValue().get(getKey(userId));
+        return redisTemplate.opsForValue().get("refresh_token:" + userId);
     }
 
     public void delete(String userId) {
-        redisTemplate.delete(getKey(userId));
+        redisTemplate.delete("refresh_token:" + userId);
     }
 
-    private String getKey(String userId) {
-        return "refresh_token:" + userId;
-    }
 }
