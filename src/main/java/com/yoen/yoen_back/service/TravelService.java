@@ -19,6 +19,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -32,6 +33,10 @@ public class TravelService {
     private final TravelUserRepository travelUserRepository;
     private final UserRepository userRepository;
     private final TravelJoinCodeRedisDao travelJoinCodeRedisDao;
+
+    private final static String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    private final SecureRandom random = new SecureRandom();
+
 
     public List<Travel> getAllTravels() {
         return travelRepository.findAll();
@@ -90,15 +95,28 @@ public class TravelService {
 
     public String getJoinCode (User user, Long travelId) {
         if(!travelJoinCodeRedisDao.existsTravelId(travelId)){
-            Long code = getUniqueJoinCode();
+            String code = getUniqueJoinCode(6);
             travelJoinCodeRedisDao.saveBidirectionalMapping(code, travelId);
         }
         return travelJoinCodeRedisDao.getCodeByTravelId(travelId)
                 .orElseThrow(() -> new IllegalStateException("해당 여행의 참여 코드가 존재하지 않습니다."));
     }
 
-    public Long getUniqueJoinCode() {
-        return 123123L;
+    public String getUniqueJoinCode(int length) {
+        String code;
+        do {
+            StringBuilder codeBuilder = new StringBuilder(length);
+            for (int i = 0; i < length; i++) {
+                int index = random.nextInt(CHARACTERS.length());
+                codeBuilder.append(CHARACTERS.charAt(index));
+            }
+            code = codeBuilder.toString();
+        } while (travelJoinCodeRedisDao.existsCode(code));
+        return code;
     }
 
+    public LocalDateTime getCodeExpiredTime(String code) {
+        return travelJoinCodeRedisDao.getExpirationTime(code)
+                .orElseThrow(() -> new IllegalStateException("유효하지 않은 코드입니다."));
+    }
 }
