@@ -14,6 +14,7 @@ import com.yoen.yoen_back.repository.travel.TravelRecordRepository;
 import com.yoen.yoen_back.repository.travel.TravelRepository;
 import com.yoen.yoen_back.repository.travel.TravelUserRepository;
 import com.yoen.yoen_back.repository.user.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -44,6 +45,7 @@ public class TravelService {
     }
 
     // 권한 관련해서 어떻게 입력받을건지 생각
+    @Transactional
     public TravelUser setTravel (Long userId, Travel travel) {
         Travel tv = travelRepository.save(travel);
 
