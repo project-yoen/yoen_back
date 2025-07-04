@@ -1,10 +1,13 @@
 package com.yoen.yoen_back.configuration;
 
 import com.google.auth.oauth2.GoogleCredentials;
+import com.google.cloud.storage.Bucket;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
+import com.google.firebase.cloud.StorageClient;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
@@ -45,4 +48,9 @@ public class FirebaseConfig {
             }
         }
     }
+    @Bean
+    public Bucket bucket() {
+        return StorageClient.getInstance().bucket(); // 이걸 Bean으로만 등록
+    }
+
 }
