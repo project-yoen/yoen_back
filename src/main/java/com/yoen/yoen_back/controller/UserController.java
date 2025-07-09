@@ -1,6 +1,5 @@
 package com.yoen.yoen_back.controller;
 
-import com.yoen.yoen_back.common.infrastructure.JwtProvider;
 import com.yoen.yoen_back.dto.ApiResponse;
 import com.yoen.yoen_back.dto.LoginRequestDto;
 import com.yoen.yoen_back.dto.LoginResponseDto;

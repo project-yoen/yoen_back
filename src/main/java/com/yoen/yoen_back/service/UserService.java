@@ -23,9 +23,8 @@ public class UserService {
         User user = User.builder()
                 .password(bCryptPasswordEncoder.encode(dto.password()))
                 .email(dto.email())
-                .nickname(dto.nickname())
                 .gender(dto.gender())
-                .role(dto.role())
+                .nickname(dto.nickname())
                 .birthday(Formatter.getDate(dto.birthday()))
                 .build();
         return userRepository.save(user);
