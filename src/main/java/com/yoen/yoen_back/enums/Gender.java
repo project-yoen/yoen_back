@@ -3,5 +3,5 @@ package com.yoen.yoen_back.enums;
 public enum Gender {
     MALE,
     FEMALE,
-    OTHER
+    OTHERS
 }
