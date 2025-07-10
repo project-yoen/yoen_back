@@ -5,7 +5,7 @@ import com.yoen.yoen_back.dto.LoginRequestDto;
 import com.yoen.yoen_back.dto.LoginResponseDto;
 import com.yoen.yoen_back.entity.user.User;
 import lombok.RequiredArgsConstructor;
-import org.apache.hc.client5.http.auth.InvalidCredentialsException;
+import org.apache.http.auth.InvalidCredentialsException;
 import org.springframework.stereotype.Service;
 
 @Service

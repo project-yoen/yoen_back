@@ -8,7 +8,7 @@ import com.yoen.yoen_back.entity.user.User;
 import com.yoen.yoen_back.service.AuthService;
 import com.yoen.yoen_back.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.apache.hc.client5.http.auth.InvalidCredentialsException;
+import org.apache.http.auth.InvalidCredentialsException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

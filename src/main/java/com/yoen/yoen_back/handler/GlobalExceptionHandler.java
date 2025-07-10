@@ -37,7 +37,7 @@ public class GlobalExceptionHandler {
         // 로깅 추가 가능
         log.error("인증 오류 발생", ex);
         return ResponseEntity
-                .status(HttpStatus.FORBIDDEN)
+                .status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.failure("인증되지 않은 사용자입니다."));
     }
 

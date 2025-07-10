@@ -12,3 +12,4 @@ public abstract class ApiException extends RuntimeException {
         this.status = status;
     }
 }
+

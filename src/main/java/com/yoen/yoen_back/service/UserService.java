@@ -6,7 +6,7 @@ import com.yoen.yoen_back.dto.RegisterRequestDto;
 import com.yoen.yoen_back.entity.user.User;
 import com.yoen.yoen_back.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.apache.hc.client5.http.auth.InvalidCredentialsException;
+import org.apache.http.auth.InvalidCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
