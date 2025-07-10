@@ -3,6 +3,7 @@ package com.yoen.yoen_back.handler;
 import com.yoen.yoen_back.common.entity.ApiException;
 import com.yoen.yoen_back.dto.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.auth.InvalidCredentialsException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -29,6 +30,15 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<?>> handleValidation(MethodArgumentNotValidException ex) {
         String message = ex.getBindingResult().getAllErrors().get(0).getDefaultMessage();
         return ResponseEntity.badRequest().body(ApiResponse.failure(message));
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ApiResponse<?>> handleInvalidCredential(InvalidCredentialsException ex) {
+        // 로깅 추가 가능
+        log.error("인증 오류 발생", ex);
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.failure("인증되지 않은 사용자입니다."));
     }
 
     @ExceptionHandler(Exception.class)

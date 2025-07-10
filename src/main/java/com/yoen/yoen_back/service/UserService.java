@@ -24,6 +24,7 @@ public class UserService {
                 .password(bCryptPasswordEncoder.encode(dto.password()))
                 .email(dto.email())
                 .gender(dto.gender())
+                .name(dto.name())
                 .nickname(dto.nickname())
                 .birthday(Formatter.getDate(dto.birthday()))
                 .build();
