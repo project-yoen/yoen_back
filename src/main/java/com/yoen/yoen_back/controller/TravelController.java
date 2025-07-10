@@ -1,14 +1,10 @@
 package com.yoen.yoen_back.controller;
 
 import com.yoen.yoen_back.common.security.CustomUserDetails;
-import com.yoen.yoen_back.dto.ApiResponse;
-import com.yoen.yoen_back.dto.JoinCodeResponseDto;
-import com.yoen.yoen_back.dto.PaymentRequestDto;
-import com.yoen.yoen_back.dto.TravelRecordRequestDto;
+import com.yoen.yoen_back.dto.*;
 import com.yoen.yoen_back.entity.payment.Payment;
 import com.yoen.yoen_back.entity.travel.Travel;
 import com.yoen.yoen_back.entity.travel.TravelRecord;
-import com.yoen.yoen_back.entity.travel.TravelUser;
 import com.yoen.yoen_back.service.TravelService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -43,10 +39,10 @@ public class TravelController {
     // 미완, 일단 userId는 추후 뺼건데, travelUserNickname은 또 입력받아여해서 아마 dto를 써야할것 같음
     // 그리고 일단 보여주기 식 TravelUser 반환을 하는데 이것도 나중에 void나 일반 문자열출력으로 수정
     // dto, jwt 인증 구현 전까지는 PathVariable userId로 개발
-    @PostMapping("/setTravel/{userId}")
-    public ResponseEntity<ApiResponse<TravelUser>> setTravel(@PathVariable Long userId, @RequestBody Travel travel) {
-        TravelUser tu = travelService.setTravel(userId, travel);
-        return ResponseEntity.ok(ApiResponse.success(tu));
+    @PostMapping("/setTravel")
+    public ResponseEntity<ApiResponse<Travel>> setTravel(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody TravelRequestDto travelRequestDto) {
+        Travel tv = travelService.setTravel(userDetails.user(), travelRequestDto);
+        return ResponseEntity.ok(ApiResponse.success(tv));
     }
 
     @PostMapping("/setPayment/{userId}")
@@ -67,4 +63,13 @@ public class TravelController {
         LocalDateTime expireTime = travelService.getCodeExpiredTime(cd);
         return ResponseEntity.ok(ApiResponse.success(JoinCodeResponseDto.joinCode(cd, expireTime)));
     }
+    @GetMapping("/users")
+    public List<TravelUserDto> getAllTravelUsers() {
+        return travelService.getAllTravelUser().stream().map(tu -> new TravelUserDto(tu.getTravel().getTravelId(), tu.getUser().getUserId())).toList();
+    }
+    @GetMapping("/destinations")
+    public List<TravelDestinationDto> getAllTravelDestinations() {
+        return travelService.getAllTravelDestination().stream().map(td -> new TravelDestinationDto(td.getTravel().getTravelId(), td.getDestination().getName())).toList();
+    }
 }
+
