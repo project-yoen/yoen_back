@@ -12,7 +12,7 @@ public class RefreshTokenRedisDao {
 
     private final RedisTemplate<String, String> redisTemplate;
 
-    private static final long REFRESH_TOKEN_TTL_DAYS = 7;
+    private static final long REFRESH_TOKEN_TTL_DAYS = 14;
 
     public void save(String userId, String refreshToken) {
         redisTemplate.opsForValue().set(

@@ -1,18 +1,25 @@
 package com.yoen.yoen_back.service;
 
+import com.yoen.yoen_back.common.entity.InvalidTokenException;
 import com.yoen.yoen_back.common.infrastructure.JwtProvider;
+import com.yoen.yoen_back.dao.redis.RefreshTokenRedisDao;
 import com.yoen.yoen_back.dto.LoginRequestDto;
 import com.yoen.yoen_back.dto.LoginResponseDto;
+import com.yoen.yoen_back.dto.TokenResponse;
 import com.yoen.yoen_back.entity.user.User;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.auth.InvalidCredentialsException;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
     private final JwtProvider jwtProvider;
     private final UserService userService;
+    private final RefreshTokenRedisDao refreshTokenRedisDao;
+
 
     public String generateRefreshToken(Long userId) {
         return jwtProvider.generateRefreshToken(String.valueOf(userId));
@@ -24,8 +31,42 @@ public class AuthService {
 
     public LoginResponseDto loginAndGetToken(LoginRequestDto dto) throws InvalidCredentialsException {
         User user = userService.login(dto);
-        Long userId = user.getUserId();
+        String userId = String.valueOf(user.getUserId());
 
-        return new LoginResponseDto(user, generateAccessToken(userId), generateRefreshToken(userId));
+        String accessToken = jwtProvider.generateAccessToken(userId);
+        String refreshToken = jwtProvider.generateRefreshToken(userId);
+
+        // redis에 토큰 저장
+        refreshTokenRedisDao.save(userId, refreshToken);
+        log.info(refreshTokenRedisDao.get(userId));
+
+        return new LoginResponseDto(user, accessToken, refreshToken);
     }
+
+    public TokenResponse reissueTokens(String refreshToken) {
+        if (!jwtProvider.validateToken(refreshToken)) {
+            throw new InvalidTokenException("리프레시 토큰 유효성 검사 실패");
+        }
+        String userId = jwtProvider.getUserIdFromToken(refreshToken);
+        String storedToken = refreshTokenRedisDao.get(userId);
+
+        // 저장되어있는 토큰이 없거나 일치하지 않을시
+        if (storedToken == null || !storedToken.equals(refreshToken)) {
+            throw new InvalidTokenException("리프레시 토큰 불일치 또는 만료됨");
+        }
+        Long _userId = Long.parseLong(userId);
+
+        String newAccessToken = generateAccessToken(_userId);
+        String newRefreshToken = generateRefreshToken(_userId);
+
+        refreshTokenRedisDao.save(userId, newRefreshToken);
+
+        return new TokenResponse(newAccessToken, newRefreshToken);
+    }
+
+    public void logout(String accessToken) {
+        String userId = jwtProvider.getUserIdFromToken(accessToken);
+        refreshTokenRedisDao.delete(userId);
+    }
+
 }
