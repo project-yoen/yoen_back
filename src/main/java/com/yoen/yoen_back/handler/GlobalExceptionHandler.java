@@ -1,6 +1,7 @@
 package com.yoen.yoen_back.handler;
 
 import com.yoen.yoen_back.common.entity.ApiException;
+import com.yoen.yoen_back.common.entity.InvalidTokenException;
 import com.yoen.yoen_back.dto.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.auth.InvalidCredentialsException;
@@ -32,6 +33,15 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(ApiResponse.failure(message));
     }
 
+    @ExceptionHandler(InvalidTokenException.class)
+    public ResponseEntity<ApiResponse<?>> handleInvalidToken(InvalidTokenException ex) {
+        // 로깅 추가 가능
+        log.error("유효하지 않은 토큰", ex);
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.failure("유효하지 않은 토큰입니다."));
+    }
+
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<ApiResponse<?>> handleInvalidCredential(InvalidCredentialsException ex) {
         // 로깅 추가 가능
@@ -39,6 +49,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.failure("인증되지 않은 사용자입니다."));
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<String> handleMaxSizeException(MaxUploadSizeExceededException exc) {
+        return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body("파일 크기가 너무 큽니다");
     }
 
     @ExceptionHandler(Exception.class)
@@ -50,8 +65,4 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.failure("서버 내부 오류가 발생했습니다."));
     }
 
-    @ExceptionHandler(MaxUploadSizeExceededException.class)
-    public ResponseEntity<String> handleMaxSizeException(MaxUploadSizeExceededException exc) {
-        return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body("파일 크기가 너무 큽니다");
-    }
 }
