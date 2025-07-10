@@ -29,11 +29,6 @@ public class FirebaseConfig {
             String resourcePath = env.getProperty("firebase.config.path");
             String storageBucket = env.getProperty("firebase.storage.bucket");
 
-            log.info("=== Firebase Config Debug ===");
-            log.info("firebase.config.path: {}", resourcePath);
-            log.info("firebase.config.bucket: {}", storageBucket);
-            log.info("==============================");
-
             try (InputStream serviceAccount = getClass().getClassLoader().getResourceAsStream(resourcePath)) {
                 assert serviceAccount != null;
                 FirebaseOptions options = FirebaseOptions.builder()
@@ -43,7 +38,7 @@ public class FirebaseConfig {
 
                 FirebaseApp.initializeApp(options);
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error(e.getMessage());
                 throw new RuntimeException("Firebase initialization failed", e);
             }
         }

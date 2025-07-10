@@ -35,9 +35,8 @@ public class UserController {
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<String>> signUp(@RequestBody RegisterRequestDto dto) {
-        User newUser = userService.register(dto);
+        userService.register(dto);
 
-        // 토큰 발급 (액세스, 리프레시)
         return ResponseEntity.ok(ApiResponse.success("Sign Up Success"));
     }
 
