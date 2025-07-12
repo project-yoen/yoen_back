@@ -21,14 +21,17 @@ public class AuthService {
     private final RefreshTokenRedisDao refreshTokenRedisDao;
 
 
+    // jwtProvider로 refreshToken 받는 함수
     public String generateRefreshToken(Long userId) {
         return jwtProvider.generateRefreshToken(String.valueOf(userId));
     }
 
+    // jwtProvider로 accessToken 받는 함수
     public String generateAccessToken(Long userId) {
         return jwtProvider.generateAccessToken(String.valueOf(userId));
     }
 
+    // 로그인 기능과 토큰발급을 함께하는 함수
     public LoginResponseDto loginAndGetToken(LoginRequestDto dto) throws InvalidCredentialsException {
         User user = userService.login(dto);
         String userId = String.valueOf(user.getUserId());
@@ -43,6 +46,7 @@ public class AuthService {
         return new LoginResponseDto(user, accessToken, refreshToken);
     }
 
+    // accessToken과 refreshToken을 재 발급 하는 함수
     public TokenResponse reissueTokens(String refreshToken) {
         if (!jwtProvider.validateToken(refreshToken)) {
             throw new InvalidTokenException("리프레시 토큰 유효성 검사 실패");
@@ -64,6 +68,7 @@ public class AuthService {
         return new TokenResponse(newAccessToken, newRefreshToken);
     }
 
+    // 로그 아웃시 redis에 저장되어 있는 refreshToken 지우는 함수
     public void logout(String accessToken) {
         String userId = jwtProvider.getUserIdFromToken(accessToken);
         refreshTokenRedisDao.delete(userId);
