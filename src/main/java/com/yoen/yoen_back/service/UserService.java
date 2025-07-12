@@ -3,12 +3,14 @@ package com.yoen.yoen_back.service;
 import com.yoen.yoen_back.common.utils.Formatter;
 import com.yoen.yoen_back.dto.LoginRequestDto;
 import com.yoen.yoen_back.dto.RegisterRequestDto;
+import com.yoen.yoen_back.entity.image.Image;
 import com.yoen.yoen_back.entity.user.User;
 import com.yoen.yoen_back.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.http.auth.InvalidCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -16,6 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
+    private final ImageService imageService;
     private final BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
 
 
@@ -42,9 +45,6 @@ public class UserService {
         return user;
     }
 
-    public User signUp(User user) {
-        return userRepository.save(user);
-    }
 
     public List<User> test() {
         return userRepository.findAll();
@@ -52,5 +52,17 @@ public class UserService {
 
     public User findById(Long id) {
         return userRepository.findById(id).orElse(null);
+    }
+
+
+    // 유저 프로필 사진 세팅 함수
+    public String saveProfileUrl(User user, MultipartFile file) {
+        Image profileImage = imageService.saveImage(user, file);
+        if (user.getProfileImage() != null) imageService.deleteImage(user.getProfileImage().getImageId());
+
+        user.setProfileImage(profileImage);
+        userRepository.save(user);
+
+        return profileImage.getImageUrl();
     }
 }
