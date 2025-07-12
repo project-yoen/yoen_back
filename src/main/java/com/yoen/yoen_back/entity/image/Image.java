@@ -2,8 +2,10 @@ package com.yoen.yoen_back.entity.image;
 
 import com.yoen.yoen_back.common.entity.BaseEntity;
 import com.yoen.yoen_back.entity.travel.Travel;
+import com.yoen.yoen_back.entity.user.User;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Where;
 
 /**사진 엔티티
  * 사진 정보를 관리
@@ -20,10 +22,14 @@ public class Image extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long imageId;
 
-    @JoinColumn(name = "travel_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
-    private Travel travel;
-    
+    User user;
+
+    @Column(nullable = false)
+    private String objectKey;
+
     @Column(nullable = false)
     private String imageUrl;
 }
+

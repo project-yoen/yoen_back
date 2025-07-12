@@ -2,6 +2,7 @@ package com.yoen.yoen_back.service;
 
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Bucket;
+import com.yoen.yoen_back.dto.UploadedImage;
 import com.yoen.yoen_back.entity.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -10,17 +11,15 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
-public class PhotoUploadService {
+public class ImageUploadService {
 
     private final Bucket bucket;
 
-    public String upload(User user, MultipartFile file) {
+    public UploadedImage uploadImage(User user, MultipartFile file) {
         try {
             String ext = Optional.ofNullable(file.getOriginalFilename())
                     .map(name -> name.substring(name.lastIndexOf('.') + 1))
@@ -44,11 +43,32 @@ public class PhotoUploadService {
                     .update();
 
             String encodedName = URLEncoder.encode(blob.getName(), StandardCharsets.UTF_8);
-            return String.format("https://firebasestorage.googleapis.com/v0/b/%s/o/%s?alt=media&token=%s",
+            String imageUrl = String.format("https://firebasestorage.googleapis.com/v0/b/%s/o/%s?alt=media&token=%s",
                     bucket.getName(), encodedName, token);
+            return new UploadedImage(objectKey, imageUrl);
 
         } catch (IOException e) {
             throw new RuntimeException("사진 업로드 실패", e);
         }
     }
+
+    public List<UploadedImage> uploadImages(User user, List<MultipartFile> files) {
+        List<UploadedImage> results = new ArrayList<>();
+
+        for (MultipartFile file : files) {
+            results.add(uploadImage(user, file)); // 기존 단일 업로드 재사용
+        }
+
+        return results;
+    }
+
+
+    public void delete(String objectKey) {
+        boolean deleted = bucket.get(objectKey).delete();
+
+        if (!deleted) {
+            throw new RuntimeException("파일 삭제 실패: " + objectKey);
+        }
+    }
+
 }
