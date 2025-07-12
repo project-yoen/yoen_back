@@ -42,11 +42,22 @@ public class TravelService {
     }
 
     public List<TravelRecord> getAllTravelRecordsByTravelId(Long travelId) {
-        return travelRecordRepository.findByTravel_TravelId(travelId);
+        return travelRecordRepository.findByTravel_TravelIdAndIsActiveTrue(travelId);
     }
 
     public List<Payment> getAllPaymentsByTravelId(Long travelId) {
-        return paymentRepository.findByTravel_TravelId(travelId);
+        return paymentRepository.findByTravel_TravelIdAndIsActiveTrue(travelId);
+    }
+
+    //Todo 여행을 삭제할 때 관련된 모든 테이블의 레코드를 비활성화 해야 할까?
+    @Transactional
+    public void deleteTravel(Long travelId) {
+//        List<TravelRecord> tr = travelRecordRepository.findByTravel_TravelId(travelId);
+//        List<TravelUser> tu = travelUserRepository.findByTravel_TravelId(travelId);
+//        List<TravelDestination> td = travelDestinationRepository.findByTravel_TravelId(travelId);
+//        List<Payment> pay= paymentRepository.findByTravel_TravelId(travelId);
+//        List<PrePayment> prePayment = paymentRepository.findByTravel_TravelId(travelId);
+        travelRepository.deleteById(travelId);
     }
 
     // todo: 여행 객체를 생성 -> 여행 객체와 유저를 매핑 -> 여행 객체에 여행_목적지 객체 매핑 -> 함수 3개를 모은 setTravel 선언
@@ -101,6 +112,8 @@ public class TravelService {
                 .build();
         return destinationRepository.save(dt);
     }
+
+
     public List<TravelUser> getAllTravelUser() {
         return travelUserRepository.findAll();
     }
@@ -117,7 +130,7 @@ public class TravelService {
         return destinationRepository.findAll();
     }
 
-    public TravelRecord setTravelRecord (Long userId, TravelRecordRequestDto dto) {
+    public TravelRecord setTravelRecord (TravelRecordRequestDto dto) {
         Travel tv = travelRepository.getReferenceById(dto.travelId());
         TravelUser tu = travelUserRepository.getReferenceById(dto.travelUserId());
         TravelRecord travelRecord = TravelRecord.builder()
