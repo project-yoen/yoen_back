@@ -78,7 +78,7 @@ public class TravelService {
     @Transactional
     public void createTravelDestination (Travel tv, List<Long> destinationIds) {
         destinationIds.forEach(destinationId -> {
-            Destination dt = destinationRepository.findById(destinationId)
+            Destination dt = destinationRepository.findByDestinationIdAndIsActiveTrue(destinationId)
                     .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 목적지 ID: " + destinationId));
             TravelDestination td = TravelDestination.builder()
                     .travel(tv)
