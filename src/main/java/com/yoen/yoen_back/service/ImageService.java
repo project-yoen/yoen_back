@@ -1,6 +1,5 @@
 package com.yoen.yoen_back.service;
 
-import com.yoen.yoen_back.dto.ImageResponseDto;
 import com.yoen.yoen_back.dto.UploadedImage;
 import com.yoen.yoen_back.entity.image.Image;
 import com.yoen.yoen_back.entity.user.User;
@@ -20,6 +19,7 @@ public class ImageService {
     private final ImageRepository imageRepository;
     private final ImageUploadService imageUploadService;
 
+    // image저장하는 함수 (imageUploadService를 통해 클라우드에 업로드후 url을 로컬에 저장)
     public Image saveImage(User user, MultipartFile file) {
         UploadedImage uploadedImage = imageUploadService.uploadImage(user, file);
 
@@ -31,6 +31,7 @@ public class ImageService {
         return imageRepository.save(image);
     }
 
+    // image 여러개를 한번에 클라우드에 저장하고 로컬DB에 저장하는 함수
     public List<Image> saveImages(User user, List<MultipartFile> files) {
         List<UploadedImage> uploadedImages = imageUploadService.uploadImages(user, files);
 
@@ -42,7 +43,7 @@ public class ImageService {
     }
 
 
-    // imageId를 받아 삭제
+    // imageId를 받아 삭제하는 함수
     public String deleteImage(Long imageId) {
         Optional<Image> optionalImage = imageRepository.findByImageIdAndIsActiveTrue(imageId);
         optionalImage.ifPresent(image -> {
@@ -55,7 +56,7 @@ public class ImageService {
         return optionalImage.map(Image::getImageUrl).orElse(null);
     }
 
-    // imageId 리스트를 받아 삭제
+    // imageId 리스트를 받아 삭제하는 함수
     public List<String> deleteImages(List<Long> imageIds) {
         List<String> results = new ArrayList<>();
 
