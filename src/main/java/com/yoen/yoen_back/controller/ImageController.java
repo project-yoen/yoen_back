@@ -2,11 +2,9 @@ package com.yoen.yoen_back.controller;
 
 import com.yoen.yoen_back.common.security.CustomUserDetails;
 import com.yoen.yoen_back.dto.ApiResponse;
-import com.yoen.yoen_back.dto.ImageResponseDto;
-import com.yoen.yoen_back.dto.UploadedImage;
+import com.yoen.yoen_back.dto.IdListRequest;
 import com.yoen.yoen_back.entity.image.Image;
 import com.yoen.yoen_back.service.ImageService;
-import com.yoen.yoen_back.service.ImageUploadService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -38,10 +36,33 @@ public class ImageController {
             @AuthenticationPrincipal CustomUserDetails userDetail,
             @RequestPart("images") List<MultipartFile> files) {
 
-        List <Image> uploadedImages = imageService.saveImages(userDetail.user(), files);
+        List<Image> uploadedImages = imageService.saveImages(userDetail.user(), files);
 
         // 일단 urls 예시
         List<String> urls = uploadedImages.stream().map(Image::getImageUrl).collect(Collectors.toList());
         return ResponseEntity.ok(ApiResponse.success(urls));
     }
+
+    @DeleteMapping(path = "/delete-single/{imageId}")
+    public ResponseEntity<ApiResponse<String>> deleteSingle(
+            @AuthenticationPrincipal CustomUserDetails userDetail,
+            @PathVariable Long imageId) {
+        String removedImageUrl = imageService.deleteImage(imageId);
+
+        return ResponseEntity.ok(ApiResponse.success("The image has been successfully deleted: " + removedImageUrl));
+    }
+
+    @DeleteMapping(path = "/delete-multiple")
+    public ResponseEntity<ApiResponse<String>> deleteSingle(
+            @AuthenticationPrincipal CustomUserDetails userDetail,
+            @RequestBody IdListRequest idListRequest
+            ) {
+
+        List<String> removedImageUrls = imageService.deleteImages(idListRequest.ids());
+        String urls = String.join(",", removedImageUrls);
+
+        return ResponseEntity.ok(ApiResponse.success("The image has been successfully deleted: " + urls));
+    }
+
+
 }
