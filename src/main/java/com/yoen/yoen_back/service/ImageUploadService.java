@@ -19,6 +19,7 @@ public class ImageUploadService {
 
     private final Bucket bucket;
 
+    // 클라우드에 이미지 업로드 하는 함수 objectKey와 imageUrl을 반환
     public UploadedImage uploadImage(User user, MultipartFile file) {
         try {
             String ext = Optional.ofNullable(file.getOriginalFilename())
@@ -52,6 +53,7 @@ public class ImageUploadService {
         }
     }
 
+    // 여러 이미지 업로드 처리하는 함수
     public List<UploadedImage> uploadImages(User user, List<MultipartFile> files) {
         List<UploadedImage> results = new ArrayList<>();
 
@@ -63,6 +65,7 @@ public class ImageUploadService {
     }
 
 
+    // objectKey로 업로드된 이미지 삭제하는 함수
     public void delete(String objectKey) {
         boolean deleted = bucket.get(objectKey).delete();
 
