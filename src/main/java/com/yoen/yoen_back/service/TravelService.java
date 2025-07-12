@@ -143,7 +143,7 @@ public class TravelService {
 
 
 
-    public Payment setPayment (Long userId, PaymentRequestDto dto) {
+    public Payment setPayment (PaymentRequestDto dto) {
         // isActive는 무조건 true
         Travel travel = travelRepository.getReferenceById(dto.travelId());
         Payment payment = Payment.builder().

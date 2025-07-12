@@ -49,7 +49,7 @@ public class TravelController {
 
     @PostMapping("/setPayment")
     public ResponseEntity<ApiResponse<Payment>> setPayment(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody PaymentRequestDto dto) {
-        Payment pay = travelService.setPayment(userDetails.user().getUserId(), dto);
+        Payment pay = travelService.setPayment(dto);
         return ResponseEntity.ok(ApiResponse.success(pay));
     }
 
