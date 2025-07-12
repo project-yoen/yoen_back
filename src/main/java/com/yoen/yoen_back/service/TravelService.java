@@ -122,9 +122,6 @@ public class TravelService {
     }
 
 
-
-
-
     public List<Destination> createDestinations (List<DestinationDto> dtos) {
         dtos.forEach(this::createDestination);
         return destinationRepository.findAll();
@@ -147,6 +144,7 @@ public class TravelService {
 
 
     public Payment setPayment (Long userId, PaymentRequestDto dto) {
+        // isActive는 무조건 true
         Travel travel = travelRepository.getReferenceById(dto.travelId());
         Payment payment = Payment.builder().
                 travel(travel).
