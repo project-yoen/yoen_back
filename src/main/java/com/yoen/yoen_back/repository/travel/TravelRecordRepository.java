@@ -6,5 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface TravelRecordRepository extends JpaRepository<TravelRecord, Long> {
-    List<TravelRecord> findByTravel_TravelId(Long travelTravelId);
+    List<TravelRecord> findByTravel_TravelId(Long travelId);
+    List<TravelRecord> findByTravel_TravelIdAndIsActiveTrue(Long travelId);
 }
