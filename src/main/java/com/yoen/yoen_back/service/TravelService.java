@@ -6,16 +6,20 @@ import com.yoen.yoen_back.dto.DestinationDto;
 import com.yoen.yoen_back.dto.PaymentRequestDto;
 import com.yoen.yoen_back.dto.TravelRecordRequestDto;
 import com.yoen.yoen_back.dto.TravelRequestDto;
+import com.yoen.yoen_back.entity.image.Image;
+import com.yoen.yoen_back.entity.image.TravelRecordImage;
 import com.yoen.yoen_back.entity.payment.Payment;
 import com.yoen.yoen_back.entity.travel.*;
 import com.yoen.yoen_back.entity.user.User;
 import com.yoen.yoen_back.enums.Role;
+import com.yoen.yoen_back.repository.image.TravelRecordImageRepository;
 import com.yoen.yoen_back.repository.payment.PaymentRepository;
 import com.yoen.yoen_back.repository.travel.*;
 import com.yoen.yoen_back.repository.user.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
@@ -30,6 +34,8 @@ public class TravelService {
     private final TravelUserRepository travelUserRepository;
     private final UserRepository userRepository;
     private final TravelJoinCodeRedisDao travelJoinCodeRedisDao;
+    private final ImageService imageService;
+    private final TravelRecordImageRepository travelRecordImageRepository;
 
     private final static String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     private final SecureRandom random = new SecureRandom();
@@ -62,7 +68,7 @@ public class TravelService {
 
     // todo: 여행 객체를 생성 -> 여행 객체와 유저를 매핑 -> 여행 객체에 여행_목적지 객체 매핑 -> 함수 3개를 모은 setTravel 선언
     // 여행 객체 생성
-    public Travel createTravel (TravelRequestDto dto) {
+    public Travel createTravel(TravelRequestDto dto) {
         // save할 여행 객체 생성
         Travel tv = Travel.builder()
                 .nation(dto.nation())
@@ -76,7 +82,7 @@ public class TravelService {
     }
 
     //여행_유저 객체 매핑
-    public TravelUser createTravelUser (Travel tv, User user) {
+    public TravelUser createTravelUser(Travel tv, User user) {
         Role role = Role.Writer;
         TravelUser tu = TravelUser.builder()
                 .travel(tv)
@@ -85,9 +91,10 @@ public class TravelService {
                 .build();
         return travelUserRepository.save(tu);
     }
+
     //여행_목적지 객체 매핑
     @Transactional
-    public void createTravelDestination (Travel tv, List<Long> destinationIds) {
+    public void createTravelDestination(Travel tv, List<Long> destinationIds) {
         destinationIds.forEach(destinationId -> {
             Destination dt = destinationRepository.findByDestinationIdAndIsActiveTrue(destinationId)
                     .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 목적지 ID: " + destinationId));
@@ -98,14 +105,16 @@ public class TravelService {
             travelDestinationRepository.save(td);
         });
     }
+
     @Transactional
-    public Travel setTravel(User user, TravelRequestDto dto){
+    public Travel setTravel(User user, TravelRequestDto dto) {
         Travel tv = createTravel(dto);
         createTravelUser(tv, user);
         createTravelDestination(tv, dto.destinationIds());
         return tv;
     }
-    public Destination createDestination (DestinationDto dto) {
+
+    public Destination createDestination(DestinationDto dto) {
         Destination dt = Destination.builder()
                 .name(dto.name())
                 .nation(dto.nation())
@@ -117,17 +126,20 @@ public class TravelService {
     public List<TravelUser> getAllTravelUser() {
         return travelUserRepository.findAll();
     }
+
     public List<TravelDestination> getAllTravelDestination() {
         return travelDestinationRepository.findAll();
     }
 
 
-    public List<Destination> createDestinations (List<DestinationDto> dtos) {
+    public List<Destination> createDestinations(List<DestinationDto> dtos) {
         dtos.forEach(this::createDestination);
         return destinationRepository.findAll();
     }
 
-    public TravelRecord setTravelRecord (TravelRecordRequestDto dto) {
+    @Transactional
+    public TravelRecord setTravelRecord(User user, TravelRecordRequestDto dto, List<MultipartFile> files) {
+        List<Image> images = imageService.saveImages(user, files); // 클라우드에 업로드 및 image 레포지토리에 저장
         Travel tv = travelRepository.getReferenceById(dto.travelId());
         TravelUser tu = travelUserRepository.getReferenceById(dto.travelUserId());
         TravelRecord travelRecord = TravelRecord.builder()
@@ -137,13 +149,19 @@ public class TravelService {
                 .content(dto.content())
                 .recordTime(Formatter.getDateTime(dto.recordTime()))
                 .build();
+
+        images.forEach(image -> {
+            TravelRecordImage tri = TravelRecordImage.builder()
+                    .image(image)
+                    .travelrecord(travelRecord)
+                    .build();
+            travelRecordImageRepository.save(tri); // travelRecordImage 레포에 image들 저장
+        });
         return travelRecordRepository.save(travelRecord);
     }
 
 
-
-
-    public Payment setPayment (PaymentRequestDto dto) {
+    public Payment setPayment(PaymentRequestDto dto) {
         // isActive는 무조건 true
         Travel travel = travelRepository.getReferenceById(dto.travelId());
         Payment payment = Payment.builder().
@@ -158,8 +176,8 @@ public class TravelService {
     }
 
 
-    public String getJoinCode (User user, Long travelId) {
-        if(!travelJoinCodeRedisDao.existsTravelId(travelId)){
+    public String getJoinCode(User user, Long travelId) {
+        if (!travelJoinCodeRedisDao.existsTravelId(travelId)) {
             String code = getUniqueJoinCode(6);
             travelJoinCodeRedisDao.saveBidirectionalMapping(code, travelId);
         }

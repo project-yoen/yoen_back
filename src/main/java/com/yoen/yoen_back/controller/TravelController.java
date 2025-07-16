@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -54,8 +55,8 @@ public class TravelController {
     }
 
     @PostMapping("/setTravelRecord")
-    public ResponseEntity<ApiResponse<TravelRecord>> setTravelRecord(@AuthenticationPrincipal CustomUserDetails userDetails,@RequestBody TravelRecordRequestDto dto) {
-        TravelRecord tr = travelService.setTravelRecord(dto);
+    public ResponseEntity<ApiResponse<TravelRecord>> setTravelRecord(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody TravelRecordRequestDto dto, @RequestPart("images") List<MultipartFile> files) {
+        TravelRecord tr = travelService.setTravelRecord(userDetails.user(), dto, files);
         return ResponseEntity.ok(ApiResponse.success(tr));
     }
 
@@ -65,10 +66,12 @@ public class TravelController {
         LocalDateTime expireTime = travelService.getCodeExpiredTime(cd);
         return ResponseEntity.ok(ApiResponse.success(JoinCodeResponseDto.joinCode(cd, expireTime)));
     }
+
     @GetMapping("/users")
     public List<TravelUserDto> getAllTravelUsers() {
         return travelService.getAllTravelUser().stream().map(tu -> new TravelUserDto(tu.getTravel().getTravelId(), tu.getUser().getUserId())).toList();
     }
+
     @GetMapping("/destinations")
     public List<TravelDestinationDto> getAllTravelDestinations() {
         return travelService.getAllTravelDestination().stream().map(td -> new TravelDestinationDto(td.getTravel().getTravelId(), td.getDestination().getName())).toList();
