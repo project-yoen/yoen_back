@@ -1,4 +1,4 @@
 package com.yoen.yoen_back.dto;
 
-public record ImageResponseDto(Long photoId, String photoUrl) {
+public record ImageResponseDto(Long imageId, String imageUrl) {
 }
