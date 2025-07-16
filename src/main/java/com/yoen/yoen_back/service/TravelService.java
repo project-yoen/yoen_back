@@ -2,10 +2,7 @@ package com.yoen.yoen_back.service;
 
 import com.yoen.yoen_back.common.utils.Formatter;
 import com.yoen.yoen_back.dao.redis.TravelJoinCodeRedisDao;
-import com.yoen.yoen_back.dto.DestinationDto;
-import com.yoen.yoen_back.dto.PaymentRequestDto;
-import com.yoen.yoen_back.dto.TravelRecordRequestDto;
-import com.yoen.yoen_back.dto.TravelRequestDto;
+import com.yoen.yoen_back.dto.*;
 import com.yoen.yoen_back.entity.image.Image;
 import com.yoen.yoen_back.entity.image.TravelRecordImage;
 import com.yoen.yoen_back.entity.payment.Payment;
@@ -23,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -138,7 +136,7 @@ public class TravelService {
     }
 
     @Transactional
-    public TravelRecord setTravelRecord(User user, TravelRecordRequestDto dto, List<MultipartFile> files) {
+    public TravelRecordResponseDto setTravelRecord(User user, TravelRecordRequestDto dto, List<MultipartFile> files) {
         List<Image> images = imageService.saveImages(user, files); // 클라우드에 업로드 및 image 레포지토리에 저장
         Travel tv = travelRepository.getReferenceById(dto.travelId());
         TravelUser tu = travelUserRepository.getReferenceById(dto.travelUserId());
@@ -149,17 +147,28 @@ public class TravelService {
                 .content(dto.content())
                 .recordTime(Formatter.getDateTime(dto.recordTime()))
                 .build();
+        // 먼저 저장
+        TravelRecord tr = travelRecordRepository.save(travelRecord);
 
+        // TODO: 여기서부턴 좀 수정이 있어야할거 같음 지금 이미지를 불러다가 응답하는게 좀 복잡함 (왜 세개로 분리했는지 고민)
+        List<TravelRecordImageDto> imagesDto = new ArrayList<>();
         images.forEach(image -> {
             TravelRecordImage tri = TravelRecordImage.builder()
                     .image(image)
                     .travelrecord(travelRecord)
                     .build();
-            travelRecordImageRepository.save(tri); // travelRecordImage 레포에 image들 저장
+            TravelRecordImage tmp = travelRecordImageRepository.save(tri); // travelRecordImage 레포에 image들 저장
+            imagesDto.add(new TravelRecordImageDto(tmp.getTravelRecordImageId(), image.getImageId(), image.getImageUrl()));
         });
-        return travelRecordRepository.save(travelRecord);
+
+        return new TravelRecordResponseDto(tr.getTravelRecordId(), tr.getTitle(), tr.getContent(), tr.getRecordTime(), imagesDto);
     }
 
+    // 여행에 대한 여행 유저 반환하는 함수
+    public TravelUser getTravelUser(User user, Long travelId) {
+        return travelUserRepository.findByTravel_TravelIdAndUser(travelId, user)
+                .orElseThrow(() -> new RuntimeException("해당 유저의 TravelUser가 존재하지 않습니다."));
+    }
 
     public Payment setPayment(PaymentRequestDto dto) {
         // isActive는 무조건 true
