@@ -1,4 +1,4 @@
 package com.yoen.yoen_back.dto;
 
-public record TravelUserDto(Long travelId, Long userId) {
+public record TravelUserDto(Long travelUserId, Long travelId, Long userId) {
 }
