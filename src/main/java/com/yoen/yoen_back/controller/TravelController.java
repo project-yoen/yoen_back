@@ -55,12 +55,14 @@ public class TravelController {
         return ResponseEntity.ok(ApiResponse.success(pay));
     }
 
+    // 여행 기록 작성하는 함수 (RequestParts를 쓰거나 아니면 두개로 분리해야함)
     @PostMapping("/setTravelRecord")
     public ResponseEntity<ApiResponse<TravelRecordResponseDto>> setTravelRecord(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestPart("dto") TravelRecordRequestDto dto, @RequestPart("images") List<MultipartFile> files) {
         TravelRecordResponseDto trd = travelService.setTravelRecord(userDetails.user(), dto, files);
         return ResponseEntity.ok(ApiResponse.success(trd));
     }
 
+    // 여행 유저 반환하는 함수
     @GetMapping("/getTravelUser")
     public ResponseEntity<ApiResponse<TravelUserDto>> getTravelUser(@AuthenticationPrincipal CustomUserDetails userDetails,@RequestParam Long travelId) {
         TravelUser tu = travelService.getTravelUser(userDetails.user(), travelId);
