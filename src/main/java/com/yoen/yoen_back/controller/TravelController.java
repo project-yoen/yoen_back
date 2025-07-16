@@ -5,6 +5,7 @@ import com.yoen.yoen_back.dto.*;
 import com.yoen.yoen_back.entity.payment.Payment;
 import com.yoen.yoen_back.entity.travel.Travel;
 import com.yoen.yoen_back.entity.travel.TravelRecord;
+import com.yoen.yoen_back.entity.travel.TravelUser;
 import com.yoen.yoen_back.service.TravelService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -55,9 +56,16 @@ public class TravelController {
     }
 
     @PostMapping("/setTravelRecord")
-    public ResponseEntity<ApiResponse<TravelRecord>> setTravelRecord(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody TravelRecordRequestDto dto, @RequestPart("images") List<MultipartFile> files) {
-        TravelRecord tr = travelService.setTravelRecord(userDetails.user(), dto, files);
-        return ResponseEntity.ok(ApiResponse.success(tr));
+    public ResponseEntity<ApiResponse<TravelRecordResponseDto>> setTravelRecord(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestPart("dto") TravelRecordRequestDto dto, @RequestPart("images") List<MultipartFile> files) {
+        TravelRecordResponseDto trd = travelService.setTravelRecord(userDetails.user(), dto, files);
+        return ResponseEntity.ok(ApiResponse.success(trd));
+    }
+
+    @GetMapping("/getTravelUser")
+    public ResponseEntity<ApiResponse<TravelUserDto>> getTravelUser(@AuthenticationPrincipal CustomUserDetails userDetails,@RequestParam Long travelId) {
+        TravelUser tu = travelService.getTravelUser(userDetails.user(), travelId);
+        TravelUserDto tud = new TravelUserDto(tu.getTravelUserId(), tu.getUser().getUserId(), tu.getTravel().getTravelId());
+        return ResponseEntity.ok(ApiResponse.success(tud));
     }
 
     @GetMapping("/code")
@@ -69,7 +77,7 @@ public class TravelController {
 
     @GetMapping("/users")
     public List<TravelUserDto> getAllTravelUsers() {
-        return travelService.getAllTravelUser().stream().map(tu -> new TravelUserDto(tu.getTravel().getTravelId(), tu.getUser().getUserId())).toList();
+        return travelService.getAllTravelUser().stream().map(tu -> new TravelUserDto(tu.getTravelUserId(),tu.getTravel().getTravelId(), tu.getUser().getUserId())).toList();
     }
 
     @GetMapping("/destinations")
