@@ -4,11 +4,13 @@ import com.yoen.yoen_back.common.utils.Formatter;
 import com.yoen.yoen_back.dao.redis.TravelJoinCodeRedisDao;
 import com.yoen.yoen_back.dto.*;
 import com.yoen.yoen_back.entity.image.Image;
+import com.yoen.yoen_back.entity.image.PaymentImage;
 import com.yoen.yoen_back.entity.image.TravelRecordImage;
 import com.yoen.yoen_back.entity.payment.Payment;
 import com.yoen.yoen_back.entity.travel.*;
 import com.yoen.yoen_back.entity.user.User;
 import com.yoen.yoen_back.enums.Role;
+import com.yoen.yoen_back.repository.image.PaymentImageRepository;
 import com.yoen.yoen_back.repository.image.TravelRecordImageRepository;
 import com.yoen.yoen_back.repository.payment.PaymentRepository;
 import com.yoen.yoen_back.repository.travel.*;
@@ -39,6 +41,7 @@ public class TravelService {
     private final SecureRandom random = new SecureRandom();
     private final TravelDestinationRepository travelDestinationRepository;
     private final DestinationRepository destinationRepository;
+    private final PaymentImageRepository paymentImageRepository;
 
 
     public List<Travel> getAllTravels() {
@@ -210,5 +213,36 @@ public class TravelService {
     public LocalDateTime getCodeExpiredTime(String code) {
         return travelJoinCodeRedisDao.getExpirationTime(code)
                 .orElseThrow(() -> new IllegalStateException("유효하지 않은 코드입니다."));
+    }
+
+    @Transactional
+    public PaymentResponseDto setPayment(User user, PaymentRequestDto dto, List<MultipartFile> files) {
+        //받은 이미지들을 저장한다
+        List<Image> images = imageService.saveImages(user, files);
+        //DTO에서 받은 여행ID로 금액기록을 저장할 여행을 찾아온다
+        Travel tv = travelRepository.getReferenceById(dto.travelId());
+        //금액기록을 빌더 패턴으로 생성하여 저장한다
+        Payment payment = Payment.builder()
+                .travel(tv)
+                .paymentAccount(dto.paymentAccount())
+                .category(dto.category())
+                .payerType(dto.payerType())
+                .payTime(Formatter.getDateTime(dto.payTime()))
+                .build();
+        paymentRepository.save(payment);
+        //이미지 리스트를 하나하나 변환하여 DTO List로 저장한다
+        List<PaymentImageDto> imagesDto = images.stream().map(
+                image -> {
+                    PaymentImage pi = PaymentImage.builder()
+                            .image(image)
+                            .payment(payment)
+                            .build();
+                    PaymentImage tmp = paymentImageRepository.save(pi);
+
+                    return new PaymentImageDto(tmp.getPaymentImageId(), image.getImageId(), image.getImageUrl());
+                }
+        ).toList();
+        return new PaymentResponseDto(payment.getPaymentId(), payment.getCategory(), payment.getPayerType(),
+                payment.getPayTime(), payment.getPaymentAccount(), imagesDto);
     }
 }
