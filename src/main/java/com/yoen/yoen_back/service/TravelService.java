@@ -3,6 +3,7 @@ package com.yoen.yoen_back.service;
 import com.yoen.yoen_back.common.utils.Formatter;
 import com.yoen.yoen_back.dao.redis.TravelJoinCodeRedisDao;
 import com.yoen.yoen_back.dto.*;
+import com.yoen.yoen_back.entity.Category;
 import com.yoen.yoen_back.entity.image.Image;
 import com.yoen.yoen_back.entity.image.PaymentImage;
 import com.yoen.yoen_back.entity.image.TravelRecordImage;
@@ -10,6 +11,7 @@ import com.yoen.yoen_back.entity.payment.Payment;
 import com.yoen.yoen_back.entity.travel.*;
 import com.yoen.yoen_back.entity.user.User;
 import com.yoen.yoen_back.enums.Role;
+import com.yoen.yoen_back.repository.CategoryRepository;
 import com.yoen.yoen_back.repository.image.PaymentImageRepository;
 import com.yoen.yoen_back.repository.image.TravelRecordImageRepository;
 import com.yoen.yoen_back.repository.payment.PaymentRepository;
@@ -36,6 +38,7 @@ public class TravelService {
     private final TravelJoinCodeRedisDao travelJoinCodeRedisDao;
     private final ImageService imageService;
     private final TravelRecordImageRepository travelRecordImageRepository;
+    private final CategoryRepository categoryRepository;
 
     private final static String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     private final SecureRandom random = new SecureRandom();
@@ -175,11 +178,12 @@ public class TravelService {
 
     public Payment setPayment(PaymentRequestDto dto) {
         // isActive는 무조건 true
-        Travel travel = travelRepository.getReferenceById(dto.travelId());
+        Category category = categoryRepository.getReferenceById(dto.categoryId());
+        Travel tv = travelRepository.getReferenceById(dto.travelId());
         Payment payment = Payment.builder().
-                travel(travel).
+                travel(tv).
                 payTime(Formatter.getDateTime(dto.payTime())).
-                category(dto.category()).
+                category(category).
                 payerType(dto.payerType()).
                 paymentAccount(dto.paymentAccount()).
                 build();
@@ -219,8 +223,6 @@ public class TravelService {
     public PaymentResponseDto createTravelPayment(User user, PaymentRequestDto dto, List<MultipartFile> files) {
         //받은 이미지들을 저장한다
         List<Image> images = imageService.saveImages(user, files);
-        //DTO에서 받은 여행ID로 금액기록을 저장할 여행을 찾아온다
-        Travel tv = travelRepository.getReferenceById(dto.travelId());
         //금액기록을 빌더 패턴으로 생성하여 저장한다
         Payment payment = setPayment(dto);
         //이미지 리스트를 하나하나 변환하여 DTO List로 저장한다
