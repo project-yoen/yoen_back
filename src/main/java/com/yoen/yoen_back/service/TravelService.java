@@ -237,16 +237,16 @@ public class TravelService {
                     return new PaymentImageDto(tmp.getPaymentImageId(), image.getImageId(), image.getImageUrl());
                 }
         ).toList();
-        return new PaymentResponseDto(payment.getPaymentId(), payment.getCategory(), payment.getPayerType(),
+        return new PaymentResponseDto(payment.getPaymentId(), payment.getCategory().getCategoryId(), payment.getPayerType(),
                 payment.getPayTime(), payment.getPaymentAccount(), imagesDto);
     }
 
-    public List<Category> createCategory(CategoryRequestDto dto){
+    public CategoryRequestDto createCategory(CategoryRequestDto dto){
         Category category = Category.builder()
                 .categoryName(dto.categoryName())
                 .type(dto.categoryType())
                 .build();
         categoryRepository.save(category);
-        return categoryRepository.findAll();
+        return new CategoryRequestDto(category.getCategoryId(), category.getCategoryName(), category.getType());
     }
 }

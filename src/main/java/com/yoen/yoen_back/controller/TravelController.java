@@ -96,9 +96,9 @@ public class TravelController {
     }
 
     @PostMapping("/category")
-    public ResponseEntity<ApiResponse<List<Category>>> craeteCategory(CategoryRequestDto dto){
-        List<Category> categories = travelService.createCategory(dto);
-        return ResponseEntity.ok(ApiResponse.success(categories));
+    public ResponseEntity<ApiResponse<CategoryRequestDto>> craeteCategory(@RequestBody CategoryRequestDto dto){
+        CategoryRequestDto category = travelService.createCategory(dto);
+        return ResponseEntity.ok(ApiResponse.success(category));
     }
 }
 
