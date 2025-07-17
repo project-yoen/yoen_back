@@ -240,4 +240,13 @@ public class TravelService {
         return new PaymentResponseDto(payment.getPaymentId(), payment.getCategory(), payment.getPayerType(),
                 payment.getPayTime(), payment.getPaymentAccount(), imagesDto);
     }
+
+    public List<Category> createCategory(CategoryRequestDto dto){
+        Category category = Category.builder()
+                .categoryName(dto.categoryName())
+                .type(dto.categoryType())
+                .build();
+        categoryRepository.save(category);
+        return categoryRepository.findAll();
+    }
 }

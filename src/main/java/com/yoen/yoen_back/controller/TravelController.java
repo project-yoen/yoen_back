@@ -1,7 +1,9 @@
 package com.yoen.yoen_back.controller;
 
+import com.google.protobuf.Api;
 import com.yoen.yoen_back.common.security.CustomUserDetails;
 import com.yoen.yoen_back.dto.*;
+import com.yoen.yoen_back.entity.Category;
 import com.yoen.yoen_back.entity.payment.Payment;
 import com.yoen.yoen_back.entity.travel.Travel;
 import com.yoen.yoen_back.entity.travel.TravelRecord;
@@ -91,6 +93,12 @@ public class TravelController {
     public ResponseEntity<ApiResponse<PaymentResponseDto>> createTravelPayment(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestPart("dto") PaymentRequestDto dto, @RequestPart("images") List<MultipartFile> files) {
         PaymentResponseDto responseDto = travelService.createTravelPayment(userDetails.user(), dto, files);
         return ResponseEntity.ok(ApiResponse.success(responseDto));
+    }
+
+    @PostMapping("/category")
+    public ResponseEntity<ApiResponse<List<Category>>> craeteCategory(CategoryRequestDto dto){
+        List<Category> categories = travelService.createCategory(dto);
+        return ResponseEntity.ok(ApiResponse.success(categories));
     }
 }
 
