@@ -216,20 +216,13 @@ public class TravelService {
     }
 
     @Transactional
-    public PaymentResponseDto setPayment(User user, PaymentRequestDto dto, List<MultipartFile> files) {
+    public PaymentResponseDto createTravelPayment(User user, PaymentRequestDto dto, List<MultipartFile> files) {
         //받은 이미지들을 저장한다
         List<Image> images = imageService.saveImages(user, files);
         //DTO에서 받은 여행ID로 금액기록을 저장할 여행을 찾아온다
         Travel tv = travelRepository.getReferenceById(dto.travelId());
         //금액기록을 빌더 패턴으로 생성하여 저장한다
-        Payment payment = Payment.builder()
-                .travel(tv)
-                .paymentAccount(dto.paymentAccount())
-                .category(dto.category())
-                .payerType(dto.payerType())
-                .payTime(Formatter.getDateTime(dto.payTime()))
-                .build();
-        paymentRepository.save(payment);
+        Payment payment = setPayment(dto);
         //이미지 리스트를 하나하나 변환하여 DTO List로 저장한다
         List<PaymentImageDto> imagesDto = images.stream().map(
                 image -> {
