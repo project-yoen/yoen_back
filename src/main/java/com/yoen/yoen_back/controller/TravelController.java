@@ -86,5 +86,11 @@ public class TravelController {
     public List<TravelDestinationDto> getAllTravelDestinations() {
         return travelService.getAllTravelDestination().stream().map(td -> new TravelDestinationDto(td.getTravel().getTravelId(), td.getDestination().getName())).toList();
     }
+
+    @PostMapping("/payment")
+    public ResponseEntity<ApiResponse<PaymentResponseDto>> createTravelPayment(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestPart("dto") PaymentRequestDto dto, @RequestPart("images") List<MultipartFile> files) {
+        PaymentResponseDto responseDto = travelService.createTravelPayment(userDetails.user(), dto, files);
+        return ResponseEntity.ok(ApiResponse.success(responseDto));
+    }
 }
 
