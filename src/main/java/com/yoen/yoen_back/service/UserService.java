@@ -65,4 +65,7 @@ public class UserService {
 
         return profileImage.getImageUrl();
     }
+    public Boolean validateEmail(String email) {
+        return userRepository.existsByEmail(email);
+    }
 }
