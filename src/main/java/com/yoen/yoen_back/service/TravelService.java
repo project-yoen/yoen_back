@@ -237,7 +237,7 @@ public class TravelService {
                     return new PaymentImageDto(tmp.getPaymentImageId(), image.getImageId(), image.getImageUrl());
                 }
         ).toList();
-        return new PaymentResponseDto(payment.getPaymentId(), payment.getCategory().getCategoryId(), payment.getPayerType(),
+        return new PaymentResponseDto(payment.getPaymentId(), payment.getCategory().getCategoryId(), payment.getCategory().getCategoryName(), payment.getPayerType(),
                 payment.getPayTime(), payment.getPaymentAccount(), imagesDto);
     }
 
