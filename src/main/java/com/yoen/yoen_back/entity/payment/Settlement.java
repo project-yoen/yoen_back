@@ -29,5 +29,6 @@ public class Settlement extends BaseEntity {
 
     private Long amount;
 
+    private Boolean isPaid = false;
 
 }
