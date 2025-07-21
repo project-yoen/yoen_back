@@ -179,14 +179,22 @@ public class TravelService {
     public Payment setPayment(PaymentRequestDto dto) {
         // isActive는 무조건 true
         Category category = categoryRepository.getReferenceById(dto.categoryId());
+        // 환율 가져오는 로직
+        LocalDateTime payTime = Formatter.getDateTime(dto.payTime());
+        Double exchangeRate = 10.2;
+
+
         Travel tv = travelRepository.getReferenceById(dto.travelId());
         Payment payment = Payment.builder().
                 travel(tv).
-                payTime(Formatter.getDateTime(dto.payTime())).
+                payTime(payTime).
                 category(category).
                 payerType(dto.payerType()).
                 paymentAccount(dto.paymentAccount()).
-                build();
+                exchangeRate(exchangeRate).
+                paymentName(dto.paymentName())
+                .paymentMethod(dto.paymentMethod())
+                .build();
 
         return paymentRepository.save(payment);
     }
@@ -238,10 +246,10 @@ public class TravelService {
                 }
         ).toList();
         return new PaymentResponseDto(payment.getPaymentId(), payment.getCategory().getCategoryId(), payment.getCategory().getCategoryName(), payment.getPayerType(),
-                payment.getPayTime(), payment.getPaymentAccount(), imagesDto);
+                payment.getPaymentMethod(), payment.getPaymentName(), payment.getExchangeRate(), payment.getPayTime(), payment.getPaymentAccount(), imagesDto);
     }
 
-    public CategoryRequestDto createCategory(CategoryRequestDto dto){
+    public CategoryRequestDto createCategory(CategoryRequestDto dto) {
         Category category = Category.builder()
                 .categoryName(dto.categoryName())
                 .type(dto.categoryType())
