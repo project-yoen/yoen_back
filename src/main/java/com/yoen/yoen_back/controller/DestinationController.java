@@ -17,7 +17,7 @@ import java.util.List;
 public class DestinationController {
     private final TravelService travelService;
 
-    @PostMapping("/create")
+    @PostMapping("/set-destination")
     public List<Destination> createDestination(@RequestBody List<DestinationDto> destinations) {
         return travelService.createDestinations(destinations);
     }

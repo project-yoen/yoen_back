@@ -28,7 +28,7 @@ public class UserController {
 //    public ResponseEntity<?> signIn(@RequestParam String email, @RequestParam String password) {}
 
 
-    @GetMapping("/getAllUser")
+    @GetMapping("/get-alluser")
     public ResponseEntity<ApiResponse<List<User>>> test() {
         return ResponseEntity.ok(ApiResponse.success(userService.test()));
     }
@@ -46,4 +46,8 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(lgd));
     }
 
+    @GetMapping("/exist-email")
+    public ResponseEntity<ApiResponse<Boolean>> existEmail(@RequestParam("email") String email) {
+        return ResponseEntity.ok(ApiResponse.success(userService.validateEmail(email)));
+    }
 }

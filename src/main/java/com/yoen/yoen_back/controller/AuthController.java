@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
     private final AuthService authService;
 
-    //todo : 리프레시, 액세스 토큰 만료시 재발급?
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<TokenResponse>> refreshToken(@RequestBody RefreshTokenRequestDto refreshTokenRequest) {
         String refreshToken = refreshTokenRequest.refreshToken();

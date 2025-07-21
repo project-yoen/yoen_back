@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 public class ImageController {
     private final ImageService imageService;
 
-    @PostMapping(path = "/upload-single")
+    @PostMapping(path = "/set-image")
     public ResponseEntity<ApiResponse<String>> upload(@AuthenticationPrincipal CustomUserDetails userDetail, @RequestPart("image") MultipartFile file) {
         Image uploadedImage = imageService.saveImage(userDetail.user(), file);
         return ResponseEntity.ok(ApiResponse.success(uploadedImage.getImageUrl()));
@@ -31,7 +31,7 @@ public class ImageController {
 //
 //    }
 
-    @PostMapping(path = "/upload-multiple")
+    @PostMapping(path = "/set-images")
     public ResponseEntity<ApiResponse<List<String>>> uploadMultiple(
             @AuthenticationPrincipal CustomUserDetails userDetail,
             @RequestPart("images") List<MultipartFile> files) {
@@ -43,7 +43,7 @@ public class ImageController {
         return ResponseEntity.ok(ApiResponse.success(urls));
     }
 
-    @DeleteMapping(path = "/delete-single/{imageId}")
+    @DeleteMapping(path = "/delete-image/{imageId}")
     public ResponseEntity<ApiResponse<String>> deleteSingle(
             @AuthenticationPrincipal CustomUserDetails userDetail,
             @PathVariable Long imageId) {
@@ -52,7 +52,7 @@ public class ImageController {
         return ResponseEntity.ok(ApiResponse.success("The image has been successfully deleted: " + removedImageUrl));
     }
 
-    @DeleteMapping(path = "/delete-multiple")
+    @DeleteMapping(path = "/delete-images")
     public ResponseEntity<ApiResponse<String>> deleteSingle(
             @AuthenticationPrincipal CustomUserDetails userDetail,
             @RequestBody IdListRequest idListRequest
