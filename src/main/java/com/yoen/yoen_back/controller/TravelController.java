@@ -1,5 +1,6 @@
 package com.yoen.yoen_back.controller;
 
+import com.google.protobuf.Api;
 import com.yoen.yoen_back.common.security.CustomUserDetails;
 import com.yoen.yoen_back.dto.*;
 import com.yoen.yoen_back.entity.payment.Payment;
@@ -102,5 +103,12 @@ public class TravelController {
 
         return ResponseEntity.ok(ApiResponse.success(surd));
     }
+
+    @DeleteMapping("/delete-paymentimage")
+    public ResponseEntity<ApiResponse<String>> deletePaymentImage(@RequestParam("imageId") Long paymentImageId) {
+        travelService.deletePaymentImage(paymentImageId);
+        return ResponseEntity.ok(ApiResponse.success("Image deleted successfully"));
+    }
+
 }
 
