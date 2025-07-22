@@ -1,6 +1,7 @@
 package com.yoen.yoen_back.handler;
 
 import com.yoen.yoen_back.common.entity.ApiException;
+import com.yoen.yoen_back.common.entity.InvalidJoinCodeException;
 import com.yoen.yoen_back.common.entity.InvalidTokenException;
 import com.yoen.yoen_back.dto.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -12,9 +13,10 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
-/** 글로벌 에러 핸들러
- *  컨트롤러에서 트라이 캐치를 전부 없애고 서비스에서만 트라이캐치하기 위해
- *  따로 에러 핸들러를 추가함
+/**
+ * 글로벌 에러 핸들러
+ * 컨트롤러에서 트라이 캐치를 전부 없애고 서비스에서만 트라이캐치하기 위해
+ * 따로 에러 핸들러를 추가함
  */
 @Slf4j
 @RestControllerAdvice
@@ -54,6 +56,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<String> handleMaxSizeException(MaxUploadSizeExceededException exc) {
         return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body("파일 크기가 너무 큽니다");
+    }
+
+    @ExceptionHandler(InvalidJoinCodeException.class)
+    public ResponseEntity<ApiResponse<?>> handleInvalidJoinCode(InvalidJoinCodeException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.failure(ex.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)
