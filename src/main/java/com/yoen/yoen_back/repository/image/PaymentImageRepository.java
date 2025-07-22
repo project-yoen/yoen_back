@@ -8,4 +8,5 @@ import java.util.Optional;
 
 public interface PaymentImageRepository extends JpaRepository<PaymentImage, Long> {
     Optional<PaymentImage> findByPaymentImageIdAndIsActiveTrue(Long id);
+    List<PaymentImage> findByPayment_PaymentId(Long id);
 }
