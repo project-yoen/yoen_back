@@ -154,6 +154,7 @@ public class TravelService {
         return destinationRepository.findAll();
     }
 
+    // 여행 기록 추가 할시 (한번에 이미지까지 저장) (생성)
     @Transactional
     public TravelRecordResponseDto createTravelRecord(User user, TravelRecordRequestDto dto, List<MultipartFile> files) {
         List<Image> images = imageService.saveImages(user, files); // 클라우드에 업로드 및 image 레포지토리에 저장
@@ -183,7 +184,7 @@ public class TravelService {
         return new TravelRecordResponseDto(tr.getTravelRecordId(), tr.getTitle(), tr.getContent(), tr.getRecordTime(), imagesDto);
     }
 
-    // 사진을 제외한 여행기록을 수정할시
+    // 사진을 제외한 여행기록을 수정할시 (수정)
     @Transactional
     public TravelRecordResponseDto updateTravelRecord(User user, TravelRecordRequestDto dto, List<MultipartFile> files) {
         TravelRecord tr = travelRecordRepository.getReferenceById(dto.travelRecordId());
@@ -197,7 +198,7 @@ public class TravelService {
         return new TravelRecordResponseDto(tr.getTravelRecordId(), tr.getTitle(), tr.getContent(), tr.getRecordTime(), new ArrayList<>());
     }
 
-    // 기존 여행기록에 사진들을 추가할시
+    // 기존 여행기록에 사진들을 추가할시 (수정)
     public void updateTravelRecordImages(User user, Long paymentId, List<MultipartFile> files) {
         //받은 이미지들을 저장한다
         List<Image> images = imageService.saveImages(user, files);
@@ -216,7 +217,7 @@ public class TravelService {
         ).toList();
     }
 
-    // 기존 여행기록에서 사진을 삭제할시
+    // 기존 여행기록에서 사진을 삭제할시 (수정)
     public void deleteTravelRecordImage(Long paymentImageId) {
         Optional<TravelRecordImage> paymentImage = travelRecordImageRepository.findByTravelRecordImageIdAndIsActiveTrue(paymentImageId);
         paymentImage.ifPresent(image -> {
@@ -230,9 +231,9 @@ public class TravelService {
         });
     }
 
-    // 여행기록 삭제
+    // 여행기록 삭제 (삭제)
     public void deleteTravelRecord(Long travelRecordId) {
-        Optional<TravelRecord> travelRecordOptional = travelRecordRepository.findById(travelRecordId);
+        Optional<TravelRecord> travelRecordOptional = travelRecordRepository.findByTravelRecordIdAndIsActiveTrue(travelRecordId);
         travelRecordOptional.ifPresent(travelRecord -> {
             List<TravelRecordImage> images = travelRecordImageRepository.findAllByTravelRecord_TravelRecordId(travelRecordId);
             // 관련 이미지 삭제
@@ -251,7 +252,6 @@ public class TravelService {
             travelRecord.setIsActive(false);
             travelRecordRepository.save(travelRecord);
         });
-
     }
 
     // 여행에 대한 여행 유저 반환하는 함수
