@@ -411,6 +411,27 @@ public class TravelService {
 
     }
 
+    // 금액기록 삭제하는 메서드
+    public void deleteTravelPayment(Long paymentId) {
+        // 금액기록 ID로 금액기록 찾아오기
+        Payment pm = paymentRepository.getReferenceById(paymentId);
+        // 금액기록 ID로 paymentImage 찾아오기
+        List<PaymentImage> pi = paymentImageRepository.findByPayment_PaymentId(pm.getPaymentId());
+        // 돌면서 이미지 soft delete
+        pi.forEach(image -> {
+            deletePaymentImage(image.getPaymentImageId());
+        });
+
+        // 마찬가지로 정산들 찾아와서 soft delete
+        List<Settlement> st = settlementRepository.findByPayment_PaymentId(pm.getPaymentId());
+        st.forEach(settlement -> {
+            deleteSettlement(settlement.getSettlementId());
+        });
+
+        // 찾아온 금액기록 최종 soft delete
+        pm.setIsActive(false);
+        paymentRepository.save(pm);
+    }
 
     public CategoryRequestDto createCategory(CategoryRequestDto dto) {
         Category category = Category.builder()
