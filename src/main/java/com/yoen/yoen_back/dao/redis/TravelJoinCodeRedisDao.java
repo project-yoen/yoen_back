@@ -20,7 +20,7 @@ public class TravelJoinCodeRedisDao {
         redisTemplate.opsForValue().set("travelCode:" + travelId, code, TTL);
     }
 
-    public Optional<String> getTripIdByCode(String code) {
+    public Optional<String> getTravelIdByCode(String code) {
         return Optional.ofNullable(redisTemplate.opsForValue().get("joinCode:" + code));
     }
 
