@@ -1,9 +1,6 @@
 package com.yoen.yoen_back.entity.payment;
 
 import com.yoen.yoen_back.common.entity.BaseEntity;
-import com.yoen.yoen_back.entity.travel.Travel;
-import com.yoen.yoen_back.entity.travel.TravelUser;
-import com.yoen.yoen_back.enums.PaymentMethod;
 import jakarta.persistence.*;
 import lombok.*;
 

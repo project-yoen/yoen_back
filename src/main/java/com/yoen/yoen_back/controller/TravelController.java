@@ -1,10 +1,9 @@
 package com.yoen.yoen_back.controller;
 
-import com.google.protobuf.Api;
 import com.yoen.yoen_back.common.security.CustomUserDetails;
 import com.yoen.yoen_back.dto.*;
-import com.yoen.yoen_back.entity.Category;
 import com.yoen.yoen_back.entity.payment.Payment;
+import com.yoen.yoen_back.entity.payment.SettlementUser;
 import com.yoen.yoen_back.entity.travel.Travel;
 import com.yoen.yoen_back.entity.travel.TravelRecord;
 import com.yoen.yoen_back.entity.travel.TravelUser;
@@ -51,12 +50,6 @@ public class TravelController {
         return ResponseEntity.ok(ApiResponse.success(travelService.getAllPaymentsByTravelId(travelId)));
     }
 
-    @PostMapping("/set-payment")
-    public ResponseEntity<ApiResponse<Payment>> setPayment(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody PaymentRequestDto dto) {
-        Payment pay = travelService.setPayment(dto);
-        return ResponseEntity.ok(ApiResponse.success(pay));
-    }
-
     // 여행 기록 작성하는 함수 (RequestParts를 쓰거나 아니면 두개로 분리해야함)
     @PostMapping("/set-travelrecord")
     public ResponseEntity<ApiResponse<TravelRecordResponseDto>> setTravelRecord(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestPart("dto") TravelRecordRequestDto dto, @RequestPart("images") List<MultipartFile> files) {
@@ -66,7 +59,7 @@ public class TravelController {
 
     // 여행 유저 반환하는 함수
     @GetMapping("/get-traveluser")
-    public ResponseEntity<ApiResponse<TravelUserDto>> getTravelUser(@AuthenticationPrincipal CustomUserDetails userDetails,@RequestParam Long travelId) {
+    public ResponseEntity<ApiResponse<TravelUserDto>> getTravelUser(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam Long travelId) {
         TravelUser tu = travelService.getTravelUser(userDetails.user(), travelId);
         TravelUserDto tud = new TravelUserDto(tu.getTravelUserId(), tu.getUser().getUserId(), tu.getTravel().getTravelId());
         return ResponseEntity.ok(ApiResponse.success(tud));
@@ -81,7 +74,7 @@ public class TravelController {
 
     @GetMapping("/get-alluser")
     public List<TravelUserDto> getAllTravelUsers() {
-        return travelService.getAllTravelUser().stream().map(tu -> new TravelUserDto(tu.getTravelUserId(),tu.getTravel().getTravelId(), tu.getUser().getUserId())).toList();
+        return travelService.getAllTravelUser().stream().map(tu -> new TravelUserDto(tu.getTravelUserId(), tu.getTravel().getTravelId(), tu.getUser().getUserId())).toList();
     }
 
     @GetMapping("/get-alldestination")
@@ -96,9 +89,18 @@ public class TravelController {
     }
 
     @PostMapping("/set-category")
-    public ResponseEntity<ApiResponse<CategoryRequestDto>> craeteCategory(@RequestBody CategoryRequestDto dto){
+    public ResponseEntity<ApiResponse<CategoryRequestDto>> craeteCategory(@RequestBody CategoryRequestDto dto) {
         CategoryRequestDto category = travelService.createCategory(dto);
         return ResponseEntity.ok(ApiResponse.success(category));
+    }
+
+    // 테스트용
+    @GetMapping("/get-allsettlementuser")
+    public ResponseEntity<ApiResponse<List<SettlementUserResponseDto>>> getAllSettlementUser(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        List<SettlementUser> settlementUserList = travelService.getAllSettlementUsers();
+        List<SettlementUserResponseDto> surd = settlementUserList.stream().map(settlementUser -> new SettlementUserResponseDto(settlementUser.getSettlementUserId(), settlementUser.getSettlement().getSettlementId(), settlementUser.getTravelUser().getTravelUserId(), settlementUser.getAmount(), settlementUser.getIsPaid())).toList();
+
+        return ResponseEntity.ok(ApiResponse.success(surd));
     }
 }
 

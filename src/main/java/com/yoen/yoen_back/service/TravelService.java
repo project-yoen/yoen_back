@@ -8,6 +8,8 @@ import com.yoen.yoen_back.entity.image.Image;
 import com.yoen.yoen_back.entity.image.PaymentImage;
 import com.yoen.yoen_back.entity.image.TravelRecordImage;
 import com.yoen.yoen_back.entity.payment.Payment;
+import com.yoen.yoen_back.entity.payment.Settlement;
+import com.yoen.yoen_back.entity.payment.SettlementUser;
 import com.yoen.yoen_back.entity.travel.*;
 import com.yoen.yoen_back.entity.user.User;
 import com.yoen.yoen_back.enums.Role;
@@ -15,6 +17,8 @@ import com.yoen.yoen_back.repository.CategoryRepository;
 import com.yoen.yoen_back.repository.image.PaymentImageRepository;
 import com.yoen.yoen_back.repository.image.TravelRecordImageRepository;
 import com.yoen.yoen_back.repository.payment.PaymentRepository;
+import com.yoen.yoen_back.repository.payment.SettlementRepository;
+import com.yoen.yoen_back.repository.payment.SettlementUserRepository;
 import com.yoen.yoen_back.repository.travel.*;
 import com.yoen.yoen_back.repository.user.UserRepository;
 import jakarta.transaction.Transactional;
@@ -45,6 +49,8 @@ public class TravelService {
     private final TravelDestinationRepository travelDestinationRepository;
     private final DestinationRepository destinationRepository;
     private final PaymentImageRepository paymentImageRepository;
+    private final SettlementRepository settlementRepository;
+    private final SettlementUserRepository settlementUserRepository;
 
 
     public List<Travel> getAllTravels() {
@@ -245,8 +251,42 @@ public class TravelService {
                     return new PaymentImageDto(tmp.getPaymentImageId(), image.getImageId(), image.getImageUrl());
                 }
         ).toList();
+
+        // 정산리스트 저장 로직
+        List<Settlement> settlementList = dto.settlementList().stream().map( settlement -> {
+            Settlement sm = Settlement.builder()
+                    .payment(payment)
+                    .amount(settlement.amount())
+                    .isPaid(settlement.isPaid())
+                    .settlementName(settlement.settlementName())
+                    .build();
+
+            // 정산 저장
+            Settlement savedSettlement = settlementRepository.save(sm);
+
+            // 정산 유저 저장 로직
+            settlement.travelUsers().forEach(travelUser -> {
+                TravelUser tu = travelUserRepository.getReferenceById(travelUser);
+                SettlementUser su = SettlementUser.builder()
+                        .travelUser(tu)
+                        .settlement(savedSettlement)
+                        .amount(settlement.amount() / settlement.travelUsers().size())
+                        .isPaid(settlement.isPaid())
+                        .build();
+
+                // 정산 유저 저장
+                settlementUserRepository.save(su);
+            });
+            return settlementRepository.save(sm);
+        }).toList();
+
         return new PaymentResponseDto(payment.getPaymentId(), payment.getCategory().getCategoryId(), payment.getCategory().getCategoryName(), payment.getPayerType(),
                 payment.getPaymentMethod(), payment.getPaymentName(), payment.getExchangeRate(), payment.getPayTime(), payment.getPaymentAccount(), imagesDto);
+    }
+
+    // 정산유저 테스트
+    public List<SettlementUser> getAllSettlementUsers() {
+        return settlementUserRepository.findAll();
     }
 
     public CategoryRequestDto createCategory(CategoryRequestDto dto) {
