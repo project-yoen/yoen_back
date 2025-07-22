@@ -85,7 +85,7 @@ public class TravelService {
 
     // todo: 여행 객체를 생성 -> 여행 객체와 유저를 매핑 -> 여행 객체에 여행_목적지 객체 매핑 -> 함수 3개를 모은 setTravel 선언
     // 여행 객체 생성
-    public Travel createTravel(TravelRequestDto dto) {
+    public Travel setTravel(TravelRequestDto dto) {
         // save할 여행 객체 생성
         Travel tv = Travel.builder()
                 .nation(dto.nation())
@@ -97,6 +97,7 @@ public class TravelService {
 
         return travelRepository.save(tv);
     }
+
 
     //여행_유저 객체 매핑
     public TravelUser createTravelUser(Travel tv, User user) {
@@ -115,6 +116,14 @@ public class TravelService {
         destinationIds.forEach(destinationId -> {
             Destination dt = destinationRepository.findByDestinationIdAndIsActiveTrue(destinationId)
                     .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 목적지 ID: " + destinationId));
+            List<TravelDestination> tdl = travelDestinationRepository.findByTravel_TravelId(tv.getTravelId());
+
+            // TravelDestination 이었던 것들 전부 비활성화
+            tdl.forEach(travelDestination -> {
+                travelDestination.setIsActive(false);
+                travelDestinationRepository.save(travelDestination);
+            });
+
             TravelDestination td = TravelDestination.builder()
                     .travel(tv)
                     .destination(dt)
@@ -124,11 +133,25 @@ public class TravelService {
     }
 
     @Transactional
-    public Travel setTravel(User user, TravelRequestDto dto) {
-        Travel tv = createTravel(dto);
+    public Travel createTravel(User user, TravelRequestDto dto) {
+        Travel tv = setTravel(dto);
         createTravelUser(tv, user);
         createTravelDestination(tv, dto.destinationIds());
         return tv;
+    }
+
+    @Transactional
+    public Travel updateTravel(TravelRequestDto dto) {
+        // save할 여행 객체 생성
+        Travel tv = travelRepository.getReferenceById(dto.travelId());
+        tv.setTravelName(dto.travelName());
+        tv.setNumOfPeople(dto.numOfPeople());
+        tv.setStartDate(Formatter.getDate(dto.startDate()));
+        tv.setEndDate(Formatter.getDate(dto.endDate()));
+        tv.setNation(dto.nation());
+        createTravelDestination(tv, dto.destinationIds());
+
+        return travelRepository.save(tv);
     }
 
     public Destination createDestination(DestinationDto dto) {

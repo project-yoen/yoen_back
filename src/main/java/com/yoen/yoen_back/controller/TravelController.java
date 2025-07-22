@@ -31,7 +31,7 @@ public class TravelController {
 
     @PostMapping("/set-travel")
     public ResponseEntity<ApiResponse<Travel>> setTravel(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody TravelRequestDto dto) {
-        Travel tv = travelService.setTravel(userDetails.user(), dto);
+        Travel tv = travelService.createTravel(userDetails.user(), dto);
         return ResponseEntity.ok(ApiResponse.success(tv));
     }
 
