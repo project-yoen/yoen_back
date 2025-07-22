@@ -1,5 +1,6 @@
 package com.yoen.yoen_back.service;
 
+import com.yoen.yoen_back.common.entity.InvalidJoinCodeException;
 import com.yoen.yoen_back.common.utils.Formatter;
 import com.yoen.yoen_back.dao.redis.TravelJoinCodeRedisDao;
 import com.yoen.yoen_back.dto.*;
@@ -57,7 +58,7 @@ public class TravelService {
 
     private final SecureRandom random = new SecureRandom();
     private final static String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-
+    private final TravelJoinRequestRepository travelJoinRequestRepository;
 
 
     public List<Travel> getAllTravels() {
@@ -306,6 +307,17 @@ public class TravelService {
         }
         return travelJoinCodeRedisDao.getCodeByTravelId(travelId)
                 .orElseThrow(() -> new IllegalStateException("해당 여행의 참여 코드가 존재하지 않습니다."));
+    }
+
+    public void getTravelIdByCode(User user, String code) {
+        String travelId = travelJoinCodeRedisDao.getTravelIdByCode(code).orElseThrow(() -> new InvalidJoinCodeException("유효하지 않은 코드입니다."));
+        Long tl = Long.parseLong(travelId);
+        TravelJoinRequest tjr = TravelJoinRequest.builder()
+                .user(user)
+                .travel(travelRepository.getReferenceById(tl))
+                .isAccepted(false)
+                .build();
+        travelJoinRequestRepository.save(tjr);
     }
 
     public String getUniqueJoinCode(int length) {
