@@ -289,6 +289,51 @@ public class TravelService {
     public List<SettlementUser> getAllSettlementUsers() {
         return settlementUserRepository.findAll();
     }
+    // Todo: 이미지 처리 해야하는데.. 지금 맨 처음 금액기록을 생성할 때는 이미지랑 금액기록이랑 한번에 보내는데 수정할때도 동일한 방식을 사용하면 시간이 너무 오래 걸릴거같아서
+    public PaymentResponseDto updateTravelPayment(PaymentRequestDto dto) {
+        Payment pm = paymentRepository.getReferenceById(dto.paymentId());
+        pm.setCategory(categoryRepository.getReferenceById(dto.categoryId()));
+        pm.setPayerType(dto.payerType());
+        pm.setPaymentMethod(dto.paymentMethod());
+        pm.setPaymentAccount(dto.paymentAccount());
+        pm.setPaymentName(dto.paymentName());
+//        pm.setExchangeRate(dto.ex);
+        pm.setPayTime(Formatter.getDateTime(dto.payTime()));
+        paymentRepository.save(pm);
+        return new PaymentResponseDto(pm.getPaymentId(), pm.getCategory().getCategoryId(), pm.getCategory().getCategoryName(), pm.getPayerType(),
+                pm.getPaymentMethod(), pm.getPaymentName(), pm.getExchangeRate(), pm.getPayTime(), pm.getPaymentAccount(),new ArrayList<>());
+    }
+
+    public void updatePaymentImages(User user, Long paymentId, List<MultipartFile> files) {
+        //받은 이미지들을 저장한다
+        List<Image> images = imageService.saveImages(user, files);
+        Payment pm = paymentRepository.getReferenceById(paymentId);
+        //이미지 리스트를 하나하나 변환하여 DTO List로 저장한다
+        List<PaymentImageDto> imagesDto = images.stream().map(
+                image -> {
+                    PaymentImage pi = PaymentImage.builder()
+                            .image(image)
+                            .payment(pm)
+                            .build();
+                    PaymentImage tmp = paymentImageRepository.save(pi);
+
+                    return new PaymentImageDto(tmp.getPaymentImageId(), image.getImageId(), image.getImageUrl());
+                }
+        ).toList();
+    }
+
+    public void deletePaymentImage(Long paymentImageId) {
+        Optional<PaymentImage> paymentImage = paymentImageRepository.findByPaymentImageIdAndIsActiveTrue(paymentImageId);
+        paymentImage.ifPresent(image -> {
+            // 사진 모집단 삭제 (클라우드 삭제)
+            Image img = image.getImage();
+            imageService.deleteImage(img.getImageId());
+
+            // paymentImage 삭제
+            image.setIsActive(false);
+            paymentImageRepository.save(image);
+        });
+    }
 
     public void deleteSettlement(Long settlementId) {
         Optional<Settlement> settlement = settlementRepository.findBySettlementIdAndIsActiveTrue(settlementId);
@@ -307,6 +352,8 @@ public class TravelService {
         });
 
     }
+
+
 
     public CategoryRequestDto createCategory(CategoryRequestDto dto) {
         Category category = Category.builder()

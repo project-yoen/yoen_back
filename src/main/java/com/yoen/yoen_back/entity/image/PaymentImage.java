@@ -1,5 +1,6 @@
 package com.yoen.yoen_back.entity.image;
 
+import com.yoen.yoen_back.common.entity.BaseEntity;
 import com.yoen.yoen_back.entity.payment.Payment;
 import jakarta.persistence.*;
 import lombok.*;
@@ -13,7 +14,7 @@ import lombok.*;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Table(name = "paymentimages")
-public class PaymentImage {
+public class PaymentImage extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long paymentImageId;
