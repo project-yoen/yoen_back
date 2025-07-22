@@ -218,8 +218,8 @@ public class TravelService {
     }
 
     // 기존 여행기록에서 사진을 삭제할시 (수정)
-    public void deleteTravelRecordImage(Long paymentImageId) {
-        Optional<TravelRecordImage> paymentImage = travelRecordImageRepository.findByTravelRecordImageIdAndIsActiveTrue(paymentImageId);
+    public void deleteTravelRecordImage(Long travelRecordImageId) {
+        Optional<TravelRecordImage> paymentImage = travelRecordImageRepository.findByTravelRecordImageIdAndIsActiveTrue(travelRecordImageId);
         paymentImage.ifPresent(image -> {
             // 사진 모집단 삭제 (클라우드 삭제)
             Image img = image.getImage();
@@ -233,25 +233,18 @@ public class TravelService {
 
     // 여행기록 삭제 (삭제)
     public void deleteTravelRecord(Long travelRecordId) {
-        Optional<TravelRecord> travelRecordOptional = travelRecordRepository.findByTravelRecordIdAndIsActiveTrue(travelRecordId);
-        travelRecordOptional.ifPresent(travelRecord -> {
-            List<TravelRecordImage> images = travelRecordImageRepository.findAllByTravelRecord_TravelRecordId(travelRecordId);
-            // 관련 이미지 삭제
-            // ToDo: 이미지 삭제 기능 겹치는거 많아서 따로 함수로 뺴도 괜찮을거같음
-            images.forEach(image -> {
-                // 이미지 모집단 중 삭제
-                Image img = image.getImage();
-                imageService.deleteImage(img.getImageId());
-
-                // 여행기록 사진 레포에서 이미지 삭제
-                image.setIsActive(false);
-                travelRecordImageRepository.save(image);
-            });
-
-            // 여행 기록 삭제
-            travelRecord.setIsActive(false);
-            travelRecordRepository.save(travelRecord);
+        TravelRecord travelRecord = travelRecordRepository.getReferenceById(travelRecordId);
+        // 관련 이미지 가져오기
+        List<TravelRecordImage> images = travelRecordImageRepository.findAllByTravelRecord_TravelRecordId(travelRecordId);
+        // 관련 이미지 삭제
+        images.forEach(image -> {
+            // 이미지 모집단 중 삭제
+            deleteTravelRecordImage(image.getTravelRecordImageId());
         });
+
+        // 여행 기록 삭제
+        travelRecord.setIsActive(false);
+        travelRecordRepository.save(travelRecord);
     }
 
     // 여행에 대한 여행 유저 반환하는 함수
