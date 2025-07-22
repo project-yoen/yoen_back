@@ -335,7 +335,7 @@ public class TravelService {
 
     public LocalDateTime getCodeExpiredTime(String code) {
         return travelJoinCodeRedisDao.getExpirationTime(code)
-                .orElseThrow(() -> new IllegalStateException("유효하지 않은 코드입니다."));
+                .orElseThrow(() -> new InvalidJoinCodeException("유효하지 않은 코드입니다."));
     }
 
     @Transactional
