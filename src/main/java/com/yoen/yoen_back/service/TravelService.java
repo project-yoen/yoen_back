@@ -174,7 +174,7 @@ public class TravelService {
         images.forEach(image -> {
             TravelRecordImage tri = TravelRecordImage.builder()
                     .image(image)
-                    .travelrecord(travelRecord)
+                    .travelRecord(travelRecord)
                     .build();
             TravelRecordImage tmp = travelRecordImageRepository.save(tri); // travelRecordImage 레포에 image들 저장
             imagesDto.add(new TravelRecordImageDto(tmp.getTravelRecordImageId(), image.getImageId(), image.getImageUrl()));
@@ -207,7 +207,7 @@ public class TravelService {
                 image -> {
                     TravelRecordImage tri = TravelRecordImage.builder()
                             .image(image)
-                            .travelrecord(tr)
+                            .travelRecord(tr)
                             .build();
                     TravelRecordImage tmp = travelRecordImageRepository.save(tri);
 
@@ -228,6 +228,30 @@ public class TravelService {
             image.setIsActive(false);
             travelRecordImageRepository.save(image);
         });
+    }
+
+    // 여행기록 삭제
+    public void deleteTravelRecord(Long travelRecordId) {
+        Optional<TravelRecord> travelRecordOptional = travelRecordRepository.findById(travelRecordId);
+        travelRecordOptional.ifPresent(travelRecord -> {
+            List<TravelRecordImage> images = travelRecordImageRepository.findAllByTravelRecord_TravelRecordId(travelRecordId);
+            // 관련 이미지 삭제
+            // ToDo: 이미지 삭제 기능 겹치는거 많아서 따로 함수로 뺴도 괜찮을거같음
+            images.forEach(image -> {
+                // 이미지 모집단 중 삭제
+                Image img = image.getImage();
+                imageService.deleteImage(img.getImageId());
+
+                // 여행기록 사진 레포에서 이미지 삭제
+                image.setIsActive(false);
+                travelRecordImageRepository.save(image);
+            });
+
+            // 여행 기록 삭제
+            travelRecord.setIsActive(false);
+            travelRecordRepository.save(travelRecord);
+        });
+
     }
 
     // 여행에 대한 여행 유저 반환하는 함수

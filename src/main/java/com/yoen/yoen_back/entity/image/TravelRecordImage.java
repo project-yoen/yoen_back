@@ -21,7 +21,7 @@ public class TravelRecordImage extends BaseEntity {
 
     @JoinColumn(name = "travelrecord_id", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
-    private TravelRecord travelrecord;
+    private TravelRecord travelRecord;
 
     @JoinColumn(name = "image_id", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
