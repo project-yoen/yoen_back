@@ -4,6 +4,7 @@ import com.yoen.yoen_back.common.utils.Formatter;
 import com.yoen.yoen_back.dao.redis.TravelJoinCodeRedisDao;
 import com.yoen.yoen_back.dto.*;
 import com.yoen.yoen_back.entity.Category;
+import com.yoen.yoen_back.entity.ExchangeRate;
 import com.yoen.yoen_back.entity.image.Image;
 import com.yoen.yoen_back.entity.image.PaymentImage;
 import com.yoen.yoen_back.entity.image.TravelRecordImage;
@@ -14,6 +15,7 @@ import com.yoen.yoen_back.entity.travel.*;
 import com.yoen.yoen_back.entity.user.User;
 import com.yoen.yoen_back.enums.Role;
 import com.yoen.yoen_back.repository.CategoryRepository;
+import com.yoen.yoen_back.repository.ExchangeRateRepository;
 import com.yoen.yoen_back.repository.image.PaymentImageRepository;
 import com.yoen.yoen_back.repository.image.TravelRecordImageRepository;
 import com.yoen.yoen_back.repository.payment.PaymentRepository;
@@ -52,6 +54,8 @@ public class TravelService {
     private final PaymentImageRepository paymentImageRepository;
     private final SettlementRepository settlementRepository;
     private final SettlementUserRepository settlementUserRepository;
+
+    private final ExchangeRateUpdateService exchangeRateUpdateService;
 
 
     public List<Travel> getAllTravels() {
@@ -188,8 +192,7 @@ public class TravelService {
         Category category = categoryRepository.getReferenceById(dto.categoryId());
         // 환율 가져오는 로직
         LocalDateTime payTime = Formatter.getDateTime(dto.payTime());
-        Double exchangeRate = 10.2;
-
+        ExchangeRate exchangeRate = exchangeRateUpdateService.getExchangeRate(payTime);
 
         Travel tv = travelRepository.getReferenceById(dto.travelId());
         Payment payment = Payment.builder().
@@ -198,7 +201,7 @@ public class TravelService {
                 category(category).
                 payerType(dto.payerType()).
                 paymentAccount(dto.paymentAccount()).
-                exchangeRate(exchangeRate).
+                exchangeRate(exchangeRate.getExchangeRate()).
                 paymentName(dto.paymentName())
                 .paymentMethod(dto.paymentMethod())
                 .build();
@@ -254,7 +257,7 @@ public class TravelService {
         ).toList();
 
         // 정산리스트 저장 로직
-        List<Settlement> settlementList = dto.settlementList().stream().map( settlement -> {
+        List<Settlement> settlementList = dto.settlementList().stream().map(settlement -> {
             Settlement sm = Settlement.builder()
                     .payment(payment)
                     .amount(settlement.amount())
@@ -289,19 +292,21 @@ public class TravelService {
     public List<SettlementUser> getAllSettlementUsers() {
         return settlementUserRepository.findAll();
     }
+
     // Todo: 이미지 처리 해야하는데.. 지금 맨 처음 금액기록을 생성할 때는 이미지랑 금액기록이랑 한번에 보내는데 수정할때도 동일한 방식을 사용하면 시간이 너무 오래 걸릴거같아서
     public PaymentResponseDto updateTravelPayment(PaymentRequestDto dto) {
         Payment pm = paymentRepository.getReferenceById(dto.paymentId());
-        pm.setCategory(categoryRepository.getReferenceById(dto.categoryId()));
-        pm.setPayerType(dto.payerType());
-        pm.setPaymentMethod(dto.paymentMethod());
-        pm.setPaymentAccount(dto.paymentAccount());
-        pm.setPaymentName(dto.paymentName());
-//        pm.setExchangeRate(dto.ex);
-        pm.setPayTime(Formatter.getDateTime(dto.payTime()));
+
+        pm.setCategory(categoryRepository.getReferenceById(dto.categoryId())); // 카테고리
+        pm.setPayerType(dto.payerType()); // 개인 or 공금
+        pm.setPaymentMethod(dto.paymentMethod()); // 카드 or 현금
+        pm.setPaymentAccount(dto.paymentAccount()); // 돈 총합
+        pm.setExchangeRate(exchangeRateUpdateService.getExchangeRate(Formatter.getDateTime(dto.payTime())).getExchangeRate()); // 환율
+        pm.setPaymentName(dto.paymentName()); // 금액기록 이름
+        pm.setPayTime(Formatter.getDateTime(dto.payTime())); // 금액기록 시간
         paymentRepository.save(pm);
         return new PaymentResponseDto(pm.getPaymentId(), pm.getCategory().getCategoryId(), pm.getCategory().getCategoryName(), pm.getPayerType(),
-                pm.getPaymentMethod(), pm.getPaymentName(), pm.getExchangeRate(), pm.getPayTime(), pm.getPaymentAccount(),new ArrayList<>());
+                pm.getPaymentMethod(), pm.getPaymentName(), pm.getExchangeRate(), pm.getPayTime(), pm.getPaymentAccount(), new ArrayList<>());
     }
 
     public void updatePaymentImages(User user, Long paymentId, List<MultipartFile> files) {
@@ -352,7 +357,6 @@ public class TravelService {
         });
 
     }
-
 
 
     public CategoryRequestDto createCategory(CategoryRequestDto dto) {
