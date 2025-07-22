@@ -30,6 +30,7 @@ import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -287,6 +288,24 @@ public class TravelService {
     // 정산유저 테스트
     public List<SettlementUser> getAllSettlementUsers() {
         return settlementUserRepository.findAll();
+    }
+
+    public void deleteSettlement(Long settlementId) {
+        Optional<Settlement> settlement = settlementRepository.findBySettlementIdAndIsActiveTrue(settlementId);
+
+        settlement.ifPresent(stm -> {
+            List<SettlementUser> su = settlementUserRepository.findAllBySettlement_SettlementId(stm.getSettlementId());
+            su.forEach(stmu -> {
+                // 관련 정산 유저 소프트 삭제
+                stmu.setIsActive(false);
+                settlementUserRepository.save(stmu);
+            });
+
+            // 관련 정산 소프트 삭제
+            stm.setIsActive(false);
+            settlementRepository.save(stm);
+        });
+
     }
 
     public CategoryRequestDto createCategory(CategoryRequestDto dto) {
