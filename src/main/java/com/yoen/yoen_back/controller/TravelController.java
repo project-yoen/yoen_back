@@ -110,5 +110,11 @@ public class TravelController {
         return ResponseEntity.ok(ApiResponse.success("Image deleted successfully"));
     }
 
+    @DeleteMapping("/delete-settlement")
+    public ResponseEntity<ApiResponse<String>> deleteSettlement(@RequestParam("settlementId") Long settlementId) {
+        travelService.deleteSettlement(settlementId);
+        return ResponseEntity.ok(ApiResponse.success("Image deleted successfully"));
+    }
+
 }
 
