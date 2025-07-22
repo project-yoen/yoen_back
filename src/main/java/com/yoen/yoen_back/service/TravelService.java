@@ -308,7 +308,7 @@ public class TravelService {
         return travelJoinCodeRedisDao.getCodeByTravelId(travelId)
                 .orElseThrow(() -> new IllegalStateException("해당 여행의 참여 코드가 존재하지 않습니다."));
     }
-
+    // Todo 이름 변경 필요
     public void getTravelIdByCode(User user, String code) {
         String travelId = travelJoinCodeRedisDao.getTravelIdByCode(code).orElseThrow(() -> new InvalidJoinCodeException("유효하지 않은 코드입니다."));
         Long tl = Long.parseLong(travelId);
