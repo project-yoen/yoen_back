@@ -15,7 +15,6 @@ import com.yoen.yoen_back.entity.travel.*;
 import com.yoen.yoen_back.entity.user.User;
 import com.yoen.yoen_back.enums.Role;
 import com.yoen.yoen_back.repository.CategoryRepository;
-import com.yoen.yoen_back.repository.ExchangeRateRepository;
 import com.yoen.yoen_back.repository.image.PaymentImageRepository;
 import com.yoen.yoen_back.repository.image.TravelRecordImageRepository;
 import com.yoen.yoen_back.repository.payment.PaymentRepository;
@@ -47,8 +46,6 @@ public class TravelService {
     private final TravelRecordImageRepository travelRecordImageRepository;
     private final CategoryRepository categoryRepository;
 
-    private final static String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    private final SecureRandom random = new SecureRandom();
     private final TravelDestinationRepository travelDestinationRepository;
     private final DestinationRepository destinationRepository;
     private final PaymentImageRepository paymentImageRepository;
@@ -56,6 +53,11 @@ public class TravelService {
     private final SettlementUserRepository settlementUserRepository;
 
     private final ExchangeRateUpdateService exchangeRateUpdateService;
+
+
+    private final SecureRandom random = new SecureRandom();
+    private final static String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
 
 
     public List<Travel> getAllTravels() {
@@ -153,7 +155,7 @@ public class TravelService {
     }
 
     @Transactional
-    public TravelRecordResponseDto setTravelRecord(User user, TravelRecordRequestDto dto, List<MultipartFile> files) {
+    public TravelRecordResponseDto createTravelRecord(User user, TravelRecordRequestDto dto, List<MultipartFile> files) {
         List<Image> images = imageService.saveImages(user, files); // 클라우드에 업로드 및 image 레포지토리에 저장
         Travel tv = travelRepository.getReferenceById(dto.travelId());
         TravelUser tu = travelUserRepository.getReferenceById(dto.travelUserId());
@@ -179,6 +181,53 @@ public class TravelService {
         });
 
         return new TravelRecordResponseDto(tr.getTravelRecordId(), tr.getTitle(), tr.getContent(), tr.getRecordTime(), imagesDto);
+    }
+
+    // 사진을 제외한 여행기록을 수정할시
+    @Transactional
+    public TravelRecordResponseDto updateTravelRecord(User user, TravelRecordRequestDto dto, List<MultipartFile> files) {
+        TravelRecord tr = travelRecordRepository.getReferenceById(dto.travelRecordId());
+
+        // 수정
+        tr.setTitle(dto.title());
+        tr.setContent(dto.content());
+        tr.setRecordTime(Formatter.getDateTime(dto.recordTime()));
+        travelRecordRepository.save(tr);
+
+        return new TravelRecordResponseDto(tr.getTravelRecordId(), tr.getTitle(), tr.getContent(), tr.getRecordTime(), new ArrayList<>());
+    }
+
+    // 기존 여행기록에 사진들을 추가할시
+    public void updateTravelRecordImages(User user, Long paymentId, List<MultipartFile> files) {
+        //받은 이미지들을 저장한다
+        List<Image> images = imageService.saveImages(user, files);
+        TravelRecord tr = travelRecordRepository.getReferenceById(paymentId);
+        //이미지 리스트를 하나하나 변환하여 DTO List로 저장한다
+        List<TravelRecordImageDto> imagesDto = images.stream().map(
+                image -> {
+                    TravelRecordImage tri = TravelRecordImage.builder()
+                            .image(image)
+                            .travelrecord(tr)
+                            .build();
+                    TravelRecordImage tmp = travelRecordImageRepository.save(tri);
+
+                    return new TravelRecordImageDto(tmp.getTravelRecordImageId(), image.getImageId(), image.getImageUrl());
+                }
+        ).toList();
+    }
+
+    // 기존 여행기록에서 사진을 삭제할시
+    public void deleteTravelRecordImage(Long paymentImageId) {
+        Optional<TravelRecordImage> paymentImage = travelRecordImageRepository.findByTravelRecordImageIdAndIsActiveTrue(paymentImageId);
+        paymentImage.ifPresent(image -> {
+            // 사진 모집단 삭제 (클라우드 삭제)
+            Image img = image.getImage();
+            imageService.deleteImage(img.getImageId());
+
+            // paymentImage 삭제
+            image.setIsActive(false);
+            travelRecordImageRepository.save(image);
+        });
     }
 
     // 여행에 대한 여행 유저 반환하는 함수
@@ -293,6 +342,8 @@ public class TravelService {
         return settlementUserRepository.findAll();
     }
 
+
+    // 사진을 제외한 금액기록을 수정할시
     // Todo: 이미지 처리 해야하는데.. 지금 맨 처음 금액기록을 생성할 때는 이미지랑 금액기록이랑 한번에 보내는데 수정할때도 동일한 방식을 사용하면 시간이 너무 오래 걸릴거같아서
     public PaymentResponseDto updateTravelPayment(PaymentRequestDto dto) {
         Payment pm = paymentRepository.getReferenceById(dto.paymentId());
@@ -309,6 +360,7 @@ public class TravelService {
                 pm.getPaymentMethod(), pm.getPaymentName(), pm.getExchangeRate(), pm.getPayTime(), pm.getPaymentAccount(), new ArrayList<>());
     }
 
+    // 기존 금액기록에 사진을 추가할시
     public void updatePaymentImages(User user, Long paymentId, List<MultipartFile> files) {
         //받은 이미지들을 저장한다
         List<Image> images = imageService.saveImages(user, files);
@@ -327,6 +379,7 @@ public class TravelService {
         ).toList();
     }
 
+    // 기존 금액기록의 사진을 삭제할시
     public void deletePaymentImage(Long paymentImageId) {
         Optional<PaymentImage> paymentImage = paymentImageRepository.findByPaymentImageIdAndIsActiveTrue(paymentImageId);
         paymentImage.ifPresent(image -> {
