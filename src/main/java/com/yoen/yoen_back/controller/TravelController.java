@@ -78,14 +78,14 @@ public class TravelController {
         return ResponseEntity.ok(ApiResponse.success(travelService.getUserTravelJoinRequests(userDetails.user())));
     }
 
-    @DeleteMapping("/delete-usertraveljoinrequest")
-    public void deleteUserTravelJoinRequest(@RequestBody IdRequest idRequest) {
-        travelService.deleteUserTravelJoinRequest(idRequest.id());
+    @DeleteMapping("/delete-usertraveljoinrequest/{id}")
+    public void deleteUserTravelJoinRequest(@PathVariable("id") Long travelJoinRequestId) {
+        travelService.deleteUserTravelJoinRequest(travelJoinRequestId);
     }
 
     // 여행 유저 반환하는 함수
-    @GetMapping("/set-traveljoinrequest")
-    public ResponseEntity<ApiResponse<String>> setTravelJoinRequest(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam String joinCode) {
+    @PostMapping("/set-traveljoinrequest/{joinCode}")
+    public ResponseEntity<ApiResponse<String>> setTravelJoinRequest(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable("joinCode") String joinCode) {
         travelService.requestToJoinTravel(userDetails.user(), joinCode);
         return ResponseEntity.ok(ApiResponse.success(""));
     }
@@ -148,8 +148,8 @@ public class TravelController {
 
     // 여행에 참여 신청한 사람 승인
     @PostMapping("/set-acceptjoinrequest/{id}")
-    public ResponseEntity<ApiResponse<String>> acceptJoinRequest(@PathVariable("id") Long travelJoinRequestId) {
-        travelService.acceptJoinRequest(travelJoinRequestId);
+    public ResponseEntity<ApiResponse<String>> acceptJoinRequest(@RequestBody AcceptJoinRequestDto dto) {
+        travelService.acceptJoinRequest(dto);
         return ResponseEntity.ok(ApiResponse.success("Join request accepted"));
     }
 
