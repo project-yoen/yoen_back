@@ -43,9 +43,9 @@ public class TravelService {
         travelRepository.deleteById(travelId);
     }
 
-    // todo: 여행 객체를 생성 -> 여행 객체와 유저를 매핑 -> 여행 객체에 여행_목적지 객체 매핑 -> 함수 3개를 모은 setTravel 선언
-    // 여행 객체 생성
-    public Travel setTravel(TravelRequestDto dto) {
+    // 여행 객체를 저장 -> 여행 객체와 유저를 매핑 -> 여행 객체에 여행_목적지 객체 매핑 -> 함수 3개를 모은 createTravel 선언
+    // 여행 객체 저장
+    public Travel saveTravelEntity(TravelRequestDto dto) {
         // save할 여행 객체 생성
         Travel tv = Travel.builder()
                 .nation(dto.nation())
@@ -59,7 +59,7 @@ public class TravelService {
     }
 
     //여행_유저 객체 매핑
-    public void createTravelUser(Travel tv, User user) {
+    public void saveTravelUserEntity(Travel tv, User user) {
         Role role = Role.Writer;
         TravelUser tu = TravelUser.builder()
                 .travel(tv)
@@ -72,8 +72,8 @@ public class TravelService {
 
     @Transactional
     public Travel createTravel(User user, TravelRequestDto dto) {
-        Travel tv = setTravel(dto);
-        createTravelUser(tv, user);
+        Travel tv = saveTravelEntity(dto);
+        saveTravelUserEntity(tv, user);
         commonService.createTravelDestination(tv, dto.destinationIds());
         return tv;
     }

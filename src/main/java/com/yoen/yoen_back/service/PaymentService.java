@@ -54,7 +54,7 @@ public class PaymentService {
         return paymentRepository.findByTravel_TravelIdAndIsActiveTrue(travelId);
     }
 
-    public Payment setPayment(PaymentRequestDto dto) {
+    public Payment savePaymentEntity(PaymentRequestDto dto) {
         // isActive는 무조건 true
         Category category = categoryRepository.getReferenceById(dto.categoryId());
         TravelUser tu = travelUserRepository.getReferenceById(dto.travelUserId());
@@ -81,11 +81,11 @@ public class PaymentService {
     }
 
 
-
+    // 정산 객체를 저장 -> 정산 객체와 금액기록을 매핑 -> 정산 객체에 정산_유저 객체 매핑 -> 함수 3개를 모은 createPayment 선언
     @Transactional
     public PaymentResponseDto createPayment(User user, PaymentRequestDto dto, List<MultipartFile> files) {
         //금액기록을 빌더 패턴으로 생성하여 저장한다
-        Payment payment = setPayment(dto);
+        Payment payment = savePaymentEntity(dto);
 
         // 정산리스트 저장 로직
         List<Settlement> settlementList = dto.settlementList().stream().map(settlement -> {
