@@ -495,7 +495,7 @@ public class TravelService {
     }
     // 내 여행에 참여신청한 사람들 출력하는 함수
     public List<JoinRequestListResponseDto> getJoinRequestList(Long travelId){
-        List<TravelJoinRequest> tjrList = travelJoinRequestRepository.findByTravel_TravelId(travelId);
+        List<TravelJoinRequest> tjrList = travelJoinRequestRepository.findByTravel_TravelIdAndIsActiveTrue(travelId);
         List<JoinRequestListResponseDto> dtos = tjrList.stream().map(
                 tjr -> {
                     User user = tjr.getUser();
