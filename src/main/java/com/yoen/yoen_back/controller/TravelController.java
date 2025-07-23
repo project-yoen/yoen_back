@@ -121,5 +121,15 @@ public class TravelController {
         return ResponseEntity.ok(ApiResponse.success("Payment deleted successfully"));
     }
 
+    // 여행에 참여 신청한 사람들 출력
+    @GetMapping("/get-traveljoinrequest")
+    public ResponseEntity<ApiResponse<List<JoinRequestListResponseDto>>> getTravelJoinRequest(@RequestParam("travelId") Long travelId) {
+        List<JoinRequestListResponseDto> dtos = travelService.getJoinRequestList(travelId);
+        return ResponseEntity.ok(ApiResponse.success(dtos));
+    }
+
+    // 여행에 참여 신청한 사람 승인
+
+    //여행에 참여 신청한 사람 거절
 }
 
