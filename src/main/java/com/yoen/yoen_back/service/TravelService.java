@@ -181,7 +181,6 @@ public class TravelService {
     // 여행 기록 추가 할시 (한번에 이미지까지 저장) (생성)
     @Transactional
     public TravelRecordResponseDto createTravelRecord(User user, TravelRecordRequestDto dto, List<MultipartFile> files) {
-        List<Image> images = imageService.saveImages(user, files); // 클라우드에 업로드 및 image 레포지토리에 저장
         Travel tv = travelRepository.getReferenceById(dto.travelId());
         TravelUser tu = travelUserRepository.getReferenceById(dto.travelUserId());
         TravelRecord travelRecord = TravelRecord.builder()
@@ -194,18 +193,25 @@ public class TravelService {
         // 먼저 저장
         TravelRecord tr = travelRecordRepository.save(travelRecord);
 
-        // TODO: 여기서부턴 좀 수정이 있어야할거 같음 지금 이미지를 불러다가 응답하는게 좀 복잡함 (왜 세개로 분리했는지 고민)
-        List<TravelRecordImageDto> imagesDto = new ArrayList<>();
-        images.forEach(image -> {
-            TravelRecordImage tri = TravelRecordImage.builder()
-                    .image(image)
-                    .travelRecord(travelRecord)
-                    .build();
-            TravelRecordImage tmp = travelRecordImageRepository.save(tri); // travelRecordImage 레포에 image들 저장
-            imagesDto.add(new TravelRecordImageDto(tmp.getTravelRecordImageId(), image.getImageId(), image.getImageUrl()));
-        });
+        // 이미지 파일이 존재할 시
+        if (files != null && !files.isEmpty()) {
+            List<Image> images = imageService.saveImages(user, files); // 클라우드에 업로드 및 image 레포지토리에 저장
+            // TODO: 여기서부턴 좀 수정이 있어야할거 같음 지금 이미지를 불러다가 응답하는게 좀 복잡함 (왜 세개로 분리했는지 고민)
+            List<TravelRecordImageDto> imagesDto = images.stream().map(image -> {
+                TravelRecordImage tri = TravelRecordImage.builder()
+                        .image(image)
+                        .travelRecord(travelRecord)
+                        .build();
+                TravelRecordImage tmp = travelRecordImageRepository.save(tri); // travelRecordImage 레포에 image들 저장
+                return new TravelRecordImageDto(tmp.getTravelRecordImageId(), image.getImageId(), image.getImageUrl());
+            }).toList();
 
-        return new TravelRecordResponseDto(tr.getTravelRecordId(), tr.getTitle(), tr.getContent(), tr.getRecordTime(), imagesDto);
+            return new TravelRecordResponseDto(tr.getTravelRecordId(), tr.getTitle(), tr.getContent(), tr.getRecordTime(), imagesDto);
+        }
+        // 이미지 파일이 존재하지 않을 시
+
+        return new TravelRecordResponseDto(tr.getTravelRecordId(), tr.getTitle(), tr.getContent(), tr.getRecordTime(), new ArrayList<>());
+
     }
 
     // 사진을 제외한 여행기록을 수정할시 (수정)
@@ -280,19 +286,23 @@ public class TravelService {
     public Payment setPayment(PaymentRequestDto dto) {
         // isActive는 무조건 true
         Category category = categoryRepository.getReferenceById(dto.categoryId());
+        TravelUser tu = travelUserRepository.getReferenceById(dto.travelUserId());
+
         // 환율 가져오는 로직
         LocalDateTime payTime = Formatter.getDateTime(dto.payTime());
         ExchangeRate exchangeRate = exchangeRateUpdateService.getExchangeRate(payTime);
 
+
         Travel tv = travelRepository.getReferenceById(dto.travelId());
-        Payment payment = Payment.builder().
-                travel(tv).
-                payTime(payTime).
-                category(category).
-                payerType(dto.payerType()).
-                paymentAccount(dto.paymentAccount()).
-                exchangeRate(exchangeRate.getExchangeRate()).
-                paymentName(dto.paymentName())
+        Payment payment = Payment.builder()
+                .travel(tv)
+                .payTime(payTime)
+                .category(category)
+                .payerType(dto.payerType())
+                .paymentAccount(dto.paymentAccount())
+                .exchangeRate(exchangeRate.getExchangeRate())
+                .travelUser(tu)
+                .paymentName(dto.paymentName())
                 .paymentMethod(dto.paymentMethod())
                 .build();
 
@@ -312,12 +322,18 @@ public class TravelService {
     public void requestToJoinTravel(User user, String code) {
         String travelId = travelJoinCodeRedisDao.getTravelIdByCode(code).orElseThrow(() -> new InvalidJoinCodeException("유효하지 않은 코드입니다."));
         Long tl = Long.parseLong(travelId);
-        TravelJoinRequest tjr = TravelJoinRequest.builder()
-                .user(user)
-                .travel(travelRepository.getReferenceById(tl))
-                .isAccepted(false)
-                .build();
-        travelJoinRequestRepository.save(tjr);
+        Travel tv = travelRepository.getReferenceById(tl);
+        List<TravelJoinRequest> tjrList = travelJoinRequestRepository.findByTravelAndUserAndIsActiveTrue(tv, user);
+
+        // 같은 여행에 isActive이 True인 레코드가 남아있다면 추가 불가능 (그러므로 승인시 혹은 거부시 isActive를 false로 해줘야함)
+        if (tjrList.isEmpty()) {
+            TravelJoinRequest tjr = TravelJoinRequest.builder()
+                    .user(user)
+                    .travel(tv)
+                    .isAccepted(false)
+                    .build();
+            travelJoinRequestRepository.save(tjr);
+        }
     }
 
     public String getUniqueJoinCode(int length) {
@@ -340,22 +356,8 @@ public class TravelService {
 
     @Transactional
     public PaymentResponseDto createTravelPayment(User user, PaymentRequestDto dto, List<MultipartFile> files) {
-        //받은 이미지들을 저장한다
-        List<Image> images = imageService.saveImages(user, files);
         //금액기록을 빌더 패턴으로 생성하여 저장한다
         Payment payment = setPayment(dto);
-        //이미지 리스트를 하나하나 변환하여 DTO List로 저장한다
-        List<PaymentImageDto> imagesDto = images.stream().map(
-                image -> {
-                    PaymentImage pi = PaymentImage.builder()
-                            .image(image)
-                            .payment(payment)
-                            .build();
-                    PaymentImage tmp = paymentImageRepository.save(pi);
-
-                    return new PaymentImageDto(tmp.getPaymentImageId(), image.getImageId(), image.getImageUrl());
-                }
-        ).toList();
 
         // 정산리스트 저장 로직
         List<Settlement> settlementList = dto.settlementList().stream().map(settlement -> {
@@ -385,8 +387,31 @@ public class TravelService {
             return settlementRepository.save(sm);
         }).toList();
 
-        return new PaymentResponseDto(payment.getPaymentId(), payment.getCategory().getCategoryId(), payment.getCategory().getCategoryName(), payment.getPayerType(),
-                payment.getPaymentMethod(), payment.getPaymentName(), payment.getExchangeRate(), payment.getPayTime(), payment.getPaymentAccount(), imagesDto);
+        // 이미지 파일이 존재할시
+        if (files != null && !files.isEmpty()) {
+            //받은 이미지들을 저장한다
+            List<Image> images = imageService.saveImages(user, files);
+
+            //이미지 리스트를 하나하나 변환하여 DTO List로 저장한다
+            List<PaymentImageDto> imagesDto = images.stream().map(
+                    image -> {
+                        PaymentImage pi = PaymentImage.builder()
+                                .image(image)
+                                .payment(payment)
+                                .build();
+                        PaymentImage tmp = paymentImageRepository.save(pi);
+
+                        return new PaymentImageDto(tmp.getPaymentImageId(), image.getImageId(), image.getImageUrl());
+                    }
+            ).toList();
+            return new PaymentResponseDto(payment.getPaymentId(), payment.getCategory().getCategoryId(), payment.getCategory().getCategoryName(), payment.getPayerType(),
+                    payment.getPaymentMethod(), payment.getPaymentName(), payment.getExchangeRate(), payment.getPayTime(), payment.getPaymentAccount(), imagesDto);
+        }
+
+        // 아미지 파일이 존재 안할시
+        return  new PaymentResponseDto(payment.getPaymentId(), payment.getCategory().getCategoryId(), payment.getCategory().getCategoryName(), payment.getPayerType(),
+                payment.getPaymentMethod(), payment.getPaymentName(), payment.getExchangeRate(), payment.getPayTime(), payment.getPaymentAccount(), new ArrayList<>());
+
     }
 
     // 정산유저 테스트
@@ -524,7 +549,11 @@ public class TravelService {
         List<TravelJoinRequest> tjrList = travelJoinRequestRepository.findByUserAndIsActiveTrueAndIsAcceptedFalse(user);
         return tjrList.stream().map(tjr -> {
             Travel tv = tjr.getTravel();
-            List<User> joinedUsers = travelUserRepository.findByTravelAndIsActiveTrue(tv).stream().map(TravelUser::getUser).toList();
+            List<UserResponseDto> joinedUsers = travelUserRepository.findByTravelAndIsActiveTrue(tv).stream().map(tu -> {
+                User tmpUser = tu.getUser();
+                String imageUrl = tmpUser.getProfileImage() != null ? tmpUser.getProfileImage().getImageUrl() : "";
+                return new UserResponseDto(tmpUser.getUserId(), tmpUser.getName(), tmpUser.getEmail(), tmpUser.getGender(), tmpUser.getNickname(), tmpUser.getBirthday(), imageUrl);
+            }).toList();
             return new UserTravelJoinResponseDto(tv.getTravelId(), tv.getTravelName(), tv.getNation(), joinedUsers);
         }).toList();
     }

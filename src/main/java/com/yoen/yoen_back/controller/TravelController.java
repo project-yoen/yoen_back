@@ -53,7 +53,7 @@ public class TravelController {
 
     // 여행 기록 작성하는 함수 (RequestParts를 쓰거나 아니면 두개로 분리해야함)
     @PostMapping("/set-travelrecord")
-    public ResponseEntity<ApiResponse<TravelRecordResponseDto>> setTravelRecord(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestPart("dto") TravelRecordRequestDto dto, @RequestPart("images") List<MultipartFile> files) {
+    public ResponseEntity<ApiResponse<TravelRecordResponseDto>> setTravelRecord(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestPart("dto") TravelRecordRequestDto dto, @RequestPart(value = "images", required = false) List<MultipartFile> files) {
         TravelRecordResponseDto trd = travelService.createTravelRecord(userDetails.user(), dto, files);
         return ResponseEntity.ok(ApiResponse.success(trd));
     }
@@ -102,7 +102,7 @@ public class TravelController {
     }
 
     @PostMapping("/set-payment")
-    public ResponseEntity<ApiResponse<PaymentResponseDto>> createTravelPayment(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestPart("dto") PaymentRequestDto dto, @RequestPart("images") List<MultipartFile> files) {
+    public ResponseEntity<ApiResponse<PaymentResponseDto>> createTravelPayment(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestPart("dto") PaymentRequestDto dto, @RequestPart(value = "images",required = false) List<MultipartFile> files) {
         PaymentResponseDto responseDto = travelService.createTravelPayment(userDetails.user(), dto, files);
         return ResponseEntity.ok(ApiResponse.success(responseDto));
     }
