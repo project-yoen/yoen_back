@@ -505,11 +505,18 @@ public class TravelService {
         return dtos;
     }
     // 내 여행에 참여 신청한 사람 승인하는 함수
-    public void acceptJoinRequest(Long travelJoinRequestId) {
-        TravelJoinRequest tjr = travelJoinRequestRepository.getReferenceById(travelJoinRequestId);
+    public void acceptJoinRequest(AcceptJoinRequestDto dto) {
+        TravelJoinRequest tjr = travelJoinRequestRepository.getReferenceById(dto.travelJoinRequestId());
         tjr.setIsAccepted(true); // 수락됨을 True로 변경
         tjr.setIsActive(false); // soft delete 수행
         travelJoinRequestRepository.save(tjr);
+        TravelUser tu = TravelUser.builder()
+                .travel(tjr.getTravel())
+                .user(tjr.getUser())
+                .role(dto.role())
+                .travelNickname(tjr.getUser().getNickname())
+                .build();
+        travelUserRepository.save(tu);
     }
     // 내 여행에 참여 신청한 사람 거절하는 함수
     public void rejectJoinRequest(Long travelJoinRequestId) {
