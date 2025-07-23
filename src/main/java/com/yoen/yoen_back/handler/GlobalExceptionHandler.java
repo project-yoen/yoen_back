@@ -3,7 +3,7 @@ package com.yoen.yoen_back.handler;
 import com.yoen.yoen_back.common.entity.ApiException;
 import com.yoen.yoen_back.common.entity.InvalidJoinCodeException;
 import com.yoen.yoen_back.common.entity.InvalidTokenException;
-import com.yoen.yoen_back.dto.ApiResponse;
+import com.yoen.yoen_back.common.entity.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.auth.InvalidCredentialsException;
 import org.springframework.http.HttpStatus;

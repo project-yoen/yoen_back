@@ -1,8 +1,16 @@
 package com.yoen.yoen_back.controller;
 
-import com.google.protobuf.Api;
+import com.yoen.yoen_back.common.entity.ApiResponse;
 import com.yoen.yoen_back.common.security.CustomUserDetails;
-import com.yoen.yoen_back.dto.*;
+import com.yoen.yoen_back.dto.etc.CategoryRequestDto;
+import com.yoen.yoen_back.dto.etc.joincode.AcceptJoinRequestDto;
+import com.yoen.yoen_back.dto.etc.joincode.JoinCodeResponseDto;
+import com.yoen.yoen_back.dto.etc.joincode.JoinRequestListResponseDto;
+import com.yoen.yoen_back.dto.etc.joincode.UserTravelJoinResponseDto;
+import com.yoen.yoen_back.dto.payment.PaymentRequestDto;
+import com.yoen.yoen_back.dto.payment.PaymentResponseDto;
+import com.yoen.yoen_back.dto.payment.settlement.SettlementUserResponseDto;
+import com.yoen.yoen_back.dto.travel.*;
 import com.yoen.yoen_back.entity.payment.Payment;
 import com.yoen.yoen_back.entity.payment.SettlementUser;
 import com.yoen.yoen_back.entity.travel.Travel;
@@ -103,7 +111,7 @@ public class TravelController {
 
     @PostMapping("/set-payment")
     public ResponseEntity<ApiResponse<PaymentResponseDto>> createTravelPayment(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestPart("dto") PaymentRequestDto dto, @RequestPart(value = "images",required = false) List<MultipartFile> files) {
-        PaymentResponseDto responseDto = travelService.createTravelPayment(userDetails.user(), dto, files);
+        PaymentResponseDto responseDto = travelService.createPayment(userDetails.user(), dto, files);
         return ResponseEntity.ok(ApiResponse.success(responseDto));
     }
 
@@ -135,7 +143,7 @@ public class TravelController {
     }
     @DeleteMapping("/delete-payment")
     public ResponseEntity<ApiResponse<String>> deletePayment(@RequestParam("paymentId") Long paymentId) {
-        travelService.deleteTravelPayment(paymentId);
+        travelService.deletePayment(paymentId);
         return ResponseEntity.ok(ApiResponse.success("Payment deleted successfully"));
     }
 

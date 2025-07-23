@@ -2,7 +2,7 @@ package com.yoen.yoen_back.service;
 
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Bucket;
-import com.yoen.yoen_back.dto.UploadedImage;
+import com.yoen.yoen_back.dto.etc.image.UploadedImage;
 import com.yoen.yoen_back.entity.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

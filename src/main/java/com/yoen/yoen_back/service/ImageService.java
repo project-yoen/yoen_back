@@ -1,6 +1,6 @@
 package com.yoen.yoen_back.service;
 
-import com.yoen.yoen_back.dto.UploadedImage;
+import com.yoen.yoen_back.dto.etc.image.UploadedImage;
 import com.yoen.yoen_back.entity.image.Image;
 import com.yoen.yoen_back.entity.user.User;
 import com.yoen.yoen_back.repository.image.ImageRepository;
@@ -35,9 +35,7 @@ public class ImageService {
     public List<Image> saveImages(User user, List<MultipartFile> files) {
         List<UploadedImage> uploadedImages = imageUploadService.uploadImages(user, files);
 
-        List<Image> images = uploadedImages.stream().map((uploaedImage) -> {
-            return Image.builder().imageUrl(uploaedImage.imageUrl()).objectKey(uploaedImage.objectKey()).user(user).build();
-        }).collect(Collectors.toList());
+        List<Image> images = uploadedImages.stream().map((uploaedImage) -> Image.builder().imageUrl(uploaedImage.imageUrl()).objectKey(uploaedImage.objectKey()).user(user).build()).collect(Collectors.toList());
 
         return imageRepository.saveAll(images);
     }

@@ -1,8 +1,8 @@
 package com.yoen.yoen_back.controller;
 
 import com.yoen.yoen_back.common.security.CustomUserDetails;
-import com.yoen.yoen_back.dto.ApiResponse;
-import com.yoen.yoen_back.dto.IdListRequest;
+import com.yoen.yoen_back.common.entity.ApiResponse;
+import com.yoen.yoen_back.dto.etc.IdListRequest;
 import com.yoen.yoen_back.entity.image.Image;
 import com.yoen.yoen_back.service.ImageService;
 import lombok.RequiredArgsConstructor;

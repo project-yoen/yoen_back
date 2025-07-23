@@ -1,6 +1,6 @@
 package com.yoen.yoen_back.controller;
 
-import com.yoen.yoen_back.dto.DestinationDto;
+import com.yoen.yoen_back.dto.etc.DestinationDto;
 import com.yoen.yoen_back.entity.travel.Destination;
 import com.yoen.yoen_back.service.TravelService;
 import lombok.RequiredArgsConstructor;

@@ -1,9 +1,9 @@
 package com.yoen.yoen_back.controller;
 
-import com.yoen.yoen_back.dto.ApiResponse;
-import com.yoen.yoen_back.dto.LoginRequestDto;
-import com.yoen.yoen_back.dto.LoginResponseDto;
-import com.yoen.yoen_back.dto.RegisterRequestDto;
+import com.yoen.yoen_back.common.entity.ApiResponse;
+import com.yoen.yoen_back.dto.user.LoginRequestDto;
+import com.yoen.yoen_back.dto.user.LoginResponseDto;
+import com.yoen.yoen_back.dto.user.RegisterRequestDto;
 import com.yoen.yoen_back.entity.user.User;
 import com.yoen.yoen_back.service.AuthService;
 import com.yoen.yoen_back.service.UserService;

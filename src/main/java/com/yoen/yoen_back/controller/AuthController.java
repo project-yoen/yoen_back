@@ -1,8 +1,8 @@
 package com.yoen.yoen_back.controller;
 
-import com.yoen.yoen_back.dto.ApiResponse;
-import com.yoen.yoen_back.dto.RefreshTokenRequestDto;
-import com.yoen.yoen_back.dto.TokenResponse;
+import com.yoen.yoen_back.common.entity.ApiResponse;
+import com.yoen.yoen_back.dto.etc.token.RefreshTokenRequestDto;
+import com.yoen.yoen_back.dto.etc.token.TokenResponse;
 import com.yoen.yoen_back.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

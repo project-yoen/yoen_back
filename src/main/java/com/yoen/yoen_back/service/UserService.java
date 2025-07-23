@@ -1,8 +1,8 @@
 package com.yoen.yoen_back.service;
 
 import com.yoen.yoen_back.common.utils.Formatter;
-import com.yoen.yoen_back.dto.LoginRequestDto;
-import com.yoen.yoen_back.dto.RegisterRequestDto;
+import com.yoen.yoen_back.dto.user.LoginRequestDto;
+import com.yoen.yoen_back.dto.user.RegisterRequestDto;
 import com.yoen.yoen_back.entity.image.Image;
 import com.yoen.yoen_back.entity.user.User;
 import com.yoen.yoen_back.repository.user.UserRepository;
@@ -12,8 +12,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -22,7 +20,7 @@ public class UserService {
     private final BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
 
 
-    public User register(RegisterRequestDto dto) {
+    public void register(RegisterRequestDto dto) {
         User user = User.builder()
                 .password(bCryptPasswordEncoder.encode(dto.password()))
                 .email(dto.email())
@@ -31,7 +29,7 @@ public class UserService {
                 .nickname(dto.nickname())
                 .birthday(Formatter.getDate(dto.birthday()))
                 .build();
-        return userRepository.save(user);
+        userRepository.save(user);
     }
 
     public User login(LoginRequestDto dto) throws InvalidCredentialsException {
@@ -45,10 +43,6 @@ public class UserService {
         return user;
     }
 
-
-    public List<User> test() {
-        return userRepository.findAll();
-    }
 
     public User findById(Long id) {
         return userRepository.findById(id).orElse(null);

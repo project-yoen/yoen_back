@@ -1,7 +1,7 @@
 package com.yoen.yoen_back.service;
 
 import com.yoen.yoen_back.common.utils.Formatter;
-import com.yoen.yoen_back.dto.ExchangeRateDto;
+import com.yoen.yoen_back.dto.etc.ExchangeRateDto;
 import com.yoen.yoen_back.entity.ExchangeRate;
 import com.yoen.yoen_back.repository.ExchangeRateRepository;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
