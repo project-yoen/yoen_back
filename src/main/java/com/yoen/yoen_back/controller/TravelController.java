@@ -147,7 +147,7 @@ public class TravelController {
     }
 
     // 여행에 참여 신청한 사람 승인
-    @PostMapping("/set-acceptjoinrequest/{id}")
+    @PostMapping("/set-acceptjoinrequest")
     public ResponseEntity<ApiResponse<String>> acceptJoinRequest(@RequestBody AcceptJoinRequestDto dto) {
         travelService.acceptJoinRequest(dto);
         return ResponseEntity.ok(ApiResponse.success("Join request accepted"));

@@ -325,8 +325,12 @@ public class TravelService {
         Travel tv = travelRepository.getReferenceById(tl);
         List<TravelJoinRequest> tjrList = travelJoinRequestRepository.findByTravelAndUserAndIsActiveTrue(tv, user);
 
-        // 같은 여행에 isActive이 True인 레코드가 남아있다면 추가 불가능 (그러므로 승인시 혹은 거부시 isActive를 false로 해줘야함)
-        if (tjrList.isEmpty()) {
+        // 이미 기존 유저가 존재하면 isJoined를 true
+        List<TravelUser> tuList = travelUserRepository.findByTravelAndIsActiveTrue(tv);
+        boolean isJoined = tuList.stream().anyMatch(tu -> user.getUserId().equals(tu.getUser().getUserId()));
+
+        // 같은 여행에 isActive이 True인 레코드가 남아있거나 이미 추가된 유저면 추가 불가능 (그러므로 승인시 혹은 거부시 isActive를 false로 해줘야함)
+        if (tjrList.isEmpty() && !isJoined) {
             TravelJoinRequest tjr = TravelJoinRequest.builder()
                     .user(user)
                     .travel(tv)
