@@ -31,6 +31,8 @@ public class User extends BaseEntity {
     @Column(nullable = false)
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
+
+    //본명
     private String name;
 
     private String nickname;
