@@ -23,10 +23,12 @@ import java.util.List;
 public class TravelService {
     private final TravelRepository travelRepository;
     private final TravelRecordRepository travelRecordRepository;
-    private final PaymentRepository paymentRepository;
     private final TravelUserRepository travelUserRepository;
+    private final PaymentRepository paymentRepository;
 
     private final CommonService commonService;
+    private final PaymentService paymentService;
+    private final RecordService recordService;
 
 
     public List<Travel> getAllTravels() {
@@ -37,9 +39,7 @@ public class TravelService {
         return travelRecordRepository.findByTravel_TravelIdAndIsActiveTrue(travelId);
     }
 
-    public List<Payment> getAllPaymentsByTravelId(Long travelId) {
-        return paymentRepository.findByTravel_TravelIdAndIsActiveTrue(travelId);
-    }
+
 
     //Todo 여행을 삭제할 때 관련된 모든 테이블의 레코드를 비활성화 해야 할까?
     @Transactional

@@ -29,8 +29,10 @@ public class JoinService {
     private final static String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
     private final TravelJoinCodeRedisDao travelJoinCodeRedisDao;
-    private final TravelRepository travelRepository;
     private final TravelJoinRequestRepository travelJoinRequestRepository;
+
+    /** 조회용 **/
+    private final TravelRepository travelRepository;
     private final TravelUserRepository travelUserRepository;
 
 

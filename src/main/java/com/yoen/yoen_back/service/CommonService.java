@@ -46,6 +46,10 @@ public class CommonService {
         });
     }
 
+    public List<TravelDestination> getAllTravelDestination() {
+        return travelDestinationRepository.findAll();
+    }
+
     public void createDestination(DestinationDto dto) {
         Destination dt = Destination.builder()
                 .name(dto.name())
@@ -54,9 +58,7 @@ public class CommonService {
         destinationRepository.save(dt);
     }
 
-    public List<TravelDestination> getAllTravelDestination() {
-        return travelDestinationRepository.findAll();
-    }
+
 
     public List<Destination> createDestinations(List<DestinationDto> dtos) {
         dtos.forEach(this::createDestination);

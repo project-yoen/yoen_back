@@ -36,17 +36,23 @@ import java.util.Optional;
 public class PaymentService {
 
     private final PaymentRepository paymentRepository;
-    private final CategoryRepository categoryRepository;
-    private final TravelUserRepository travelUserRepository;
-    private final TravelRepository travelRepository;
-    private final ExchangeRateUpdateService exchangeRateUpdateService;
     private final SettlementRepository settlementRepository;
     private final SettlementUserRepository settlementUserRepository;
-    private final ImageService imageService;
     private final PaymentImageRepository paymentImageRepository;
 
+    /** 조회용 **/
+    private final TravelUserRepository travelUserRepository;
+    private final TravelRepository travelRepository;
+    private final CategoryRepository categoryRepository;
 
 
+    private final ImageService imageService;
+    private final ExchangeRateUpdateService exchangeRateUpdateService;
+
+
+    public List<Payment> getAllPaymentsByTravelId(Long travelId) {
+        return paymentRepository.findByTravel_TravelIdAndIsActiveTrue(travelId);
+    }
 
     public Payment setPayment(PaymentRequestDto dto) {
         // isActive는 무조건 true

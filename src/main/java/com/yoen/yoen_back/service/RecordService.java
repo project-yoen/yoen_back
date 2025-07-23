@@ -28,10 +28,13 @@ import java.util.Optional;
 public class RecordService {
 
     private final TravelRecordRepository travelRecordRepository;
+    private final TravelRecordImageRepository travelRecordImageRepository;
+
+    private final ImageService imageService;
+
+    /** 조회용 **/
     private final TravelRepository travelRepository;
     private final TravelUserRepository travelUserRepository;
-    private final ImageService imageService;
-    private final TravelRecordImageRepository travelRecordImageRepository;
 
     // 여행 기록 추가 할시 (한번에 이미지까지 저장) (생성)
     @Transactional
