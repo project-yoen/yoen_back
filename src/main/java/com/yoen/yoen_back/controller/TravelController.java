@@ -73,6 +73,24 @@ public class TravelController {
         return ResponseEntity.ok(ApiResponse.success(JoinCodeResponseDto.joinCode(cd, expireTime)));
     }
 
+    @GetMapping("/get-usertraveljoinrequestlist")
+    public ResponseEntity<ApiResponse<List<UserTravelJoinResponseDto>>> getUserTravelJoinList(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(ApiResponse.success(travelService.getUserTravelJoinRequests(userDetails.user())));
+    }
+
+    @DeleteMapping("/delete-usertraveljoinrequest")
+    public void deleteUserTravelJoinRequest(@RequestBody IdRequest idRequest) {
+        travelService.deleteUserTravelJoinRequest(idRequest.id());
+    }
+
+    // 여행 유저 반환하는 함수
+    @GetMapping("/set-traveljoinrequest")
+    public ResponseEntity<ApiResponse<String>> setTravelJoinRequest(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam String joinCode) {
+        travelService.requestToJoinTravel(userDetails.user(), joinCode);
+        return ResponseEntity.ok(ApiResponse.success(""));
+    }
+
+
     @GetMapping("/get-alluser")
     public List<TravelUserDto> getAllTravelUsers() {
         return travelService.getAllTravelUser().stream().map(tu -> new TravelUserDto(tu.getTravelUserId(), tu.getTravel().getTravelId(), tu.getUser().getUserId())).toList();
