@@ -493,4 +493,17 @@ public class TravelService {
         categoryRepository.save(category);
         return new CategoryRequestDto(category.getCategoryId(), category.getCategoryName(), category.getType());
     }
+    // 내 여행에 참여신청한 사람들 출력하는 함수
+    public List<JoinRequestListResponseDto> getJoinRequestList(Long travelId){
+        List<TravelJoinRequest> tjrList = travelJoinRequestRepository.findByTravel_TravelId(travelId);
+        List<JoinRequestListResponseDto> dtos = tjrList.stream().map(
+                tjr -> {
+                    User user = tjr.getUser();
+                    return new JoinRequestListResponseDto(tjr.getTravelJoinRequestId(), user.getUserId(), user.getName(), tjr.getIsAccepted(), user.getProfileImage());
+                }
+        ).toList();
+        return dtos;
+    }
+    // 내 여행에 참여 신청한 사람 승인하는 함수
+    public void AcceptJoinRequest(Long travelJoinRequestId) {}
 }
