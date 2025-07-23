@@ -518,4 +518,25 @@ public class TravelService {
         tjr.setIsActive(false); // 거절했으니까 목록에서 soft delete
         travelJoinRequestRepository.save(tjr);
     }
+
+    // 자기 자신이 신청한 여행 리스트를 보기 위한 함수
+    public List<UserTravelJoinResponseDto> getUserTravelJoinRequests(User user) {
+        List<TravelJoinRequest> tjrList = travelJoinRequestRepository.findByUserAndIsActiveTrueAndIsAcceptedFalse(user);
+        return tjrList.stream().map(tjr -> {
+            Travel tv = tjr.getTravel();
+            List<User> joinedUsers = travelUserRepository.findByTravelAndIsActiveTrue(tv).stream().map(TravelUser::getUser).toList();
+            return new UserTravelJoinResponseDto(tv.getTravelId(), tv.getTravelName(), tv.getNation(), joinedUsers);
+        }).toList();
+    }
+
+    public void deleteUserTravelJoinRequest(Long travelJoinRequestId) {
+        Optional<TravelJoinRequest> tjr = travelJoinRequestRepository.findById(travelJoinRequestId);
+        tjr.ifPresent(travelJoinRequest -> {
+            travelJoinRequest.setIsActive(false);
+            travelJoinRequest.setIsAccepted(false); // 이미 false 일 확률이 더 높음
+            travelJoinRequestRepository.save(travelJoinRequest);
+        });
+    }
+
+
 }
