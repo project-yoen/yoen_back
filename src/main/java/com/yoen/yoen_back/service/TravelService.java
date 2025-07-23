@@ -505,7 +505,7 @@ public class TravelService {
         return dtos;
     }
     // 내 여행에 참여 신청한 사람 승인하는 함수
-    public void AcceptJoinRequest(Long travelJoinRequestId) {
+    public void acceptJoinRequest(Long travelJoinRequestId) {
         TravelJoinRequest tjr = travelJoinRequestRepository.getReferenceById(travelJoinRequestId);
         tjr.setIsAccepted(true); // 수락됨을 True로 변경
         tjr.setIsActive(false); // soft delete 수행

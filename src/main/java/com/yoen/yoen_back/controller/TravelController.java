@@ -129,7 +129,17 @@ public class TravelController {
     }
 
     // 여행에 참여 신청한 사람 승인
+    @PostMapping("/set-acceptjoinrequest/{id}")
+    public ResponseEntity<ApiResponse<String>> acceptJoinRequest(@PathVariable("id") Long travelJoinRequestId) {
+        travelService.acceptJoinRequest(travelJoinRequestId);
+        return ResponseEntity.ok(ApiResponse.success("Join request accepted"));
+    }
 
     //여행에 참여 신청한 사람 거절
+    @PostMapping("/set-acceptjoinrequest/{id}")
+    public ResponseEntity<ApiResponse<String>> rejectJoinRequest(@PathVariable("id") Long travelJoinRequestId) {
+        travelService.rejectJoinRequest(travelJoinRequestId);
+        return ResponseEntity.ok(ApiResponse.success("Join request rejected"));
+    }
 }
 
