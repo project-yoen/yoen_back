@@ -36,6 +36,12 @@ public class RecordService {
     private final TravelRepository travelRepository;
     private final TravelUserRepository travelUserRepository;
 
+
+    public List<TravelRecord> getAllTravelRecordsByTravelId(Long travelId) {
+        return travelRecordRepository.findByTravel_TravelIdAndIsActiveTrue(travelId);
+    }
+
+
     // 여행 기록 추가 할시 (한번에 이미지까지 저장) (생성)
     @Transactional
     public TravelRecordResponseDto createTravelRecord(User user, TravelRecordRequestDto dto, List<MultipartFile> files) {
@@ -74,7 +80,7 @@ public class RecordService {
 
     // 사진을 제외한 여행기록을 수정할시 (수정)
     @Transactional
-    public TravelRecordResponseDto updateTravelRecord(User user, TravelRecordRequestDto dto, List<MultipartFile> files) {
+    public TravelRecordResponseDto updateTravelRecord(TravelRecordRequestDto dto) {
         TravelRecord tr = travelRecordRepository.getReferenceById(dto.travelRecordId());
 
         // 수정

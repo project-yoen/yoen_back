@@ -2,9 +2,7 @@ package com.yoen.yoen_back.service;
 
 import com.yoen.yoen_back.common.utils.Formatter;
 import com.yoen.yoen_back.dto.travel.TravelRequestDto;
-import com.yoen.yoen_back.entity.payment.Payment;
 import com.yoen.yoen_back.entity.travel.Travel;
-import com.yoen.yoen_back.entity.travel.TravelRecord;
 import com.yoen.yoen_back.entity.travel.TravelUser;
 import com.yoen.yoen_back.entity.user.User;
 import com.yoen.yoen_back.enums.Role;
@@ -22,22 +20,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TravelService {
     private final TravelRepository travelRepository;
-    private final TravelRecordRepository travelRecordRepository;
     private final TravelUserRepository travelUserRepository;
-    private final PaymentRepository paymentRepository;
 
     private final CommonService commonService;
-    private final PaymentService paymentService;
-    private final RecordService recordService;
 
 
     public List<Travel> getAllTravels() {
         return travelRepository.findAll();
     }
 
-    public List<TravelRecord> getAllTravelRecordsByTravelId(Long travelId) {
-        return travelRecordRepository.findByTravel_TravelIdAndIsActiveTrue(travelId);
-    }
 
 
 

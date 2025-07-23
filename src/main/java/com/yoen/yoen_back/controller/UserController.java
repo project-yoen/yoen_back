@@ -4,15 +4,12 @@ import com.yoen.yoen_back.common.entity.ApiResponse;
 import com.yoen.yoen_back.dto.user.LoginRequestDto;
 import com.yoen.yoen_back.dto.user.LoginResponseDto;
 import com.yoen.yoen_back.dto.user.RegisterRequestDto;
-import com.yoen.yoen_back.entity.user.User;
 import com.yoen.yoen_back.service.AuthService;
 import com.yoen.yoen_back.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.apache.http.auth.InvalidCredentialsException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @CrossOrigin("*")
 @RestController
@@ -22,16 +19,6 @@ public class UserController {
 
     private final UserService userService;
     private final AuthService authService;
-
-    // 성공시 유저 정보와 토큰 반환
-//    @PostMapping("/signIn")
-//    public ResponseEntity<?> signIn(@RequestParam String email, @RequestParam String password) {}
-
-
-    @GetMapping("/get-alluser")
-    public ResponseEntity<ApiResponse<List<User>>> test() {
-        return ResponseEntity.ok(ApiResponse.success(userService.test()));
-    }
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<String>> signUp(@RequestBody RegisterRequestDto dto) {
@@ -46,7 +33,7 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(lgd));
     }
 
-    @GetMapping("/exist-email")
+    @GetMapping("/exists")
     public ResponseEntity<ApiResponse<Boolean>> existEmail(@RequestParam("email") String email) {
         return ResponseEntity.ok(ApiResponse.success(userService.validateEmail(email)));
     }
