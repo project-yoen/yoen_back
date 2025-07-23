@@ -136,7 +136,7 @@ public class TravelController {
     }
 
     //여행에 참여 신청한 사람 거절
-    @PostMapping("/set-acceptjoinrequest/{id}")
+    @PostMapping("/set-rejectjoinrequest/{id}")
     public ResponseEntity<ApiResponse<String>> rejectJoinRequest(@PathVariable("id") Long travelJoinRequestId) {
         travelService.rejectJoinRequest(travelJoinRequestId);
         return ResponseEntity.ok(ApiResponse.success("Join request rejected"));
