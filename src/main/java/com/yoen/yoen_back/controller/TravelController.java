@@ -104,10 +104,7 @@ public class TravelController {
         return travelService.getAllTravelUser().stream().map(tu -> new TravelUserDto(tu.getTravelUserId(), tu.getTravel().getTravelId(), tu.getUser().getUserId())).toList();
     }
 
-    @GetMapping("/get-alldestination")
-    public List<TravelDestinationDto> getAllTravelDestinations() {
-        return travelService.getAllTravelDestination().stream().map(td -> new TravelDestinationDto(td.getTravel().getTravelId(), td.getDestination().getName())).toList();
-    }
+
 
     @PostMapping("/set-payment")
     public ResponseEntity<ApiResponse<PaymentResponseDto>> createTravelPayment(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestPart("dto") PaymentRequestDto dto, @RequestPart(value = "images",required = false) List<MultipartFile> files) {
@@ -115,11 +112,7 @@ public class TravelController {
         return ResponseEntity.ok(ApiResponse.success(responseDto));
     }
 
-    @PostMapping("/set-category")
-    public ResponseEntity<ApiResponse<CategoryRequestDto>> craeteCategory(@RequestBody CategoryRequestDto dto) {
-        CategoryRequestDto category = travelService.createCategory(dto);
-        return ResponseEntity.ok(ApiResponse.success(category));
-    }
+
 
     // 테스트용
     @GetMapping("/get-allsettlementuser")

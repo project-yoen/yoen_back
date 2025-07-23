@@ -47,6 +47,7 @@ public class CommonService {
     }
 
     public List<TravelDestination> getAllTravelDestination() {
+
         return travelDestinationRepository.findAll();
     }
 
@@ -64,6 +65,7 @@ public class CommonService {
         dtos.forEach(this::createDestination);
         return destinationRepository.findAll();
     }
+
 
     /** 카테고리 관련 **/
     public CategoryRequestDto createCategory(CategoryRequestDto dto) {
