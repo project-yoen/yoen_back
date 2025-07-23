@@ -16,7 +16,7 @@ import java.util.List;
 public class CommonController {
     private final CommonService commonService;
 
-    @PostMapping("/category")
+    @PostMapping("/category/create")
     public ResponseEntity<ApiResponse<CategoryRequestDto>> createCategory(@RequestBody CategoryRequestDto dto) {
         CategoryRequestDto category = commonService.createCategory(dto);
         return ResponseEntity.ok(ApiResponse.success(category));
