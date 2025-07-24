@@ -16,9 +16,11 @@ import com.yoen.yoen_back.repository.travel.TravelRepository;
 import com.yoen.yoen_back.repository.travel.TravelUserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.data.web.SpringDataWebProperties;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -32,14 +34,32 @@ public class RecordService {
 
     private final ImageService imageService;
 
-    /** 조회용 **/
+    /**
+     * 조회용
+     **/
     private final TravelRepository travelRepository;
     private final TravelUserRepository travelUserRepository;
+    private final SpringDataWebProperties springDataWebProperties;
 
 
     public List<TravelRecord> getAllTravelRecordsByTravelId(Long travelId) {
         return travelRecordRepository.findByTravel_TravelIdAndIsActiveTrue(travelId);
     }
+
+    // TODO: 날짜별 여행기록 리스트 받기
+    public List<TravelRecordResponseDto> getTravelRecordsByDate(Long travelUserId, String date) {
+        TravelUser travelUser = travelUserRepository.getReferenceById(travelUserId);
+        Travel tv = travelUser.getTravel();
+        LocalDateTime startDateTime = Formatter.getDateTime(date);
+        List<TravelRecord> tvrList = travelRecordRepository.findAllByTravelAndRecordTimeBetween(tv, startDateTime, startDateTime.plusDays(1));
+
+        return tvrList.stream().map(tvr -> {
+            List<TravelRecordImageDto> trilist = travelRecordImageRepository.findByTravelRecordAndIsActiveTrue(tvr).stream().map(tvri -> new TravelRecordImageDto(tvri.getTravelRecordImageId(), tvri.getImage().getImageUrl())).toList();
+            return new TravelRecordResponseDto(tvr.getTravelRecordId(), tvr.getTitle(), tvr.getContent(), tvr.getRecordTime(), trilist);
+        }).toList();
+    }
+
+    // TODO: 여행기록 아이디로 여행기록 정보 받기 (보류)
 
 
     // 여행 기록 추가 할시 (한번에 이미지까지 저장) (생성)
@@ -67,7 +87,7 @@ public class RecordService {
                         .travelRecord(travelRecord)
                         .build();
                 TravelRecordImage tmp = travelRecordImageRepository.save(tri); // travelRecordImage 레포에 image들 저장
-                return new TravelRecordImageDto(tmp.getTravelRecordImageId(), image.getImageId(), image.getImageUrl());
+                return new TravelRecordImageDto(tmp.getTravelRecordImageId(), image.getImageUrl());
             }).toList();
 
             return new TravelRecordResponseDto(tr.getTravelRecordId(), tr.getTitle(), tr.getContent(), tr.getRecordTime(), imagesDto);
@@ -106,7 +126,7 @@ public class RecordService {
                             .build();
                     TravelRecordImage tmp = travelRecordImageRepository.save(tri);
 
-                    return new TravelRecordImageDto(tmp.getTravelRecordImageId(), image.getImageId(), image.getImageUrl());
+                    return new TravelRecordImageDto(tmp.getTravelRecordImageId(), image.getImageUrl());
                 }
         ).toList();
     }

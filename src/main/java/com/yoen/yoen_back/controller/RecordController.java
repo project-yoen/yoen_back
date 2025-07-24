@@ -21,6 +21,11 @@ public class RecordController {
 
     private final RecordService recordService;
 
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<TravelRecordResponseDto>>> getTravelRecordByDate(@RequestParam("travelUserId") Long travelUserId, @RequestParam("date") String date) {
+        return ResponseEntity.ok(ApiResponse.success(recordService.getTravelRecordsByDate(travelUserId, date)));
+    }
+
     @GetMapping("/all")
     public ResponseEntity<ApiResponse<List<TravelRecord>>> travelRecord(@RequestParam("travelId") Long travelId) {
         return ResponseEntity.ok(ApiResponse.success(recordService.getAllTravelRecordsByTravelId(travelId)));
