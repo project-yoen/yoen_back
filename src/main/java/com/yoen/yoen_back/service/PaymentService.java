@@ -4,6 +4,7 @@ import com.yoen.yoen_back.common.utils.Formatter;
 import com.yoen.yoen_back.dto.payment.PaymentImageDto;
 import com.yoen.yoen_back.dto.payment.PaymentRequestDto;
 import com.yoen.yoen_back.dto.payment.PaymentResponseDto;
+import com.yoen.yoen_back.dto.payment.settlement.SettlementRequestDto;
 import com.yoen.yoen_back.entity.Category;
 import com.yoen.yoen_back.entity.ExchangeRate;
 import com.yoen.yoen_back.entity.image.Image;
@@ -80,6 +81,29 @@ public class PaymentService {
         return paymentRepository.save(payment);
     }
 
+    public Settlement saveSettlementEntity(Payment payment, SettlementRequestDto dto) {
+        Settlement sm = Settlement.builder()
+                .payment(payment)
+                .amount(dto.amount())
+                .isPaid(dto.isPaid())
+                .settlementName(dto.settlementName())
+                .build();
+
+        // 정산 저장
+        return settlementRepository.save(sm);
+    }
+
+    public SettlementUser saveSettlementUserEntity(TravelUser tu, Settlement sm, SettlementRequestDto dto) {
+        SettlementUser su = SettlementUser.builder()
+                .travelUser(tu)
+                .settlement(sm)
+                .amount(dto.amount() / dto.travelUsers().size())
+                .isPaid(dto.isPaid())
+                .build();
+
+        // 정산 유저 저장
+        return settlementUserRepository.save(su);
+    }
 
     // 정산 객체를 저장 -> 정산 객체와 금액기록을 매핑 -> 정산 객체에 정산_유저 객체 매핑 -> 함수 3개를 모은 createPayment 선언
     @Transactional
@@ -88,32 +112,15 @@ public class PaymentService {
         Payment payment = savePaymentEntity(dto);
 
         // 정산리스트 저장 로직
-        List<Settlement> settlementList = dto.settlementList().stream().map(settlement -> {
-            Settlement sm = Settlement.builder()
-                    .payment(payment)
-                    .amount(settlement.amount())
-                    .isPaid(settlement.isPaid())
-                    .settlementName(settlement.settlementName())
-                    .build();
-
-            // 정산 저장
-            Settlement savedSettlement = settlementRepository.save(sm);
+        dto.settlementList().forEach(settlement -> {
+            Settlement sm = saveSettlementEntity(payment, settlement);
 
             // 정산 유저 저장 로직
             settlement.travelUsers().forEach(travelUser -> {
                 TravelUser tu = travelUserRepository.getReferenceById(travelUser);
-                SettlementUser su = SettlementUser.builder()
-                        .travelUser(tu)
-                        .settlement(savedSettlement)
-                        .amount(settlement.amount() / settlement.travelUsers().size())
-                        .isPaid(settlement.isPaid())
-                        .build();
-
-                // 정산 유저 저장
-                settlementUserRepository.save(su);
+                SettlementUser smu = saveSettlementUserEntity(tu, sm, settlement);
             });
-            return settlementRepository.save(sm);
-        }).toList();
+        });
 
         // 이미지 파일이 존재할시
         if (files != null && !files.isEmpty()) {
