@@ -36,13 +36,14 @@ public class JoinService {
     private final TravelUserRepository travelUserRepository;
 
 
-    public String getJoinCode(User user, Long travelId) {
+    public String getJoinCode(Long travelId) {
+        travelRepository.findById(travelId).orElseThrow(() -> new IllegalStateException("존재하지 않는 여행"));
         if (!travelJoinCodeRedisDao.existsTravelId(travelId)) {
             String code = getUniqueJoinCode(6);
             travelJoinCodeRedisDao.saveBidirectionalMapping(code, travelId);
         }
         return travelJoinCodeRedisDao.getCodeByTravelId(travelId)
-                .orElseThrow(() -> new IllegalStateException("해당 여행의 참여 코드가 존재하지 않습니다."));
+                .orElseThrow(() -> new InvalidJoinCodeException("해당 여행의 참여 코드가 존재하지 않습니다."));
     }
 
     public void requestToJoinTravel(User user, String code) {

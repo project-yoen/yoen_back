@@ -23,8 +23,8 @@ public class JoinController {
     private final JoinService joinService;
 
     @GetMapping("/code")
-    public ResponseEntity<ApiResponse<JoinCodeResponseDto>> getCode(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam("travelId") Long travelId) {
-        String cd = joinService.getJoinCode(userDetails.user(), travelId);
+    public ResponseEntity<ApiResponse<JoinCodeResponseDto>> getCode(@RequestParam("travelId") Long travelId) {
+        String cd = joinService.getJoinCode(travelId);
         LocalDateTime expireTime = joinService.getCodeExpiredTime(cd);
         return ResponseEntity.ok(ApiResponse.success(JoinCodeResponseDto.joinCode(cd, expireTime)));
     }

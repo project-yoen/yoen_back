@@ -23,7 +23,7 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
-    @GetMapping
+    @GetMapping("/all")
     public ResponseEntity<ApiResponse<List<Payment>>> payment(@RequestParam("travelId") Long travelId) {
         return ResponseEntity.ok(ApiResponse.success(paymentService.getAllPaymentsByTravelId(travelId)));
     }
