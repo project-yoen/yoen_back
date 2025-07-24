@@ -57,6 +57,11 @@ public class PaymentService {
         return paymentRepository.findByTravel_TravelIdAndIsActiveTrue(travelId);
     }
 
+    // TODO: 날짜별 금액기록 리스트 받기
+
+    // TODO: 금액기록 아이디로 금액기록 정보 받기
+
+
     public Payment savePaymentEntity(PaymentRequestDto dto) {
         // isActive는 무조건 true
         Category category = categoryRepository.getReferenceById(dto.categoryId());
@@ -112,14 +117,15 @@ public class PaymentService {
     // 정산 객체를 저장 -> 정산 객체와 금액기록을 매핑 -> 정산 객체에 정산_유저 객체 매핑 -> 함수 3개를 모은 createPayment 선언
     @Transactional
     public PaymentResponseDto createPayment(User user, PaymentRequestDto dto, List<MultipartFile> files) {
-        //금액기록을 빌더 패턴으로 생성하여 저장한다
+        // 금액기록을 빌더 패턴으로 생성하여 저장한다
         Payment payment = savePaymentEntity(dto);
-        if(payment.getType().equals(PaymentType.SHAREDFUND)){
+        if (payment.getType().equals(PaymentType.SHAREDFUND)){
             Travel tv = travelRepository.getReferenceById(dto.travelId());
             tv.setSharedFund(tv.getSharedFund() + payment.getPaymentAccount());
             travelRepository.save(tv);
         }
-        if(payment.getType().equals(PaymentType.PAYMENT) && payment.getPayerType().equals(Payer.SHAREDFUND)){
+
+        if (payment.getType().equals(PaymentType.PAYMENT) && payment.getPayerType().equals(Payer.SHAREDFUND)){
             Travel tv = travelRepository.getReferenceById(dto.travelId());
             if(tv.getSharedFund() - payment.getPaymentAccount() < 0){
                 throw new IllegalStateException("잔액이 부족합니다.");
@@ -170,6 +176,18 @@ public class PaymentService {
         return settlementUserRepository.findAll();
     }
 
+    // 기존 settlement를 전부 삭제 후, 새 settlement 추가
+    public void updateSettlement(Payment payment, List<Settlement> preSettlements, List<SettlementRequestDto> dto) {
+        preSettlements.forEach(settlement -> {
+            settlement.setIsActive(false);
+            settlementRepository.save(settlement);
+        });
+
+        dto.forEach(settlement -> {
+            Settlement st = saveSettlementEntity(payment, settlement);
+            settlementRepository.save(st);
+        });
+    }
 
     // 사진을 제외한 금액기록을 수정할시
     // Todo: 이미지 처리 해야하는데.. 지금 맨 처음 금액기록을 생성할 때는 이미지랑 금액기록이랑 한번에 보내는데 수정할때도 동일한 방식을 사용하면 시간이 너무 오래 걸릴거같아서
@@ -187,6 +205,10 @@ public class PaymentService {
                 travelRepository.save(tv);
             }
         }
+        List<Settlement> settlements = settlementRepository.findByPayment(pm);
+        // 기존 settlement들 삭제 후 다시 생성
+        updateSettlement(pm, settlements, dto.settlementList());
+
         pm.setCategory(categoryRepository.getReferenceById(dto.categoryId())); // 카테고리
         pm.setPayerType(dto.payerType()); // 개인 or 공금
         pm.setPaymentMethod(dto.paymentMethod()); // 카드 or 현금
@@ -195,6 +217,7 @@ public class PaymentService {
         pm.setPaymentName(dto.paymentName()); // 금액기록 이름
         pm.setPayTime(Formatter.getDateTime(dto.payTime())); // 금액기록 시간
         paymentRepository.save(pm);
+
 
         return new PaymentResponseDto(pm.getPaymentId(), pm.getCategory().getCategoryId(), pm.getCategory().getCategoryName(), pm.getPayerType(),
                 pm.getPaymentMethod(), pm.getPaymentName(), pm.getType(), pm.getExchangeRate(), pm.getPayTime(), pm.getPaymentAccount(), new ArrayList<>());
@@ -255,6 +278,22 @@ public class PaymentService {
     public void deletePayment(Long paymentId) {
         // 금액기록 ID로 금액기록 찾아오기
         Payment pm = paymentRepository.getReferenceById(paymentId);
+        Travel tv = pm.getTravel();
+
+        // 공금등록기록을 삭제했을시, 그만큼 공금에서 빼주기
+        if (pm.getType().equals(PaymentType.SHAREDFUND)) {
+            if (tv.getSharedFund() - pm.getPaymentAccount() < 0) throw new IllegalStateException("잔액이 부족합니다.");
+            tv.setSharedFund(tv.getSharedFund() - pm.getPaymentAccount());
+            travelRepository.save(tv);
+        }
+
+        // 공금으로 계산했을시, 공금계산기록 삭제했을때 그만큼 공금에 더해주기
+        if (pm.getType().equals(PaymentType.PAYMENT) && pm.getPayerType().equals(Payer.SHAREDFUND)) {
+            tv.setSharedFund(tv.getSharedFund() + pm.getPaymentAccount());
+            travelRepository.save(tv);
+        }
+            // 공금 등록
+
         // Todo: 금액기록 삭제할 때 공금이였으면 현재 공금에서 삭제되는만큼의 가격을 빼준다..?
 //        if(pm.getType().equals(PaymentType.SHAREDFUND)){
 //
