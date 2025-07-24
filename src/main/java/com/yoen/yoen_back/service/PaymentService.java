@@ -15,6 +15,8 @@ import com.yoen.yoen_back.entity.payment.SettlementUser;
 import com.yoen.yoen_back.entity.travel.Travel;
 import com.yoen.yoen_back.entity.travel.TravelUser;
 import com.yoen.yoen_back.entity.user.User;
+import com.yoen.yoen_back.enums.Payer;
+import com.yoen.yoen_back.enums.PaymentType;
 import com.yoen.yoen_back.repository.CategoryRepository;
 import com.yoen.yoen_back.repository.image.PaymentImageRepository;
 import com.yoen.yoen_back.repository.payment.PaymentRepository;
@@ -76,10 +78,12 @@ public class PaymentService {
                 .travelUser(tu)
                 .paymentName(dto.paymentName())
                 .paymentMethod(dto.paymentMethod())
+                .type(dto.paymentType())
                 .build();
 
         return paymentRepository.save(payment);
     }
+
 
     public Settlement saveSettlementEntity(Payment payment, SettlementRequestDto dto) {
         Settlement sm = Settlement.builder()
@@ -110,7 +114,19 @@ public class PaymentService {
     public PaymentResponseDto createPayment(User user, PaymentRequestDto dto, List<MultipartFile> files) {
         //금액기록을 빌더 패턴으로 생성하여 저장한다
         Payment payment = savePaymentEntity(dto);
-
+        if(payment.getType().equals(PaymentType.SHAREDFUND)){
+            Travel tv = travelRepository.getReferenceById(dto.travelId());
+            tv.setSharedFund(tv.getSharedFund() + payment.getPaymentAccount());
+            travelRepository.save(tv);
+        }
+        if(payment.getType().equals(PaymentType.PAYMENT) && payment.getPayerType().equals(Payer.SHAREDFUND)){
+            Travel tv = travelRepository.getReferenceById(dto.travelId());
+            if(tv.getSharedFund() - payment.getPaymentAccount() < 0){
+                throw new IllegalStateException("잔액이 부족합니다.");
+            }
+            tv.setSharedFund(tv.getSharedFund() - payment.getPaymentAccount());
+            travelRepository.save(tv);
+        }
         // 정산리스트 저장 로직
         dto.settlementList().forEach(settlement -> {
             Settlement sm = saveSettlementEntity(payment, settlement);
@@ -140,12 +156,12 @@ public class PaymentService {
                     }
             ).toList();
             return new PaymentResponseDto(payment.getPaymentId(), payment.getCategory().getCategoryId(), payment.getCategory().getCategoryName(), payment.getPayerType(),
-                    payment.getPaymentMethod(), payment.getPaymentName(), payment.getExchangeRate(), payment.getPayTime(), payment.getPaymentAccount(), imagesDto);
+                    payment.getPaymentMethod(), payment.getPaymentName(), payment.getType(), payment.getExchangeRate(), payment.getPayTime(), payment.getPaymentAccount(), imagesDto);
         }
 
         // 아미지 파일이 존재 안할시
         return  new PaymentResponseDto(payment.getPaymentId(), payment.getCategory().getCategoryId(), payment.getCategory().getCategoryName(), payment.getPayerType(),
-                payment.getPaymentMethod(), payment.getPaymentName(), payment.getExchangeRate(), payment.getPayTime(), payment.getPaymentAccount(), new ArrayList<>());
+                payment.getPaymentMethod(), payment.getPaymentName(), payment.getType(), payment.getExchangeRate(), payment.getPayTime(), payment.getPaymentAccount(), new ArrayList<>());
 
     }
 
@@ -160,6 +176,17 @@ public class PaymentService {
     public PaymentResponseDto updatePayment(PaymentRequestDto dto) {
         Payment pm = paymentRepository.getReferenceById(dto.paymentId());
 
+        // 1.공금을 채운 경우 (전체 금액이 높아졌을 때)
+        if(dto.paymentType().equals(PaymentType.SHAREDFUND)){
+            Travel tv = travelRepository.getReferenceById(dto.travelId());
+            if(tv.getSharedFund() + dto.paymentAccount() - pm.getPaymentAccount() < 0){
+                throw new IllegalStateException("잔액이 충분하지 않습니다.(공금이 음수)");
+            }
+            else{
+                tv.setSharedFund(tv.getSharedFund() - pm.getPaymentAccount() + dto.paymentAccount());
+                travelRepository.save(tv);
+            }
+        }
         pm.setCategory(categoryRepository.getReferenceById(dto.categoryId())); // 카테고리
         pm.setPayerType(dto.payerType()); // 개인 or 공금
         pm.setPaymentMethod(dto.paymentMethod()); // 카드 or 현금
@@ -168,8 +195,9 @@ public class PaymentService {
         pm.setPaymentName(dto.paymentName()); // 금액기록 이름
         pm.setPayTime(Formatter.getDateTime(dto.payTime())); // 금액기록 시간
         paymentRepository.save(pm);
+
         return new PaymentResponseDto(pm.getPaymentId(), pm.getCategory().getCategoryId(), pm.getCategory().getCategoryName(), pm.getPayerType(),
-                pm.getPaymentMethod(), pm.getPaymentName(), pm.getExchangeRate(), pm.getPayTime(), pm.getPaymentAccount(), new ArrayList<>());
+                pm.getPaymentMethod(), pm.getPaymentName(), pm.getType(), pm.getExchangeRate(), pm.getPayTime(), pm.getPaymentAccount(), new ArrayList<>());
     }
 
     // 기존 금액기록에 사진을 추가할시
@@ -227,6 +255,10 @@ public class PaymentService {
     public void deletePayment(Long paymentId) {
         // 금액기록 ID로 금액기록 찾아오기
         Payment pm = paymentRepository.getReferenceById(paymentId);
+        // Todo: 금액기록 삭제할 때 공금이였으면 현재 공금에서 삭제되는만큼의 가격을 빼준다..?
+//        if(pm.getType().equals(PaymentType.SHAREDFUND)){
+//
+//        }
         // 금액기록 ID로 paymentImage 찾아오기
         List<PaymentImage> pi = paymentImageRepository.findByPayment_PaymentId(pm.getPaymentId());
         // 돌면서 이미지 soft delete
