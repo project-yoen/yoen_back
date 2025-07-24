@@ -6,8 +6,6 @@ import com.yoen.yoen_back.entity.travel.Travel;
 import com.yoen.yoen_back.entity.travel.TravelUser;
 import com.yoen.yoen_back.entity.user.User;
 import com.yoen.yoen_back.enums.Role;
-import com.yoen.yoen_back.repository.payment.PaymentRepository;
-import com.yoen.yoen_back.repository.travel.TravelRecordRepository;
 import com.yoen.yoen_back.repository.travel.TravelRepository;
 import com.yoen.yoen_back.repository.travel.TravelUserRepository;
 import jakarta.transaction.Transactional;
@@ -60,7 +58,7 @@ public class TravelService {
 
     //여행_유저 객체 매핑
     public void saveTravelUserEntity(Travel tv, User user) {
-        Role role = Role.Writer;
+        Role role = Role.WRITER;
         TravelUser tu = TravelUser.builder()
                 .travel(tv)
                 .user(user)
