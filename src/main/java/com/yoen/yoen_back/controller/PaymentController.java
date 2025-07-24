@@ -4,6 +4,7 @@ import com.yoen.yoen_back.common.entity.ApiResponse;
 import com.yoen.yoen_back.common.security.CustomUserDetails;
 import com.yoen.yoen_back.dto.payment.PaymentRequestDto;
 import com.yoen.yoen_back.dto.payment.PaymentResponseDto;
+import com.yoen.yoen_back.dto.payment.PaymentSimpleResponseDto;
 import com.yoen.yoen_back.dto.payment.settlement.SettlementUserResponseDto;
 import com.yoen.yoen_back.entity.payment.Payment;
 import com.yoen.yoen_back.entity.payment.SettlementUser;
@@ -23,6 +24,11 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<PaymentSimpleResponseDto>>> getSimplePayment(@RequestParam("travelId") Long travelId, @RequestParam("date") String date) {
+        List<PaymentSimpleResponseDto> dtos = paymentService.getAllPaymentResponseDtoByTravelId(travelId, date);
+        return ResponseEntity.ok(ApiResponse.success(dtos));
+    }
     @GetMapping("/all")
     public ResponseEntity<ApiResponse<List<Payment>>> payment(@RequestParam("travelId") Long travelId) {
         return ResponseEntity.ok(ApiResponse.success(paymentService.getAllPaymentsByTravelId(travelId)));
