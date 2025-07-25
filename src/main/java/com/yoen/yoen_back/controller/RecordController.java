@@ -26,8 +26,8 @@ public class RecordController {
     private final AuthService authService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<TravelRecordResponseDto>>> getTravelRecordByDate(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam("travelUserId") Long travelUserId, @RequestParam("date") String date) {
-        Travel tv = authService.checkTravelUserRole(userDetails.user(), travelUserId, List.of(Role.READER, Role.WRITER));
+    public ResponseEntity<ApiResponse<List<TravelRecordResponseDto>>> getTravelRecordByDate(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam("travelId") Long travelId, @RequestParam("date") String date) {
+        Travel tv = authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.READER, Role.WRITER));
         return ResponseEntity.ok(ApiResponse.success(recordService.getTravelRecordsByDate(tv, date)));
     }
 

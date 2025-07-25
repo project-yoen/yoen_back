@@ -40,8 +40,8 @@ public class PaymentController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<ApiResponse<List<Payment>>> payment(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam("travelUserId") Long travelUserId) {
-        Travel tv = authService.checkTravelUserRole(userDetails.user(), travelUserId, List.of(Role.READER, Role.WRITER));
+    public ResponseEntity<ApiResponse<List<Payment>>> payment(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam("travelId") Long travelId) {
+        Travel tv = authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.READER, Role.WRITER));
         return ResponseEntity.ok(ApiResponse.success(paymentService.getAllPaymentsByTravel(tv)));
     }
 
