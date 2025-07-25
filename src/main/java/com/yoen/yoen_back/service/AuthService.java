@@ -10,6 +10,7 @@ import com.yoen.yoen_back.entity.image.PaymentImage;
 import com.yoen.yoen_back.entity.image.TravelRecordImage;
 import com.yoen.yoen_back.entity.payment.Payment;
 import com.yoen.yoen_back.entity.travel.Travel;
+import com.yoen.yoen_back.entity.travel.TravelJoinRequest;
 import com.yoen.yoen_back.entity.travel.TravelRecord;
 import com.yoen.yoen_back.entity.travel.TravelUser;
 import com.yoen.yoen_back.entity.user.User;
@@ -17,6 +18,7 @@ import com.yoen.yoen_back.enums.Role;
 import com.yoen.yoen_back.repository.image.PaymentImageRepository;
 import com.yoen.yoen_back.repository.image.TravelRecordImageRepository;
 import com.yoen.yoen_back.repository.payment.PaymentRepository;
+import com.yoen.yoen_back.repository.travel.TravelJoinRequestRepository;
 import com.yoen.yoen_back.repository.travel.TravelRecordRepository;
 import com.yoen.yoen_back.repository.travel.TravelRepository;
 import com.yoen.yoen_back.repository.travel.TravelUserRepository;
@@ -41,6 +43,7 @@ public class AuthService {
     private final TravelRepository travelRepository;
     private final PaymentImageRepository paymentImageRepository;
     private final TravelRecordImageRepository travelRecordImageRepository;
+    private final TravelJoinRequestRepository travelJoinRequestRepository;
 
 
     // jwtProvider로 refreshToken 받는 함수
@@ -112,9 +115,15 @@ public class AuthService {
         return checkTravelUserRole(user, roles, pi.getPayment().getTravel());
     }
 
-    public Travel checkTravelUserRoleByTravelRecordImage(User user, Long travelRecordImage, List<Role> roles) {
-        TravelRecordImage tri = travelRecordImageRepository.findByTravelRecordImageIdAndIsActiveTrue(travelRecordImage).orElseThrow(() -> new AccessDeniedException("존재하지 않은 여행기록-사진입니다.")) ;
+    public Travel checkTravelUserRoleByTravelRecordImage(User user, Long travelRecordImageId, List<Role> roles) {
+        TravelRecordImage tri = travelRecordImageRepository.findByTravelRecordImageIdAndIsActiveTrue(travelRecordImageId).orElseThrow(() -> new AccessDeniedException("존재하지 않은 여행기록-사진입니다.")) ;
         return checkTravelUserRole(user, roles, tri.getTravelRecord().getTravel());
+    }
+
+    public Travel checkTravelUserRoleByTravelJoinRequest(User user, Long travelJoinRequestId, List<Role> roles) {
+        TravelJoinRequest trj = travelJoinRequestRepository.findByTravelJoinRequestIdAndIsActiveTrue(travelJoinRequestId).orElseThrow(() -> new AccessDeniedException("존재하지 않은 승인 요청자입니다."));
+        travelUserRepository.findByTravelAndUserAndIsActiveTrue(trj.getTravel(), user).orElseThrow(() -> new AccessDeniedException("승인권한을 가지고 있지 않습니다.")) ;
+        return checkTravelUserRole(user, roles, trj.getTravel());
     }
 
     private Travel checkTravelUserRole(User user, List<Role> roles, Travel travel) {

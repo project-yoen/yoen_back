@@ -6,6 +6,8 @@ import com.yoen.yoen_back.dto.etc.joincode.AcceptJoinRequestDto;
 import com.yoen.yoen_back.dto.etc.joincode.JoinCodeResponseDto;
 import com.yoen.yoen_back.dto.etc.joincode.JoinRequestListResponseDto;
 import com.yoen.yoen_back.dto.etc.joincode.UserTravelJoinResponseDto;
+import com.yoen.yoen_back.enums.Role;
+import com.yoen.yoen_back.service.AuthService;
 import com.yoen.yoen_back.service.JoinService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +26,7 @@ import java.util.List;
 public class JoinController {
 
     private final JoinService joinService;
+    private final AuthService authService;
 
     @GetMapping("/code")
     public ResponseEntity<ApiResponse<JoinCodeResponseDto>> getCode(@RequestParam("travelId") Long travelId) {
@@ -51,21 +54,24 @@ public class JoinController {
 
     // 여행에 참여 신청한 사람들 출력
     @GetMapping("/travellist")
-    public ResponseEntity<ApiResponse<List<JoinRequestListResponseDto>>> getTravelJoinRequest(@RequestParam("travelId") Long travelId) {
+    public ResponseEntity<ApiResponse<List<JoinRequestListResponseDto>>> getTravelJoinRequest(@AuthenticationPrincipal CustomUserDetails userDetails,@RequestParam("travelId") Long travelId) {
+        authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.WRITER, Role.READER));
         List<JoinRequestListResponseDto> dtos = joinService.getJoinRequestList(travelId);
         return ResponseEntity.ok(ApiResponse.success(dtos));
     }
 
     // 여행에 참여 신청한 사람 승인
     @PostMapping("/accept")
-    public ResponseEntity<ApiResponse<String>> acceptJoinRequest(@RequestBody AcceptJoinRequestDto dto) {
+    public ResponseEntity<ApiResponse<String>> acceptJoinRequest(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody AcceptJoinRequestDto dto) {
+        authService.checkTravelUserRoleByTravelJoinRequest(userDetails.user(), dto.travelJoinRequestId(), List.of(Role.WRITER));
         joinService.acceptJoinRequest(dto);
         return ResponseEntity.ok(ApiResponse.success("Join request accepted"));
     }
 
     //여행에 참여 신청한 사람 거절
     @PostMapping("/reject/{id}")
-    public ResponseEntity<ApiResponse<String>> rejectJoinRequest(@PathVariable("id") Long travelJoinRequestId) {
+    public ResponseEntity<ApiResponse<String>> rejectJoinRequest(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable("id") Long travelJoinRequestId) {
+        authService.checkTravelUserRoleByTravelJoinRequest(userDetails.user(), travelJoinRequestId, List.of(Role.WRITER));
         joinService.rejectJoinRequest(travelJoinRequestId);
         return ResponseEntity.ok(ApiResponse.success("Join request rejected"));
     }
