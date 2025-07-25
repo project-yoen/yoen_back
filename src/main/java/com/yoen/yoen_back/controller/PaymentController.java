@@ -64,20 +64,24 @@ public class PaymentController {
     // TODO: 업데이트 추가 해야됨
 
     @DeleteMapping("/image/delete")
-    public ResponseEntity<ApiResponse<String>> deletePaymentImage(@RequestParam("imageId") Long paymentImageId) {
+    public ResponseEntity<ApiResponse<String>> deletePaymentImage(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam("imageId") Long paymentImageId) {
+        authService.checkTravelUserRoleByPaymentImage(userDetails.user(), paymentImageId, List.of(Role.WRITER));
         paymentService.deletePaymentImage(paymentImageId);
         return ResponseEntity.ok(ApiResponse.success("Image deleted successfully"));
     }
 
-    @DeleteMapping("/settlement/delete")
-    public ResponseEntity<ApiResponse<String>> deleteSettlement(@RequestParam("settlementId") Long settlementId) {
-        paymentService.deleteSettlement(settlementId);
-        return ResponseEntity.ok(ApiResponse.success("Settlement deleted successfully"));
-    }
 
-    @DeleteMapping("/delete-payment")
-    public ResponseEntity<ApiResponse<String>> deletePayment(@RequestParam("paymentId") Long paymentId) {
+    @DeleteMapping("/delete")
+    public ResponseEntity<ApiResponse<String>> deletePayment(@AuthenticationPrincipal CustomUserDetails userDetails,@RequestParam("paymentId") Long paymentId) {
+        authService.checkTravelUserRoleByPayment(userDetails.user(), paymentId, List.of(Role.WRITER));
         paymentService.deletePayment(paymentId);
         return ResponseEntity.ok(ApiResponse.success("Payment deleted successfully"));
     }
+    // 테스트용 (필요 시 PaymentService의 메서드 public으로 바꾸고 사용)
+//  @DeleteMapping("/settlement/delete")
+//  public ResponseEntity<ApiResponse<String>> deleteSettlement(@RequestParam("settlementId") Long settlementId) {
+//      paymentService.deleteSettlement(settlementId);
+//      return ResponseEntity.ok(ApiResponse.success("Settlement deleted successfully"));
+//  }
 }
+
