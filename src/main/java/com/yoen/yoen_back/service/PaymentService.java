@@ -297,7 +297,7 @@ public class PaymentService {
     }
 
     // settlementID로 settlement관련 모든거 지우는함수
-    public void deleteSettlement(Long settlementId) {
+    private void deleteSettlement(Long settlementId) {
         Optional<Settlement> settlement = settlementRepository.findBySettlementIdAndIsActiveTrue(settlementId);
 
         settlement.ifPresent(stm -> {
@@ -316,7 +316,7 @@ public class PaymentService {
     }
 
     // settlement로 settlement관련 모든거 지우는함수
-    public void deleteSettlement(Settlement settlement) {
+    private void deleteSettlement(Settlement settlement) {
         List<SettlementUser> su = settlementUserRepository.findAllBySettlement_SettlementId(settlement.getSettlementId());
         su.forEach(stmu -> {
             // 관련 정산 유저 소프트 삭제
