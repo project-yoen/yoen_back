@@ -6,11 +6,18 @@ import com.yoen.yoen_back.dao.redis.RefreshTokenRedisDao;
 import com.yoen.yoen_back.dto.etc.token.TokenResponse;
 import com.yoen.yoen_back.dto.user.LoginRequestDto;
 import com.yoen.yoen_back.dto.user.LoginResponseDto;
+import com.yoen.yoen_back.entity.travel.Travel;
+import com.yoen.yoen_back.entity.travel.TravelUser;
 import com.yoen.yoen_back.entity.user.User;
+import com.yoen.yoen_back.enums.Role;
+import com.yoen.yoen_back.repository.travel.TravelUserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.auth.InvalidCredentialsException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -19,6 +26,7 @@ public class AuthService {
     private final JwtProvider jwtProvider;
     private final UserService userService;
     private final RefreshTokenRedisDao refreshTokenRedisDao;
+    private final TravelUserRepository travelUserRepository;
 
 
     // jwtProvider로 refreshToken 받는 함수
@@ -66,6 +74,14 @@ public class AuthService {
         refreshTokenRedisDao.save(userId, newRefreshToken);
 
         return new TokenResponse(newAccessToken, newRefreshToken);
+    }
+
+    // user와 travelUserId로 일치여부 확인, role과 travelUser role 일치 여부 확인
+    public Travel checkTravelUserRole(User user, Long travelUserId, List<Role> roles) {
+        TravelUser tu = travelUserRepository.findByTravelUserIdAndIsActiveTrue(travelUserId).orElseThrow(() -> new AccessDeniedException("존재하지 않은 참여자입니다."));
+        if (!user.getUserId().equals(tu.getUser().getUserId())) throw new AccessDeniedException("사용자 정보가 일치하지 않습니다.");
+        if (!roles.contains(tu.getRole())) throw new AccessDeniedException("접근 권한이 없는 사용자입니다.");
+        return tu.getTravel();
     }
 
     // 로그 아웃시 redis에 저장되어 있는 refreshToken 지우는 함수
