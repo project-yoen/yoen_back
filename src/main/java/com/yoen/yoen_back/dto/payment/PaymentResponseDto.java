@@ -9,7 +9,7 @@ import com.yoen.yoen_back.enums.PaymentType;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public record PaymentResponseDto(Long paymentId, Long categoryId, String categoryName, Payer payerType, TravelUserDto payerName,
+public record PaymentResponseDto(Long travelId, Long paymentId, Long categoryId, String categoryName, Payer payerType, TravelUserDto payerName,
                                  PaymentMethod paymentMethod, String paymentName, PaymentType paymentType, Double exchangeRate,
                                  LocalDateTime payTime, Long paymentAccount, List<SettlementResponseDto> settlements, List<PaymentImageDto> images) {
 }
