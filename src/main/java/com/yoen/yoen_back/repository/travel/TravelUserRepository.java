@@ -15,4 +15,6 @@ public interface TravelUserRepository extends JpaRepository<TravelUser, Long> {
     List<TravelUser> findByTravelAndIsActiveTrue(Travel tv);
 
     Optional<TravelUser> findByTravelUserIdAndIsActiveTrue(Long travelUserId);
+
+    Optional<TravelUser> findByTravelAndUserAndIsActiveTrue(Travel travel, User user);
 }

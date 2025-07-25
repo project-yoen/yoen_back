@@ -6,10 +6,15 @@ import com.yoen.yoen_back.dao.redis.RefreshTokenRedisDao;
 import com.yoen.yoen_back.dto.etc.token.TokenResponse;
 import com.yoen.yoen_back.dto.user.LoginRequestDto;
 import com.yoen.yoen_back.dto.user.LoginResponseDto;
+import com.yoen.yoen_back.entity.payment.Payment;
 import com.yoen.yoen_back.entity.travel.Travel;
+import com.yoen.yoen_back.entity.travel.TravelRecord;
 import com.yoen.yoen_back.entity.travel.TravelUser;
 import com.yoen.yoen_back.entity.user.User;
 import com.yoen.yoen_back.enums.Role;
+import com.yoen.yoen_back.repository.payment.PaymentRepository;
+import com.yoen.yoen_back.repository.travel.TravelRecordRepository;
+import com.yoen.yoen_back.repository.travel.TravelRepository;
 import com.yoen.yoen_back.repository.travel.TravelUserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +32,9 @@ public class AuthService {
     private final UserService userService;
     private final RefreshTokenRedisDao refreshTokenRedisDao;
     private final TravelUserRepository travelUserRepository;
+    private final PaymentRepository paymentRepository;
+    private final TravelRecordRepository travelRecordRepository;
+    private final TravelRepository travelRepository;
 
 
     // jwtProvider로 refreshToken 받는 함수
@@ -77,12 +85,29 @@ public class AuthService {
     }
 
     // user와 travelUserId로 일치여부 확인, role과 travelUser role 일치 여부 확인
-    public Travel checkTravelUserRole(User user, Long travelId, List<Role> roles) {
-        TravelUser tu = travelUserRepository.findByTravel_TravelIdAndUserAndIsActiveTrue(travelId, user).orElseThrow(() -> new AccessDeniedException("존재하지 않은 참여자입니다."));
+    public Travel checkTravelUserRoleByTravel(User user, Long travelId, List<Role> roles) {
+        Travel tv = travelRepository.findByTravelIdAndIsActiveTrue(travelId).orElseThrow(() -> new AccessDeniedException("존재하지 않은 여행입니다.")) ;;
+        return checkTravelUserRole(user, roles, tv);
+    }
+
+    // user와 travelUserId로 일치여부 확인, role과 travelUser role 일치 여부 확인
+    public Travel checkTravelUserRoleByPayment(User user, Long paymentId, List<Role> roles) {
+        Payment pm = paymentRepository.findByPaymentIdAndIsActiveTrue(paymentId).orElseThrow(() -> new AccessDeniedException("존재하지 않은 금액기록입니다.")) ;
+        return checkTravelUserRole(user, roles, pm.getTravel());
+    }
+
+    public Travel checkTravelUserRoleByRecord(User user, Long recordId, List<Role> roles) {
+        TravelRecord pm = travelRecordRepository.findByTravelRecordIdAndIsActiveTrue(recordId).orElseThrow(() -> new AccessDeniedException("존재하지 않은 여행기록입니다.")) ;
+        return checkTravelUserRole(user, roles, pm.getTravel());
+    }
+
+    private Travel checkTravelUserRole(User user, List<Role> roles, Travel travel) {
+        TravelUser tu = travelUserRepository.findByTravelAndUserAndIsActiveTrue(travel, user).orElseThrow(() -> new AccessDeniedException("존재하지 않은 참여자입니다."));
         if (!user.getUserId().equals(tu.getUser().getUserId())) throw new AccessDeniedException("사용자 정보가 일치하지 않습니다.");
         if (!roles.contains(tu.getRole())) throw new AccessDeniedException("접근 권한이 없는 사용자입니다.");
         return tu.getTravel();
     }
+
 
     // 로그 아웃시 redis에 저장되어 있는 refreshToken 지우는 함수
     public void logout(String accessToken) {
