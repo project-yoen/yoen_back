@@ -374,16 +374,19 @@ public class PaymentService {
         Payment pm = paymentRepository.getReferenceById(paymentId);
         List<TravelUser> tuList = travelUserRepository.findByTravel_TravelId(pm.getTravel().getTravelId());
 
-        //TravelUserList 돌면서 SettlementResponseDto에 들어갈 TravelUserDto 만들기
-        List<TravelUserDto> tuDtoList = tuList.stream().map(travelUser -> new TravelUserDto(travelUser.getTravelUserId(), travelUser.getTravel().getTravelId(),
-                travelUser.getTravelUserId(), travelUser.getRole(), travelUser.getTravelNickname())).toList();
-
         //Payment에 속한 settlement 리스트 받아오기
         List<Settlement> stList = settlementRepository.findByPayment_PaymentId(paymentId);
         //settlement 리스트 돌면서 PaymentResponseDto에 들어갈 SettlementResponseDto 만들기
-        List<SettlementResponseDto> stResponseDtoList = stList.stream().map(settlement ->
-                new SettlementResponseDto(settlement.getSettlementId(), pm.getPaymentId(), settlement.getSettlementName(), settlement.getAmount(),
-                        settlement.getIsPaid(), tuDtoList)).toList();
+        List<SettlementResponseDto> stResponseDtoList = stList.stream().map(settlement -> {
+                List<SettlementUser> stuList = settlementUserRepository.findBySettlement(settlement);
+                List<TravelUserDto> tuDtoList = stuList.stream().map(stu -> {
+                    TravelUser tu = stu.getTravelUser();
+                    return new TravelUserDto(tu.getTravelUserId(), pm.getTravel().getTravelId(), tu.getUser().getUserId(),
+                            tu.getRole(), tu.getTravelNickname());
+                }).toList();
+                return new SettlementResponseDto(settlement.getSettlementId(), pm.getPaymentId(), settlement.getSettlementName(), settlement.getAmount(),
+                        settlement.getIsPaid(), tuDtoList);
+        }).toList();
 
         //PaymentImage에 존재하는 이미지 PayemntId로 가져오기
         List<PaymentImage> pmiList = paymentImageRepository.findByPayment(pm);
