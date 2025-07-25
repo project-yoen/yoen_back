@@ -7,6 +7,7 @@ import com.yoen.yoen_back.dto.payment.PaymentResponseDto;
 import com.yoen.yoen_back.dto.payment.PaymentSimpleResponseDto;
 import com.yoen.yoen_back.dto.payment.settlement.SettlementRequestDto;
 import com.yoen.yoen_back.dto.payment.settlement.SettlementResponseDto;
+import com.yoen.yoen_back.dto.payment.settlement.SettlementUserResponseDto;
 import com.yoen.yoen_back.dto.travel.TravelUserDto;
 import com.yoen.yoen_back.entity.Category;
 import com.yoen.yoen_back.entity.ExchangeRate;
@@ -68,9 +69,7 @@ public class PaymentService {
 
 
     // TODO: 날짜별 금액기록 리스트 받기
-    public List<PaymentSimpleResponseDto> getAllPaymentResponseDtoByTravelId(Long travelUserId, String date) {
-        TravelUser tu = travelUserRepository.getReferenceById(travelUserId);
-        Travel tv = tu.getTravel();
+    public List<PaymentSimpleResponseDto> getAllPaymentResponseDtoByTravelId(Travel tv, String date) {
         LocalDateTime localDateTime = Formatter.getDateTime(date);
         List<Payment> pmList = paymentRepository.findAllByTravelAndPayTimeBetween(tv, localDateTime, localDateTime.plusDays(1));
         return pmList.stream().map(payment ->
@@ -182,19 +181,23 @@ public class PaymentService {
                         return new PaymentImageDto(tmp.getPaymentImageId(), image.getImageUrl());
                     }
             ).toList();
-            return new PaymentResponseDto(payment.getPaymentId(), payment.getCategory().getCategoryId(), payment.getCategory().getCategoryName(), payment.getPayerType(), payerDto,
+            return new PaymentResponseDto(payment.getTravel().getTravelId(), payment.getPaymentId(), payment.getCategory().getCategoryId(), payment.getCategory().getCategoryName(), payment.getPayerType(), payerDto,
                     payment.getPaymentMethod(), payment.getPaymentName(), payment.getType(), payment.getExchangeRate(), payment.getPayTime(), payment.getPaymentAccount(), settlementResponse, imagesDto);
         }
 
         // 아미지 파일이 존재 안할시
-        return new PaymentResponseDto(payment.getPaymentId(), payment.getCategory().getCategoryId(), payment.getCategory().getCategoryName(), payment.getPayerType(), payerDto,
+        return new PaymentResponseDto(payment.getTravel().getTravelId(), payment.getPaymentId(), payment.getCategory().getCategoryId(), payment.getCategory().getCategoryName(), payment.getPayerType(), payerDto,
                 payment.getPaymentMethod(), payment.getPaymentName(), payment.getType(), payment.getExchangeRate(), payment.getPayTime(), payment.getPaymentAccount(), settlementResponse, new ArrayList<>());
 
     }
 
     // 정산유저 테스트
-    public List<SettlementUser> getAllSettlementUsers() {
-        return settlementUserRepository.findAll();
+    public List<SettlementUserResponseDto> getAllSettlementUsers() {
+        List<SettlementUser> stuList = settlementUserRepository.findAll();
+        return stuList.stream().map(settlementUser -> new SettlementUserResponseDto(settlementUser.getSettlementUserId(),
+                settlementUser.getSettlement().getSettlementId(), settlementUser.getTravelUser().getTravelUserId(), settlementUser.getAmount(),
+                settlementUser.getIsPaid())
+        ).toList();
     }
 
     // 기존 settlement를 전부 삭제 후, 새 settlement 추가
@@ -256,7 +259,7 @@ public class PaymentService {
 
         TravelUser payer = pm.getTravelUser();
         TravelUserDto payerDto = new TravelUserDto(payer.getTravelUserId(), payer.getTravel().getTravelId(), payer.getUser().getUserId(), payer.getRole(), payer.getTravelNickname());
-        return new PaymentResponseDto(pm.getPaymentId(), pm.getCategory().getCategoryId(), pm.getCategory().getCategoryName(), pm.getPayerType(), payerDto,
+        return new PaymentResponseDto(pm.getTravel().getTravelId(), pm.getPaymentId(), pm.getCategory().getCategoryId(), pm.getCategory().getCategoryName(), pm.getPayerType(), payerDto,
                 pm.getPaymentMethod(), pm.getPaymentName(), pm.getType(), pm.getExchangeRate(), pm.getPayTime(), pm.getPaymentAccount(), updatedSettlements, new ArrayList<>());
     }
 
@@ -372,7 +375,6 @@ public class PaymentService {
     public PaymentResponseDto getDetailPayment(Long paymentId) {
         //paymentId로 payment 찾아오고 payment에 있는 travelId로 travelUser 찾기
         Payment pm = paymentRepository.getReferenceById(paymentId);
-        List<TravelUser> tuList = travelUserRepository.findByTravel_TravelId(pm.getTravel().getTravelId());
 
         //Payment에 속한 settlement 리스트 받아오기
         List<Settlement> stList = settlementRepository.findByPayment_PaymentId(paymentId);
@@ -395,7 +397,7 @@ public class PaymentService {
                 paymentImage.getImage().getImageUrl())).toList();
         TravelUser payer = pm.getTravelUser();
         TravelUserDto payerDto = new TravelUserDto(payer.getTravelUserId(), payer.getTravel().getTravelId(), payer.getUser().getUserId(), payer.getRole(), payer.getTravelNickname());
-        return new PaymentResponseDto(pm.getPaymentId(), pm.getCategory().getCategoryId(), pm.getCategory().getCategoryName(),
+        return new PaymentResponseDto(pm.getTravel().getTravelId(), pm.getPaymentId(), pm.getCategory().getCategoryId(), pm.getCategory().getCategoryName(),
                 pm.getPayerType(), payerDto, pm.getPaymentMethod(), pm.getPaymentName(), pm.getType(), pm.getExchangeRate(), pm.getPayTime(),
                 pm.getPaymentAccount(), stResponseDtoList, pmimageDtoList);
     }
