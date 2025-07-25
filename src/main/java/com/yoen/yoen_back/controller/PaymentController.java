@@ -38,6 +38,7 @@ public class PaymentController {
         PaymentResponseDto dto = paymentService.getDetailPayment(paymentId);
         return ResponseEntity.ok(ApiResponse.success(dto));
     }
+
     @GetMapping("/all")
     public ResponseEntity<ApiResponse<List<Payment>>> payment(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam("travelUserId") Long travelUserId) {
         Travel tv = authService.checkTravelUserRole(userDetails.user(), travelUserId, List.of(Role.READER, Role.WRITER));

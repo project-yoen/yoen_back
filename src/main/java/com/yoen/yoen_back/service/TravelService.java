@@ -101,7 +101,7 @@ public class TravelService {
 
     // 여행에 대한 여행 유저 반환하는 함수
     public TravelUser getTravelUser(User user, Long travelId) {
-        return travelUserRepository.findByTravel_TravelIdAndUser(travelId, user)
+        return travelUserRepository.findByTravel_TravelIdAndUserAndIsActiveTrue(travelId, user)
                 .orElseThrow(() -> new RuntimeException("해당 유저의 TravelUser가 존재하지 않습니다."));
     }
 

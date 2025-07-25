@@ -77,8 +77,8 @@ public class AuthService {
     }
 
     // user와 travelUserId로 일치여부 확인, role과 travelUser role 일치 여부 확인
-    public Travel checkTravelUserRole(User user, Long travelUserId, List<Role> roles) {
-        TravelUser tu = travelUserRepository.findByTravelUserIdAndIsActiveTrue(travelUserId).orElseThrow(() -> new AccessDeniedException("존재하지 않은 참여자입니다."));
+    public Travel checkTravelUserRole(User user, Long travelId, List<Role> roles) {
+        TravelUser tu = travelUserRepository.findByTravel_TravelIdAndUserAndIsActiveTrue(travelId, user).orElseThrow(() -> new AccessDeniedException("존재하지 않은 참여자입니다."));
         if (!user.getUserId().equals(tu.getUser().getUserId())) throw new AccessDeniedException("사용자 정보가 일치하지 않습니다.");
         if (!roles.contains(tu.getRole())) throw new AccessDeniedException("접근 권한이 없는 사용자입니다.");
         return tu.getTravel();

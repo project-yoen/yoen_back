@@ -10,7 +10,7 @@ import java.util.Optional;
 
 public interface TravelUserRepository extends JpaRepository<TravelUser, Long> {
     List<TravelUser> findByTravel_TravelId(Long travelId);
-    Optional<TravelUser> findByTravel_TravelIdAndUser(Long travelId, User user);
+    Optional<TravelUser> findByTravel_TravelIdAndUserAndIsActiveTrue(Long travelId, User user);
 
     List<TravelUser> findByTravelAndIsActiveTrue(Travel tv);
 

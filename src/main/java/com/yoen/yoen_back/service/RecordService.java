@@ -39,7 +39,6 @@ public class RecordService {
      **/
     private final TravelRepository travelRepository;
     private final TravelUserRepository travelUserRepository;
-    private final SpringDataWebProperties springDataWebProperties;
 
 
     public List<TravelRecord> getAllTravelRecordsByTravelId(Long travelId) {
@@ -47,9 +46,7 @@ public class RecordService {
     }
 
     // TODO: 날짜별 여행기록 리스트 받기
-    public List<TravelRecordResponseDto> getTravelRecordsByDate(Long travelUserId, String date) {
-        TravelUser travelUser = travelUserRepository.getReferenceById(travelUserId);
-        Travel tv = travelUser.getTravel();
+    public List<TravelRecordResponseDto> getTravelRecordsByDate(Travel tv, String date) {
         LocalDateTime startDateTime = Formatter.getDateTime(date);
         List<TravelRecord> tvrList = travelRecordRepository.findAllByTravelAndRecordTimeBetween(tv, startDateTime, startDateTime.plusDays(1));
 

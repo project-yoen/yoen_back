@@ -4,7 +4,10 @@ import com.yoen.yoen_back.common.entity.ApiResponse;
 import com.yoen.yoen_back.common.security.CustomUserDetails;
 import com.yoen.yoen_back.dto.travel.TravelRecordRequestDto;
 import com.yoen.yoen_back.dto.travel.TravelRecordResponseDto;
+import com.yoen.yoen_back.entity.travel.Travel;
 import com.yoen.yoen_back.entity.travel.TravelRecord;
+import com.yoen.yoen_back.enums.Role;
+import com.yoen.yoen_back.service.AuthService;
 import com.yoen.yoen_back.service.RecordService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,10 +23,12 @@ import java.util.List;
 public class RecordController {
 
     private final RecordService recordService;
+    private final AuthService authService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<TravelRecordResponseDto>>> getTravelRecordByDate(@RequestParam("travelUserId") Long travelUserId, @RequestParam("date") String date) {
-        return ResponseEntity.ok(ApiResponse.success(recordService.getTravelRecordsByDate(travelUserId, date)));
+    public ResponseEntity<ApiResponse<List<TravelRecordResponseDto>>> getTravelRecordByDate(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam("travelUserId") Long travelUserId, @RequestParam("date") String date) {
+        Travel tv = authService.checkTravelUserRole(userDetails.user(), travelUserId, List.of(Role.READER, Role.WRITER));
+        return ResponseEntity.ok(ApiResponse.success(recordService.getTravelRecordsByDate(tv, date)));
     }
 
     @GetMapping("/all")
