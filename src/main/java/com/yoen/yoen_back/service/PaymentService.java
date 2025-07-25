@@ -163,7 +163,8 @@ public class PaymentService {
             return new SettlementResponseDto(sm.getSettlementId(), settlement.paymentId(), settlement.settlementName(), settlement.amount(), sm.getIsPaid(), travelUsersResponse);
 
         }).toList();
-
+        TravelUser payer = payment.getTravelUser();
+        TravelUserDto payerDto = new TravelUserDto(payer.getTravelUserId(), payer.getTravel().getTravelId(), payer.getUser().getUserId(), payer.getRole(), payer.getTravelNickname());
         // 이미지 파일이 존재할시
         if (files != null && !files.isEmpty()) {
             //받은 이미지들을 저장한다
@@ -181,12 +182,12 @@ public class PaymentService {
                         return new PaymentImageDto(tmp.getPaymentImageId(), image.getImageUrl());
                     }
             ).toList();
-            return new PaymentResponseDto(payment.getPaymentId(), payment.getCategory().getCategoryId(), payment.getCategory().getCategoryName(), payment.getPayerType(),
+            return new PaymentResponseDto(payment.getPaymentId(), payment.getCategory().getCategoryId(), payment.getCategory().getCategoryName(), payment.getPayerType(), payerDto,
                     payment.getPaymentMethod(), payment.getPaymentName(), payment.getType(), payment.getExchangeRate(), payment.getPayTime(), payment.getPaymentAccount(), settlementResponse, imagesDto);
         }
 
         // 아미지 파일이 존재 안할시
-        return new PaymentResponseDto(payment.getPaymentId(), payment.getCategory().getCategoryId(), payment.getCategory().getCategoryName(), payment.getPayerType(),
+        return new PaymentResponseDto(payment.getPaymentId(), payment.getCategory().getCategoryId(), payment.getCategory().getCategoryName(), payment.getPayerType(), payerDto,
                 payment.getPaymentMethod(), payment.getPaymentName(), payment.getType(), payment.getExchangeRate(), payment.getPayTime(), payment.getPaymentAccount(), settlementResponse, new ArrayList<>());
 
     }
@@ -253,8 +254,9 @@ public class PaymentService {
         pm.setPayTime(Formatter.getDateTime(dto.payTime())); // 금액기록 시간
         paymentRepository.save(pm);
 
-
-        return new PaymentResponseDto(pm.getPaymentId(), pm.getCategory().getCategoryId(), pm.getCategory().getCategoryName(), pm.getPayerType(),
+        TravelUser payer = pm.getTravelUser();
+        TravelUserDto payerDto = new TravelUserDto(payer.getTravelUserId(), payer.getTravel().getTravelId(), payer.getUser().getUserId(), payer.getRole(), payer.getTravelNickname());
+        return new PaymentResponseDto(pm.getPaymentId(), pm.getCategory().getCategoryId(), pm.getCategory().getCategoryName(), pm.getPayerType(), payerDto,
                 pm.getPaymentMethod(), pm.getPaymentName(), pm.getType(), pm.getExchangeRate(), pm.getPayTime(), pm.getPaymentAccount(), updatedSettlements, new ArrayList<>());
     }
 
@@ -388,9 +390,10 @@ public class PaymentService {
         //PaymentImage 리스트 돌면서 PaymentResponseDto에 들어갈 PaymentImageDtoList 만들기
         List<PaymentImageDto> pmimageDtoList = pmiList.stream().map(paymentImage -> new PaymentImageDto(paymentImage.getPaymentImageId(),
                 paymentImage.getImage().getImageUrl())).toList();
-
+        TravelUser payer = pm.getTravelUser();
+        TravelUserDto payerDto = new TravelUserDto(payer.getTravelUserId(), payer.getTravel().getTravelId(), payer.getUser().getUserId(), payer.getRole(), payer.getTravelNickname());
         return new PaymentResponseDto(pm.getPaymentId(), pm.getCategory().getCategoryId(), pm.getCategory().getCategoryName(),
-                pm.getPayerType(), pm.getPaymentMethod(), pm.getPaymentName(), pm.getType(), pm.getExchangeRate(), pm.getPayTime(),
+                pm.getPayerType(), payerDto, pm.getPaymentMethod(), pm.getPaymentName(), pm.getType(), pm.getExchangeRate(), pm.getPayTime(),
                 pm.getPaymentAccount(), stResponseDtoList, pmimageDtoList);
     }
 }
