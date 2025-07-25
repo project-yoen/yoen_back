@@ -15,6 +15,9 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * 유저가 여행에 참여하는 전반적인 과정의 엔드포인트를 담당하는 컨트롤러
+ **/
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/join")
