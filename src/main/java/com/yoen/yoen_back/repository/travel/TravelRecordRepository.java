@@ -9,9 +9,10 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TravelRecordRepository extends JpaRepository<TravelRecord, Long> {
-    List<TravelRecord> findByTravel_TravelId(Long travelId);
+    List<TravelRecord> findByTravelAndIsActiveTrue(Travel tv);
     List<TravelRecord> findByTravel_TravelIdAndIsActiveTrue(Long travelId);
     Optional<TravelRecord> findByTravelRecordIdAndIsActiveTrue(Long travelRecordId);
 
-    List<TravelRecord> findAllByTravelAndRecordTimeBetween(Travel tv, LocalDateTime start, LocalDateTime end);
+    List<TravelRecord> findAllByTravelAndRecordTimeBetweenAndIsActiveTrue(Travel tv, LocalDateTime start, LocalDateTime end);
+
 }
