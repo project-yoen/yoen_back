@@ -29,12 +29,14 @@ public class PaymentController {
     private final AuthService authService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<PaymentSimpleResponseDto>>> getSimplePayment(@RequestParam("travelUserId") Long travelUserId, @RequestParam("date") String date) {
-        List<PaymentSimpleResponseDto> dtos = paymentService.getAllPaymentResponseDtoByTravelId(travelUserId, date);
+    public ResponseEntity<ApiResponse<List<PaymentSimpleResponseDto>>> getSimplePayment(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam("travelId") Long travelId, @RequestParam("date") String date) {
+        Travel tv = authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.READER, Role.WRITER));
+        List<PaymentSimpleResponseDto> dtos = paymentService.getAllPaymentResponseDtoByTravelId(tv, date);
         return ResponseEntity.ok(ApiResponse.success(dtos));
     }
     @GetMapping("/detail")
-    public ResponseEntity<ApiResponse<PaymentResponseDto>> getDetailPayment(@RequestParam("paymentId")Long paymentId) {
+    public ResponseEntity<ApiResponse<PaymentResponseDto>> getDetailPayment(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam("paymentId")Long paymentId) {
+        authService.checkTravelUserRoleByPayment(userDetails.user(), paymentId, List.of(Role.READER, Role.WRITER));
         PaymentResponseDto dto = paymentService.getDetailPayment(paymentId);
         return ResponseEntity.ok(ApiResponse.success(dto));
     }
@@ -47,17 +49,16 @@ public class PaymentController {
 
     @PostMapping("/create")
     public ResponseEntity<ApiResponse<PaymentResponseDto>> createTravelPayment(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestPart("dto") PaymentRequestDto dto, @RequestPart(value = "images", required = false) List<MultipartFile> files) {
+        authService.checkTravelUserRoleByTravel(userDetails.user(), dto.travelId(), List.of(Role.WRITER));
         PaymentResponseDto responseDto = paymentService.createPayment(userDetails.user(), dto, files);
         return ResponseEntity.ok(ApiResponse.success(responseDto));
     }
 
-    // 테스트용
+    // 테스트용 (앱에서 사용 X)
     @GetMapping("/settlementuser/all")
     public ResponseEntity<ApiResponse<List<SettlementUserResponseDto>>> getAllSettlementUser() {
-        List<SettlementUser> settlementUserList = paymentService.getAllSettlementUsers();
-        List<SettlementUserResponseDto> surd = settlementUserList.stream().map(settlementUser -> new SettlementUserResponseDto(settlementUser.getSettlementUserId(), settlementUser.getSettlement().getSettlementId(), settlementUser.getTravelUser().getTravelUserId(), settlementUser.getAmount(), settlementUser.getIsPaid())).toList();
-
-        return ResponseEntity.ok(ApiResponse.success(surd));
+        List<SettlementUserResponseDto> dtos = paymentService.getAllSettlementUsers();
+        return ResponseEntity.ok(ApiResponse.success(dtos));
     }
 
     // TODO: 업데이트 추가 해야됨
