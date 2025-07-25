@@ -16,7 +16,6 @@ import com.yoen.yoen_back.repository.travel.TravelRepository;
 import com.yoen.yoen_back.repository.travel.TravelUserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.autoconfigure.data.web.SpringDataWebProperties;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -45,10 +44,14 @@ public class RecordService {
         return travelRecordRepository.findByTravel_TravelIdAndIsActiveTrue(travelId);
     }
 
+    public List<TravelRecord> getAllTravelRecordsByTravel(Travel tv) {
+        return travelRecordRepository.findByTravelAndIsActiveTrue(tv);
+    }
+
     // TODO: 날짜별 여행기록 리스트 받기
     public List<TravelRecordResponseDto> getTravelRecordsByDate(Travel tv, String date) {
         LocalDateTime startDateTime = Formatter.getDateTime(date);
-        List<TravelRecord> tvrList = travelRecordRepository.findAllByTravelAndRecordTimeBetween(tv, startDateTime, startDateTime.plusDays(1));
+        List<TravelRecord> tvrList = travelRecordRepository.findAllByTravelAndRecordTimeBetweenAndIsActiveTrue(tv, startDateTime, startDateTime.plusDays(1));
 
         return tvrList.stream().map(tvr -> {
             List<TravelRecordImageDto> trilist = travelRecordImageRepository.findByTravelRecordAndIsActiveTrue(tvr).stream().map(tvri -> new TravelRecordImageDto(tvri.getTravelRecordImageId(), tvri.getImage().getImageUrl())).toList();

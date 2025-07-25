@@ -25,24 +25,27 @@ public class RecordController {
     private final RecordService recordService;
     private final AuthService authService;
 
-    @GetMapping
-    public ResponseEntity<ApiResponse<List<TravelRecordResponseDto>>> getTravelRecordByDate(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam("travelId") Long travelId, @RequestParam("date") String date) {
-        Travel tv = authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.READER, Role.WRITER));
-        return ResponseEntity.ok(ApiResponse.success(recordService.getTravelRecordsByDate(tv, date)));
-    }
-
     @GetMapping("/all")
-    public ResponseEntity<ApiResponse<List<TravelRecord>>> travelRecord(@RequestParam("travelId") Long travelId) {
-        return ResponseEntity.ok(ApiResponse.success(recordService.getAllTravelRecordsByTravelId(travelId)));
+    public ResponseEntity<ApiResponse<List<TravelRecord>>> travelRecord(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam("travelId") Long travelId) {
+        Travel tv = authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.READER, Role.WRITER));
+        return ResponseEntity.ok(ApiResponse.success(recordService.getAllTravelRecordsByTravel(tv)));
     }
 
 
     // 여행 기록 작성하는 함수 (RequestParts를 쓰거나 아니면 두개로 분리해야함)
     @PostMapping("/create")
     public ResponseEntity<ApiResponse<TravelRecordResponseDto>> setTravelRecord(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestPart("dto") TravelRecordRequestDto dto, @RequestPart(value = "images", required = false) List<MultipartFile> files) {
+        authService.checkTravelUserRoleByTravel(userDetails.user(), dto.travelId(), List.of(Role.WRITER));
         TravelRecordResponseDto trd = recordService.createTravelRecord(userDetails.user(), dto, files);
         return ResponseEntity.ok(ApiResponse.success(trd));
     }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<TravelRecordResponseDto>>> getTravelRecordByDate(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam("travelId") Long travelId, @RequestParam("date") String date) {
+        Travel tv = authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.READER, Role.WRITER));
+        return ResponseEntity.ok(ApiResponse.success(recordService.getTravelRecordsByDate(tv, date)));
+    }
+
 
     // TODO: 업데이트 추가 해야됨
 
