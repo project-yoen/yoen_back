@@ -6,6 +6,8 @@ import com.yoen.yoen_back.dto.payment.PaymentRequestDto;
 import com.yoen.yoen_back.dto.payment.PaymentResponseDto;
 import com.yoen.yoen_back.dto.payment.PaymentSimpleResponseDto;
 import com.yoen.yoen_back.dto.payment.settlement.SettlementRequestDto;
+import com.yoen.yoen_back.dto.payment.settlement.SettlementResponseDto;
+import com.yoen.yoen_back.dto.travel.TravelUserDto;
 import com.yoen.yoen_back.entity.Category;
 import com.yoen.yoen_back.entity.ExchangeRate;
 import com.yoen.yoen_back.entity.image.Image;
@@ -114,12 +116,12 @@ public class PaymentService {
         return settlementRepository.save(sm);
     }
 
-    public SettlementUser saveSettlementUserEntity(TravelUser tu, Settlement sm, SettlementRequestDto dto) {
+    public SettlementUser saveSettlementUserEntity(TravelUser tu, Settlement sm, Long size) {
         SettlementUser su = SettlementUser.builder()
                 .travelUser(tu)
                 .settlement(sm)
-                .amount(dto.amount() / dto.travelUsers().size())
-                .isPaid(dto.isPaid())
+                .amount(sm.getAmount() / size)
+                .isPaid(sm.getIsPaid())
                 .build();
 
         // 정산 유저 저장
@@ -145,16 +147,17 @@ public class PaymentService {
             tv.setSharedFund(tv.getSharedFund() - payment.getPaymentAccount());
             travelRepository.save(tv);
         }
+
         // 정산리스트 저장 로직
-        dto.settlementList().forEach(settlement -> {
+        List<SettlementResponseDto> settlementResponse = dto.settlementList().stream().map(settlement -> {
             Settlement sm = saveSettlementEntity(payment, settlement);
 
             // 정산 유저 저장 로직
-            settlement.travelUsers().forEach(travelUser -> {
-                TravelUser tu = travelUserRepository.getReferenceById(travelUser);
-                SettlementUser smu = saveSettlementUserEntity(tu, sm, settlement);
-            });
-        });
+            List<TravelUserDto> travelUsersResponse = getTravelUserDtosBySettlement(settlement, sm);
+
+            return new SettlementResponseDto(sm.getSettlementId(), settlement.paymentId(), settlement.settlementName(), settlement.amount(), sm.getIsPaid(), travelUsersResponse);
+
+        }).toList();
 
         // 이미지 파일이 존재할시
         if (files != null && !files.isEmpty()) {
@@ -174,12 +177,12 @@ public class PaymentService {
                     }
             ).toList();
             return new PaymentResponseDto(payment.getPaymentId(), payment.getCategory().getCategoryId(), payment.getCategory().getCategoryName(), payment.getPayerType(),
-                    payment.getPaymentMethod(), payment.getPaymentName(), payment.getType(), payment.getExchangeRate(), payment.getPayTime(), payment.getPaymentAccount(), imagesDto);
+                    payment.getPaymentMethod(), payment.getPaymentName(), payment.getType(), payment.getExchangeRate(), payment.getPayTime(), payment.getPaymentAccount(), settlementResponse, imagesDto);
         }
 
         // 아미지 파일이 존재 안할시
         return new PaymentResponseDto(payment.getPaymentId(), payment.getCategory().getCategoryId(), payment.getCategory().getCategoryName(), payment.getPayerType(),
-                payment.getPaymentMethod(), payment.getPaymentName(), payment.getType(), payment.getExchangeRate(), payment.getPayTime(), payment.getPaymentAccount(), new ArrayList<>());
+                payment.getPaymentMethod(), payment.getPaymentName(), payment.getType(), payment.getExchangeRate(), payment.getPayTime(), payment.getPaymentAccount(), settlementResponse, new ArrayList<>());
 
     }
 
@@ -189,16 +192,31 @@ public class PaymentService {
     }
 
     // 기존 settlement를 전부 삭제 후, 새 settlement 추가
-    public void updateSettlement(Payment payment, List<Settlement> preSettlements, List<SettlementRequestDto> dto) {
-        preSettlements.forEach(settlement -> {
-            settlement.setIsActive(false);
-            settlementRepository.save(settlement);
-        });
+    public List<SettlementResponseDto> updateSettlement(Payment payment, List<Settlement> preSettlements, List<SettlementRequestDto> dto) {
+        preSettlements.forEach(this::deleteSettlement);
 
-        dto.forEach(settlement -> {
+        return dto.stream().map(settlement -> {
             Settlement st = saveSettlementEntity(payment, settlement);
-            settlementRepository.save(st);
-        });
+            // 정산 유저 저장 로직
+            settlement.travelUsers().forEach(travelUser -> {
+                TravelUser tu = travelUserRepository.getReferenceById(travelUser);
+                SettlementUser smu = saveSettlementUserEntity(tu, st, (long) settlement.travelUsers().size());
+            });
+            Settlement savedSettlement = settlementRepository.save(st);
+
+            // 정산 유저 저장 로직
+            List<TravelUserDto> travelUsersResponse = getTravelUserDtosBySettlement(settlement, savedSettlement);
+
+            return new SettlementResponseDto(savedSettlement.getSettlementId(), payment.getPaymentId(), savedSettlement.getSettlementName(), savedSettlement.getAmount(), savedSettlement.getIsPaid(), travelUsersResponse);
+        }).toList();
+    }
+
+    private List<TravelUserDto> getTravelUserDtosBySettlement(SettlementRequestDto settlement, Settlement savedSettlement) {
+        return settlement.travelUsers().stream().map(travelUser -> {
+            TravelUser tu = travelUserRepository.getReferenceById(travelUser);
+            SettlementUser smu = saveSettlementUserEntity(tu, savedSettlement, (long) settlement.travelUsers().size());
+            return new TravelUserDto(tu.getTravelUserId(), tu.getTravel().getTravelId(), tu.getUser().getUserId(), tu.getRole(), tu.getTravelNickname());
+        }).toList();
     }
 
     // 사진을 제외한 금액기록을 수정할시
@@ -217,8 +235,9 @@ public class PaymentService {
             }
         }
         List<Settlement> settlements = settlementRepository.findByPayment(pm);
-        // 기존 settlement들 삭제 후 다시 생성
-        updateSettlement(pm, settlements, dto.settlementList());
+        // 기존 settlement들 삭제 후 다시 생성 그리고 settlementResponseDto 반환
+        List<SettlementResponseDto> updatedSettlements = updateSettlement(pm, settlements, dto.settlementList());
+
 
         pm.setCategory(categoryRepository.getReferenceById(dto.categoryId())); // 카테고리
         pm.setPayerType(dto.payerType()); // 개인 or 공금
@@ -231,7 +250,7 @@ public class PaymentService {
 
 
         return new PaymentResponseDto(pm.getPaymentId(), pm.getCategory().getCategoryId(), pm.getCategory().getCategoryName(), pm.getPayerType(),
-                pm.getPaymentMethod(), pm.getPaymentName(), pm.getType(), pm.getExchangeRate(), pm.getPayTime(), pm.getPaymentAccount(), new ArrayList<>());
+                pm.getPaymentMethod(), pm.getPaymentName(), pm.getType(), pm.getExchangeRate(), pm.getPayTime(), pm.getPaymentAccount(), updatedSettlements, new ArrayList<>());
     }
 
     // 기존 금액기록에 사진을 추가할시
@@ -267,6 +286,7 @@ public class PaymentService {
         });
     }
 
+    // settlementID로 settlement관련 모든거 지우는함수
     public void deleteSettlement(Long settlementId) {
         Optional<Settlement> settlement = settlementRepository.findBySettlementIdAndIsActiveTrue(settlementId);
 
@@ -283,6 +303,20 @@ public class PaymentService {
             settlementRepository.save(stm);
         });
 
+    }
+
+    // settlement로 settlement관련 모든거 지우는함수
+    public void deleteSettlement(Settlement settlement) {
+        List<SettlementUser> su = settlementUserRepository.findAllBySettlement_SettlementId(settlement.getSettlementId());
+        su.forEach(stmu -> {
+            // 관련 정산 유저 소프트 삭제
+            stmu.setIsActive(false);
+            settlementUserRepository.save(stmu);
+        });
+
+        // 관련 정산 소프트 삭제
+        settlement.setIsActive(false);
+        settlementRepository.save(settlement);
     }
 
     // 금액기록 삭제하는 메서드
