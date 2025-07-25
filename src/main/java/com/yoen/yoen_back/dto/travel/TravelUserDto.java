@@ -1,4 +1,6 @@
 package com.yoen.yoen_back.dto.travel;
 
-public record TravelUserDto(Long travelUserId, Long travelId, Long userId) {
+import com.yoen.yoen_back.enums.Role;
+
+public record TravelUserDto(Long travelUserId, Long travelId, Long userId, Role role, String travelNickname) {
 }
