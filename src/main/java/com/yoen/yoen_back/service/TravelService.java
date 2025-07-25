@@ -63,6 +63,7 @@ public class TravelService {
                 .travel(tv)
                 .user(user)
                 .role(role)
+                .travelNickname(user.getNickname())
                 .build();
         travelUserRepository.save(tu);
     }
