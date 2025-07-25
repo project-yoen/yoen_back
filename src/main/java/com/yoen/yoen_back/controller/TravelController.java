@@ -42,14 +42,14 @@ public class TravelController {
     @GetMapping("/traveluser")
     public ResponseEntity<ApiResponse<TravelUserDto>> getTravelUser(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam Long travelId) {
         TravelUser tu = travelService.getTravelUser(userDetails.user(), travelId);
-        TravelUserDto tud = new TravelUserDto(tu.getTravelUserId(), tu.getUser().getUserId(), tu.getTravel().getTravelId());
+        TravelUserDto tud = new TravelUserDto(tu.getTravelUserId(), tu.getUser().getUserId(), tu.getTravel().getTravelId(), tu.getRole(), tu.getTravelNickname());
         return ResponseEntity.ok(ApiResponse.success(tud));
     }
 
 
     @GetMapping("/traveluser/all")
     public List<TravelUserDto> getAllTravelUsers() {
-        return travelService.getAllTravelUser().stream().map(tu -> new TravelUserDto(tu.getTravelUserId(), tu.getTravel().getTravelId(), tu.getUser().getUserId())).toList();
+        return travelService.getAllTravelUser().stream().map(tu -> new TravelUserDto(tu.getTravelUserId(), tu.getTravel().getTravelId(), tu.getUser().getUserId(), tu.getRole(), tu.getTravelNickname())).toList();
     }
 
 
