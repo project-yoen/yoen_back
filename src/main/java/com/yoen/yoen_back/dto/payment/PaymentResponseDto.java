@@ -1,6 +1,5 @@
 package com.yoen.yoen_back.dto.payment;
 
-import com.yoen.yoen_back.dto.payment.settlement.SettlementRequestDto;
 import com.yoen.yoen_back.dto.payment.settlement.SettlementResponseDto;
 import com.yoen.yoen_back.enums.Payer;
 import com.yoen.yoen_back.enums.PaymentMethod;
