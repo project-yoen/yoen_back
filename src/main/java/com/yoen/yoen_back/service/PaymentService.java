@@ -62,6 +62,11 @@ public class PaymentService {
         return paymentRepository.findByTravel_TravelIdAndIsActiveTrue(travelId);
     }
 
+    public List<Payment> getAllPaymentsByTravel(Travel travel) {
+        return paymentRepository.findByTravelAndIsActiveTrue(travel);
+    }
+
+
     // TODO: 날짜별 금액기록 리스트 받기
     public List<PaymentSimpleResponseDto> getAllPaymentResponseDtoByTravelId(Long travelUserId, String date) {
         TravelUser tu = travelUserRepository.getReferenceById(travelUserId);

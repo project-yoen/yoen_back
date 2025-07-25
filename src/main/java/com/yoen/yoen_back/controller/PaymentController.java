@@ -8,6 +8,9 @@ import com.yoen.yoen_back.dto.payment.PaymentSimpleResponseDto;
 import com.yoen.yoen_back.dto.payment.settlement.SettlementUserResponseDto;
 import com.yoen.yoen_back.entity.payment.Payment;
 import com.yoen.yoen_back.entity.payment.SettlementUser;
+import com.yoen.yoen_back.entity.travel.Travel;
+import com.yoen.yoen_back.enums.Role;
+import com.yoen.yoen_back.service.AuthService;
 import com.yoen.yoen_back.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +26,7 @@ import java.util.List;
 public class PaymentController {
 
     private final PaymentService paymentService;
+    private final AuthService authService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<PaymentSimpleResponseDto>>> getSimplePayment(@RequestParam("travelUserId") Long travelUserId, @RequestParam("date") String date) {
@@ -30,8 +34,9 @@ public class PaymentController {
         return ResponseEntity.ok(ApiResponse.success(dtos));
     }
     @GetMapping("/all")
-    public ResponseEntity<ApiResponse<List<Payment>>> payment(@RequestParam("travelId") Long travelId) {
-        return ResponseEntity.ok(ApiResponse.success(paymentService.getAllPaymentsByTravelId(travelId)));
+    public ResponseEntity<ApiResponse<List<Payment>>> payment(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam("travelUserId") Long travelUserId) {
+        Travel tv = authService.checkTravelUserRole(userDetails.user(), travelUserId, List.of(Role.READER, Role.WRITER));
+        return ResponseEntity.ok(ApiResponse.success(paymentService.getAllPaymentsByTravel(tv)));
     }
 
     @PostMapping("/create")
