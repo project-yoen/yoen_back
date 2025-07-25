@@ -25,8 +25,8 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<PaymentSimpleResponseDto>>> getSimplePayment(@RequestParam("travelId") Long travelId, @RequestParam("date") String date) {
-        List<PaymentSimpleResponseDto> dtos = paymentService.getAllPaymentResponseDtoByTravelId(travelId, date);
+    public ResponseEntity<ApiResponse<List<PaymentSimpleResponseDto>>> getSimplePayment(@RequestParam("travelUserId") Long travelUserId, @RequestParam("date") String date) {
+        List<PaymentSimpleResponseDto> dtos = paymentService.getAllPaymentResponseDtoByTravelId(travelUserId, date);
         return ResponseEntity.ok(ApiResponse.success(dtos));
     }
     @GetMapping("/all")
