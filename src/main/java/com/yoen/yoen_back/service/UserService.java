@@ -26,7 +26,7 @@ public class UserService {
                 .email(dto.email())
                 .gender(dto.gender())
                 .name(dto.name())
-                .nickname(dto.nickname())
+                .nickname(dto.name())
                 .birthday(Formatter.getDate(dto.birthday()))
                 .build();
         userRepository.save(user);
