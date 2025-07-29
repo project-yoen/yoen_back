@@ -27,7 +27,6 @@ public class CommonController {
         return ResponseEntity.ok(ApiResponse.success(category));
     }
 
-    // Todo: 프론트에서 사용할 목적지 목록 불러오는 Api
     /** 목적지 관련 엔드포인트 **/
     @GetMapping("/destination/all")
     public ResponseEntity<ApiResponse<List<DestinationResponseDto>>> getAllTravelDestinations() {
