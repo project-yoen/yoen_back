@@ -1,4 +1,4 @@
-package com.yoen.yoen_back.dto.travel;
+package com.yoen.yoen_back.dto.etc;
 
 import com.yoen.yoen_back.enums.Nation;
 
