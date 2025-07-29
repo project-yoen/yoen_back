@@ -5,7 +5,6 @@ import com.yoen.yoen_back.common.security.CustomUserDetails;
 import com.yoen.yoen_back.dto.travel.TravelRequestDto;
 import com.yoen.yoen_back.dto.travel.TravelUserDto;
 import com.yoen.yoen_back.entity.travel.Travel;
-import com.yoen.yoen_back.entity.travel.TravelUser;
 import com.yoen.yoen_back.enums.Role;
 import com.yoen.yoen_back.service.AuthService;
 import com.yoen.yoen_back.service.TravelService;
@@ -34,28 +33,30 @@ public class TravelController {
         return ResponseEntity.ok(ApiResponse.success(tv));
     }
 
+    // TODO: 삭제 (미완) (읽기 권한)
     @DeleteMapping("/delete")
-    public ResponseEntity<ApiResponse<String>> deleteTravel(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody Long travelId) {
-        authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.WRITER));
-        travelService.deleteTravel(travelId);
+    public ResponseEntity<ApiResponse<String>> deleteTravel(@AuthenticationPrincipal CustomUserDetails userDetails,@RequestBody Long travelId) {
+        Travel tv = authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.WRITER));
+        travelService.deleteTravel(tv);
         return ResponseEntity.ok(ApiResponse.success("삭제가 완료되었습니다."));
     }
 
 
-    // 여행 유저 반환하는 함수 (테스트용)
+    // 자신의 여행 유저 반환하는 함수 (읽기 권한)
     @GetMapping("/traveluser")
     public ResponseEntity<ApiResponse<TravelUserDto>> getTravelUser(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam Long travelId) {
-        authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.WRITER));
-        TravelUser tu = travelService.getTravelUser(userDetails.user(), travelId);
-        TravelUserDto tud = new TravelUserDto(tu.getTravelUserId(), tu.getUser().getUserId(), tu.getTravel().getTravelId(), tu.getRole(), tu.getTravelNickname());
+        Travel tv = authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.READER, Role.WRITER));
+        TravelUserDto tud = travelService.getTravelUser(userDetails.user(), tv);
         return ResponseEntity.ok(ApiResponse.success(tud));
     }
 
-    //테스트용
-//    @GetMapping("/traveluser/all")
-//    public List<TravelUserDto> getAllTravelUsers() {
-//        return travelService.getAllTravelUser().stream().map(tu -> new TravelUserDto(tu.getTravelUserId(), tu.getTravel().getTravelId(), tu.getUser().getUserId(), tu.getRole(), tu.getTravelNickname())).toList();
-//    }
+
+    // 여행에 포함된 여행유저들 반환하는 함수 (읽기 권한)
+    @GetMapping("/traveluser/all")
+    public List<TravelUserDto> getAllTravelUsers(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam Long travelId) {
+        Travel tv = authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.READER, Role.WRITER));
+        return travelService.getAllTravelUser(tv);
+    }
 
 
 }
