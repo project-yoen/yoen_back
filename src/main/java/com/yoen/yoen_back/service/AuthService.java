@@ -6,6 +6,7 @@ import com.yoen.yoen_back.dao.redis.RefreshTokenRedisDao;
 import com.yoen.yoen_back.dto.etc.token.TokenResponse;
 import com.yoen.yoen_back.dto.user.LoginRequestDto;
 import com.yoen.yoen_back.dto.user.LoginResponseDto;
+import com.yoen.yoen_back.dto.user.UserResponseDto;
 import com.yoen.yoen_back.entity.image.PaymentImage;
 import com.yoen.yoen_back.entity.image.TravelRecordImage;
 import com.yoen.yoen_back.entity.payment.Payment;
@@ -58,8 +59,8 @@ public class AuthService {
 
     // 로그인 기능과 토큰발급을 함께하는 함수
     public LoginResponseDto loginAndGetToken(LoginRequestDto dto) throws InvalidCredentialsException {
-        User user = userService.login(dto);
-        String userId = String.valueOf(user.getUserId());
+        UserResponseDto user = userService.login(dto);
+        String userId = String.valueOf(user.userId());
 
         String accessToken = jwtProvider.generateAccessToken(userId);
         String refreshToken = jwtProvider.generateRefreshToken(userId);
