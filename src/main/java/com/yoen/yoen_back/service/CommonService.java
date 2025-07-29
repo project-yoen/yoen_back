@@ -1,7 +1,8 @@
 package com.yoen.yoen_back.service;
 
 import com.yoen.yoen_back.dto.etc.CategoryRequestDto;
-import com.yoen.yoen_back.dto.etc.DestinationDto;
+import com.yoen.yoen_back.dto.etc.DestinationRequestDto;
+import com.yoen.yoen_back.dto.etc.DestinationResponseDto;
 import com.yoen.yoen_back.entity.Category;
 import com.yoen.yoen_back.entity.travel.Destination;
 import com.yoen.yoen_back.entity.travel.Travel;
@@ -46,12 +47,14 @@ public class CommonService {
         });
     }
 
-    public List<TravelDestination> getAllTravelDestination() {
-
-        return travelDestinationRepository.findAll();
+    public List<DestinationResponseDto> getAllDestination() {
+        List<Destination> dt = destinationRepository.findAll();
+        return dt.stream().map(destination ->
+                new DestinationResponseDto(destination.getDestinationId(),
+                        destination.getNation(), destination.getName())).toList();
     }
 
-    public void createDestination(DestinationDto dto) {
+    public void createDestination(DestinationRequestDto dto) {
         Destination dt = Destination.builder()
                 .name(dto.name())
                 .nation(dto.nation())
@@ -61,7 +64,7 @@ public class CommonService {
 
 
 
-    public List<Destination> createDestinations(List<DestinationDto> dtos) {
+    public List<Destination> createDestinations(List<DestinationRequestDto> dtos) {
         dtos.forEach(this::createDestination);
         return destinationRepository.findAll();
     }

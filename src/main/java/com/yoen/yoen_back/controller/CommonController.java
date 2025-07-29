@@ -2,8 +2,8 @@ package com.yoen.yoen_back.controller;
 
 import com.yoen.yoen_back.common.entity.ApiResponse;
 import com.yoen.yoen_back.dto.etc.CategoryRequestDto;
-import com.yoen.yoen_back.dto.etc.DestinationDto;
-import com.yoen.yoen_back.dto.travel.TravelDestinationDto;
+import com.yoen.yoen_back.dto.etc.DestinationRequestDto;
+import com.yoen.yoen_back.dto.etc.DestinationResponseDto;
 import com.yoen.yoen_back.entity.travel.Destination;
 import com.yoen.yoen_back.service.CommonService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -27,16 +27,15 @@ public class CommonController {
         return ResponseEntity.ok(ApiResponse.success(category));
     }
 
+    // Todo: 프론트에서 사용할 목적지 목록 불러오는 Api
     /** 목적지 관련 엔드포인트 **/
     @GetMapping("/destination/all")
-    public List<TravelDestinationDto> getAllTravelDestinations() {
-        return commonService.getAllTravelDestination().stream().map(
-                td -> new TravelDestinationDto(td.getTravel().getTravelId(), td.getDestination().getName())
-        ).toList();
+    public ResponseEntity<ApiResponse<List<DestinationResponseDto>>> getAllTravelDestinations() {
+        return ResponseEntity.ok(ApiResponse.success(commonService.getAllDestination()));
     }
 
     @PostMapping("/destination/create")
-    public List<Destination> createDestination(@RequestBody List<DestinationDto> destinations) {
+    public List<Destination> createDestination(@RequestBody List<DestinationRequestDto> destinations) {
         return commonService.createDestinations(destinations);
     }
 }
