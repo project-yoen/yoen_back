@@ -3,6 +3,7 @@ package com.yoen.yoen_back.service;
 import com.yoen.yoen_back.common.utils.Formatter;
 import com.yoen.yoen_back.dto.user.LoginRequestDto;
 import com.yoen.yoen_back.dto.user.RegisterRequestDto;
+import com.yoen.yoen_back.dto.user.UserResponseDto;
 import com.yoen.yoen_back.entity.image.Image;
 import com.yoen.yoen_back.entity.user.User;
 import com.yoen.yoen_back.repository.user.UserRepository;
@@ -32,15 +33,17 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public User login(LoginRequestDto dto) throws InvalidCredentialsException {
+    public UserResponseDto login(LoginRequestDto dto) throws InvalidCredentialsException {
         User user = userRepository.findByEmail(dto.email())
                 .orElseThrow(() -> new InvalidCredentialsException("이메일 또는 비밀번호가 잘못되었습니다."));
 
         if (!bCryptPasswordEncoder.matches(dto.password(), user.getPassword())) {
             throw new InvalidCredentialsException("이메일 또는 비밀번호가 잘못되었습니다.");
         }
+        Image profileImage = user.getProfileImage();
+        String imageUrl = (profileImage != null) ? profileImage.getImageUrl() : "https://example.com/default-profile.png";
 
-        return user;
+        return  new UserResponseDto(user.getUserId(), user.getName(), user.getEmail(), user.getGender(), user.getNickname(), user.getBirthday(), imageUrl);
     }
 
 
@@ -59,6 +62,7 @@ public class UserService {
 
         return profileImage.getImageUrl();
     }
+
     public Boolean validateEmail(String email) {
         return userRepository.existsByEmail(email);
     }
