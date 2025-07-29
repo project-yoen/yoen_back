@@ -6,6 +6,7 @@ import com.yoen.yoen_back.dto.etc.DestinationDto;
 import com.yoen.yoen_back.dto.travel.TravelDestinationDto;
 import com.yoen.yoen_back.entity.travel.Destination;
 import com.yoen.yoen_back.service.CommonService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +15,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
+@SecurityRequirement(name = "JWT_AUTH")
 @RequestMapping("/common")
 public class CommonController {
     private final CommonService commonService;

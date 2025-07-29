@@ -5,6 +5,7 @@ import com.yoen.yoen_back.common.security.CustomUserDetails;
 import com.yoen.yoen_back.dto.etc.IdListRequest;
 import com.yoen.yoen_back.entity.image.Image;
 import com.yoen.yoen_back.service.ImageService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -16,6 +17,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
+@SecurityRequirement(name = "JWT_AUTH")
 @RequestMapping("/image")
 public class ImageController {
     private final ImageService imageService;

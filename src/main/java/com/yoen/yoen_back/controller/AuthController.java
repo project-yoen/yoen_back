@@ -4,6 +4,7 @@ import com.yoen.yoen_back.common.entity.ApiResponse;
 import com.yoen.yoen_back.dto.etc.token.RefreshTokenRequestDto;
 import com.yoen.yoen_back.dto.etc.token.TokenResponse;
 import com.yoen.yoen_back.service.AuthService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
+@SecurityRequirement(name = "JWT_AUTH")
 @RequestMapping("/auth")
 public class AuthController {
     private final AuthService authService;

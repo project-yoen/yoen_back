@@ -9,6 +9,7 @@ import com.yoen.yoen_back.dto.etc.joincode.UserTravelJoinResponseDto;
 import com.yoen.yoen_back.enums.Role;
 import com.yoen.yoen_back.service.AuthService;
 import com.yoen.yoen_back.service.JoinService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,6 +23,7 @@ import java.util.List;
  **/
 @RestController
 @RequiredArgsConstructor
+@SecurityRequirement(name = "JWT_AUTH")
 @RequestMapping("/join")
 public class JoinController {
 
