@@ -21,7 +21,7 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable) // 개발 단계에서는 CSRF 비활성화
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/user/login", "/user/register", "/auth/refresh", "/user/exist-email").permitAll() // 로그인/회원가입은 인증 없이
+                        .requestMatchers("/user/login", "/user/register", "/auth/refresh", "/user/exist-email", "/v3/**", "/swagger-ui.html/**", "/swagger-ui/**").permitAll() // 로그인/회원가입은 인증 없이
                         .anyRequest().authenticated() // 나머지는 토큰 필요
                 )
                 .formLogin(AbstractHttpConfigurer::disable) // 폼 로그인 비활성화

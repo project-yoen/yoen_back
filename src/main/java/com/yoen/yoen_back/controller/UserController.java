@@ -6,6 +6,9 @@ import com.yoen.yoen_back.dto.user.LoginResponseDto;
 import com.yoen.yoen_back.dto.user.RegisterRequestDto;
 import com.yoen.yoen_back.service.AuthService;
 import com.yoen.yoen_back.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.RequiredArgsConstructor;
 import org.apache.http.auth.InvalidCredentialsException;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +29,7 @@ public class UserController {
 
         return ResponseEntity.ok(ApiResponse.success("Sign Up Success"));
     }
+
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponseDto>> login(@RequestBody LoginRequestDto dto) throws InvalidCredentialsException {

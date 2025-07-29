@@ -6,6 +6,8 @@ import com.yoen.yoen_back.dto.travel.TravelRequestDto;
 import com.yoen.yoen_back.dto.travel.TravelUserDto;
 import com.yoen.yoen_back.entity.travel.Travel;
 import com.yoen.yoen_back.entity.travel.TravelUser;
+import com.yoen.yoen_back.enums.Role;
+import com.yoen.yoen_back.service.AuthService;
 import com.yoen.yoen_back.service.TravelService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +21,7 @@ import java.util.List;
 @RequestMapping("/travel")
 public class TravelController {
     private final TravelService travelService;
+    private final AuthService authService;
 
     @GetMapping("/all")
     public ResponseEntity<ApiResponse<List<Travel>>> travel() {
@@ -32,25 +35,27 @@ public class TravelController {
     }
 
     @DeleteMapping("/delete")
-    public ResponseEntity<ApiResponse<String>> deleteTravel(@RequestBody Long travelId) {
+    public ResponseEntity<ApiResponse<String>> deleteTravel(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody Long travelId) {
+        authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.WRITER));
         travelService.deleteTravel(travelId);
         return ResponseEntity.ok(ApiResponse.success("삭제가 완료되었습니다."));
     }
 
 
-    // 여행 유저 반환하는 함수
+    // 여행 유저 반환하는 함수 (테스트용)
     @GetMapping("/traveluser")
     public ResponseEntity<ApiResponse<TravelUserDto>> getTravelUser(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam Long travelId) {
+        authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.WRITER));
         TravelUser tu = travelService.getTravelUser(userDetails.user(), travelId);
         TravelUserDto tud = new TravelUserDto(tu.getTravelUserId(), tu.getUser().getUserId(), tu.getTravel().getTravelId(), tu.getRole(), tu.getTravelNickname());
         return ResponseEntity.ok(ApiResponse.success(tud));
     }
 
-
-    @GetMapping("/traveluser/all")
-    public List<TravelUserDto> getAllTravelUsers() {
-        return travelService.getAllTravelUser().stream().map(tu -> new TravelUserDto(tu.getTravelUserId(), tu.getTravel().getTravelId(), tu.getUser().getUserId(), tu.getRole(), tu.getTravelNickname())).toList();
-    }
+    //테스트용
+//    @GetMapping("/traveluser/all")
+//    public List<TravelUserDto> getAllTravelUsers() {
+//        return travelService.getAllTravelUser().stream().map(tu -> new TravelUserDto(tu.getTravelUserId(), tu.getTravel().getTravelId(), tu.getUser().getUserId(), tu.getRole(), tu.getTravelNickname())).toList();
+//    }
 
 
 }
