@@ -4,10 +4,15 @@ import com.yoen.yoen_back.common.utils.Formatter;
 import com.yoen.yoen_back.dto.travel.TravelRequestDto;
 import com.yoen.yoen_back.dto.travel.TravelResponseDto;
 import com.yoen.yoen_back.dto.travel.TravelUserDto;
+import com.yoen.yoen_back.entity.image.Image;
+import com.yoen.yoen_back.entity.image.TravelRecordImage;
 import com.yoen.yoen_back.entity.travel.Travel;
+import com.yoen.yoen_back.entity.travel.TravelRecord;
 import com.yoen.yoen_back.entity.travel.TravelUser;
 import com.yoen.yoen_back.entity.user.User;
 import com.yoen.yoen_back.enums.Role;
+import com.yoen.yoen_back.repository.image.TravelRecordImageRepository;
+import com.yoen.yoen_back.repository.travel.TravelRecordRepository;
 import com.yoen.yoen_back.repository.travel.TravelRepository;
 import com.yoen.yoen_back.repository.travel.TravelUserRepository;
 import jakarta.transaction.Transactional;
@@ -15,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +29,8 @@ public class TravelService {
     private final TravelUserRepository travelUserRepository;
 
     private final CommonService commonService;
+    private final TravelRecordRepository travelRecordRepository;
+    private final TravelRecordImageRepository travelRecordImageRepository;
 
 
     public List<Travel> getAllTravels() {
@@ -31,10 +39,23 @@ public class TravelService {
 
 
     public List<TravelResponseDto> getAllTravelByUser(User user) {
-        List<Travel> tvList = travelUserRepository.findActiveTravelsByUserId(user.getUserId());
-        return tvList.stream().map(travel -> new TravelResponseDto(travel.getTravelId(), travel.getTravelName(), travel.getStartDate())).toList();
+        // Todo: @Query 쓰지 않고 단계별로 조회하기
+        List<Travel> tvList = travelUserRepository.findActiveTravelsByUser(user);
+        
+        
+        // Todo: 함수로 빼도 ㄱㅊ
+        return tvList.stream().map(travel -> {
+            List<TravelRecord> trList = travelRecordRepository.findByTravel_TravelIdAndIsActiveTrue(travel.getTravelId());
+            TravelRecord tr = trList.get(0);
+            Optional<Image> tri = travelRecordImageRepository.findFirstByTravelRecordOrderByCreatedAtAsc(tr.getTravelRecordId());
+            Optional<String> imageUrl = tri.map(Image::getImageUrl);
+            return new TravelResponseDto(travel.getTravelId(), travel.getTravelName(), travel.getStartDate(), imageUrl.orElse(""));
+        }).toList();
     }
-    //Todo 여행을 삭제할 때 관련된 모든 테이블의 레코드를 비활성화 해야 할까?
+    // Todo: 여행의 프로필 이미지 바꾸는 함수 구현
+
+
+    // Todo 여행을 삭제할 때 관련된 모든 테이블의 레코드를 비활성화 해야 할까?
     @Transactional
     public void deleteTravel(Travel tv) {
 //        List<TravelRecord> tr = travelRecordRepository.findByTravel_TravelId(travelId);
