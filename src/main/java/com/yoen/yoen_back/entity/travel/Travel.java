@@ -1,6 +1,7 @@
 package com.yoen.yoen_back.entity.travel;
 
 import com.yoen.yoen_back.common.entity.BaseEntity;
+import com.yoen.yoen_back.entity.image.Image;
 import com.yoen.yoen_back.enums.Nation;
 import jakarta.persistence.*;
 import lombok.*;
@@ -39,5 +40,8 @@ public class Travel extends BaseEntity {
     private LocalDate endDate;
 
     private Long sharedFund;
+
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private Image travelImage;
 
 }
