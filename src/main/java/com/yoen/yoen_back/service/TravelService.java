@@ -2,6 +2,7 @@ package com.yoen.yoen_back.service;
 
 import com.yoen.yoen_back.common.utils.Formatter;
 import com.yoen.yoen_back.dto.travel.TravelRequestDto;
+import com.yoen.yoen_back.dto.travel.TravelResponseDto;
 import com.yoen.yoen_back.dto.travel.TravelUserDto;
 import com.yoen.yoen_back.entity.travel.Travel;
 import com.yoen.yoen_back.entity.travel.TravelUser;
@@ -29,6 +30,10 @@ public class TravelService {
     }
 
 
+    public List<TravelResponseDto> getAllTravelByUser(User user) {
+        List<Travel> tvList = travelUserRepository.findActiveTravelsByUserId(user.getUserId());
+        return tvList.stream().map(travel -> new TravelResponseDto(travel.getTravelId(), travel.getTravelName(), travel.getStartDate())).toList();
+    }
     //Todo 여행을 삭제할 때 관련된 모든 테이블의 레코드를 비활성화 해야 할까?
     @Transactional
     public void deleteTravel(Travel tv) {
