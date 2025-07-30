@@ -61,9 +61,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidJoinCodeException.class)
     public ResponseEntity<ApiResponse<?>> handleInvalidJoinCode(InvalidJoinCodeException ex) {
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.failure(ex.getMessage()));
+        return ResponseEntity.ok(ApiResponse.failure("옳지 않은 참여코드입니다."));
     }
 
     @ExceptionHandler(IllegalStateException.class)

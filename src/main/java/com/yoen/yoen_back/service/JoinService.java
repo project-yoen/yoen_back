@@ -128,7 +128,7 @@ public class JoinService {
                 String imageUrl = tmpUser.getProfileImage() != null ? tmpUser.getProfileImage().getImageUrl() : "";
                 return new UserResponseDto(tmpUser.getUserId(), tmpUser.getName(), tmpUser.getEmail(), tmpUser.getGender(), tmpUser.getNickname(), tmpUser.getBirthday(), imageUrl);
             }).toList();
-            return new UserTravelJoinResponseDto(tv.getTravelId(), tv.getTravelName(), tv.getNation(), joinedUsers);
+            return new UserTravelJoinResponseDto(tjr.getTravelJoinRequestId(), tv.getTravelId(), tv.getTravelName(), tv.getNation(), joinedUsers);
         }).toList();
     }
 

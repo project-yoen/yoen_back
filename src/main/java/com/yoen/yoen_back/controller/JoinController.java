@@ -11,6 +11,7 @@ import com.yoen.yoen_back.service.AuthService;
 import com.yoen.yoen_back.service.JoinService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.Response;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -43,15 +44,16 @@ public class JoinController {
     }
 
     @DeleteMapping("/delete/{id}")
-    public void deleteUserTravelJoinRequest(@PathVariable("id") Long travelJoinRequestId) {
+    public ResponseEntity<ApiResponse<String>> deleteUserTravelJoinRequest(@PathVariable("id") Long travelJoinRequestId) {
         joinService.deleteUserTravelJoinRequest(travelJoinRequestId);
+        return ResponseEntity.ok(ApiResponse.success("제거되었습니다."));
     }
 
     // 여행 유저 반환하는 함수
     @PostMapping("/{joinCode}")
     public ResponseEntity<ApiResponse<String>> setTravelJoinRequest(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable("joinCode") String joinCode) {
         joinService.requestToJoinTravel(userDetails.user(), joinCode);
-        return ResponseEntity.ok(ApiResponse.success(""));
+        return ResponseEntity.ok(ApiResponse.success("가입 신청이 완료되었습니다."));
     }
 
     // 여행에 참여 신청한 사람들 출력
