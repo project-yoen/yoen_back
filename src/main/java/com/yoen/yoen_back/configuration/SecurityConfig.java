@@ -24,9 +24,6 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-
-                .cors() // cors 일단 테스트
-                .and()
                 .csrf(AbstractHttpConfigurer::disable) // 개발 단계에서는 CSRF 비활성화
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/user/login", "/user/register", "/auth/refresh", "/user/exists", "/v3/**", "/swagger-ui.html/**", "/swagger-ui/**").permitAll() // 로그인/회원가입은 인증 없이

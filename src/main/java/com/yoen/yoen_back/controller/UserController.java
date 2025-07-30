@@ -12,7 +12,6 @@ import org.apache.http.auth.InvalidCredentialsException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@CrossOrigin("*")
 @RestController
 @RequiredArgsConstructor
 @SecurityRequirement(name = "JWT_AUTH")
