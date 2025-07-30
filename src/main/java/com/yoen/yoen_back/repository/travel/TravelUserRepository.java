@@ -4,6 +4,8 @@ import com.yoen.yoen_back.entity.travel.Travel;
 import com.yoen.yoen_back.entity.travel.TravelUser;
 import com.yoen.yoen_back.entity.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,4 +19,7 @@ public interface TravelUserRepository extends JpaRepository<TravelUser, Long> {
     Optional<TravelUser> findByTravelUserIdAndIsActiveTrue(Long travelUserId);
 
     Optional<TravelUser> findByTravelAndUserAndIsActiveTrue(Travel travel, User user);
+
+    @Query("SELECT tu.travel FROM TravelUser tu WHERE tu.user.userId = :userId AND tu.travel.isActive = true")
+    List<Travel> findActiveTravelsByUserId(@Param("userId") Long userId);
 }
