@@ -45,10 +45,13 @@ public class TravelService {
         // Todo: TravelList 돌면서 해당 Travel의 travelImage가 비어있을 때만 여행기록 가져오게 변경
         // Todo: 함수로 빼도 ㄱㅊ
         return tvList.stream().map(travel -> {
+            Optional<String> imageUrl = Optional.of("");
             List<TravelRecord> trList = travelRecordRepository.findByTravel_TravelIdAndIsActiveTrue(travel.getTravelId());
-            TravelRecord tr = trList.get(0);
-            Optional<Image> tri = travelRecordImageRepository.findFirstByTravelRecordOrderByCreatedAtAsc(tr.getTravelRecordId());
-            Optional<String> imageUrl = tri.map(Image::getImageUrl);
+            if(!trList.isEmpty()) {
+                TravelRecord tr = trList.get(0);
+                Optional<Image> tri = travelRecordImageRepository.findFirstByTravelRecordOrderByCreatedAtAsc(tr.getTravelRecordId());
+                imageUrl = tri.map(Image::getImageUrl);
+            }
             return new TravelResponseDto(travel.getTravelId(), travel.getTravelName(), travel.getStartDate(), imageUrl.orElse(""));
         }).toList();
     }
