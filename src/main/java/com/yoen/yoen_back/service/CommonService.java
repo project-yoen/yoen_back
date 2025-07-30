@@ -7,6 +7,7 @@ import com.yoen.yoen_back.entity.Category;
 import com.yoen.yoen_back.entity.travel.Destination;
 import com.yoen.yoen_back.entity.travel.Travel;
 import com.yoen.yoen_back.entity.travel.TravelDestination;
+import com.yoen.yoen_back.enums.Nation;
 import com.yoen.yoen_back.repository.CategoryRepository;
 import com.yoen.yoen_back.repository.travel.DestinationRepository;
 import com.yoen.yoen_back.repository.travel.TravelDestinationRepository;
@@ -49,6 +50,12 @@ public class CommonService {
 
     public List<DestinationResponseDto> getAllDestination() {
         List<Destination> dt = destinationRepository.findAll();
+        return dt.stream().map(destination ->
+                new DestinationResponseDto(destination.getDestinationId(),
+                        destination.getNation(), destination.getName())).toList();
+    }
+    public List<DestinationResponseDto> getNationDestinations(Nation nation ) {
+        List<Destination> dt = destinationRepository.findByNationAndIsActiveTrue(nation);
         return dt.stream().map(destination ->
                 new DestinationResponseDto(destination.getDestinationId(),
                         destination.getNation(), destination.getName())).toList();
