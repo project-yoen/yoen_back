@@ -13,6 +13,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
+import static org.springframework.security.config.Customizer.withDefaults;
+
 @Configuration
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -24,9 +26,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                .cors(withDefaults())
                 .csrf(AbstractHttpConfigurer::disable) // 개발 단계에서는 CSRF 비활성화
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/user/login", "/user/register", "/auth/refresh", "/user/exists", "/v3/**", "/swagger-ui.html/**", "/swagger-ui/**").permitAll() // 로그인/회원가입은 인증 없이
+                        .requestMatchers("/user/login", "/user/register", "/user/exists", "/auth/refresh", "/v3/**", "/swagger-ui.html/**", "/swagger-ui/**").permitAll() // 로그인/회원가입은 인증 없이
                         .anyRequest().authenticated() // 나머지는 토큰 필요
                 )
                 .formLogin(AbstractHttpConfigurer::disable) // 폼 로그인 비활성화
@@ -36,7 +39,7 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // ✅ 이게 실제로 CORS 동작하게 만드는 설정 (테스트)
+    // 이게 실제로 CORS 동작하게 만드는 설정 (테스트)
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();

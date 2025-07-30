@@ -5,6 +5,7 @@ import com.yoen.yoen_back.dto.etc.CategoryRequestDto;
 import com.yoen.yoen_back.dto.etc.DestinationRequestDto;
 import com.yoen.yoen_back.dto.etc.DestinationResponseDto;
 import com.yoen.yoen_back.entity.travel.Destination;
+import com.yoen.yoen_back.enums.Nation;
 import com.yoen.yoen_back.service.CommonService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
@@ -29,8 +30,9 @@ public class CommonController {
 
     /** 목적지 관련 엔드포인트 **/
     @GetMapping("/destination/all")
-    public ResponseEntity<ApiResponse<List<DestinationResponseDto>>> getAllTravelDestinations() {
-        return ResponseEntity.ok(ApiResponse.success(commonService.getAllDestination()));
+    public ResponseEntity<ApiResponse<List<DestinationResponseDto>>> getNationDestinations(@RequestParam(value = "nation", required = false) Nation nation) {
+        if (nation == null) return ResponseEntity.ok(ApiResponse.success(commonService.getAllDestination()));
+        return ResponseEntity.ok(ApiResponse.success(commonService.getNationDestinations(nation)));
     }
 
     @PostMapping("/destination/create")
