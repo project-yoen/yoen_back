@@ -3,6 +3,7 @@ package com.yoen.yoen_back.controller;
 import com.yoen.yoen_back.common.entity.ApiResponse;
 import com.yoen.yoen_back.common.security.CustomUserDetails;
 import com.yoen.yoen_back.dto.travel.TravelRequestDto;
+import com.yoen.yoen_back.dto.travel.TravelResponseDto;
 import com.yoen.yoen_back.dto.travel.TravelUserDto;
 import com.yoen.yoen_back.entity.travel.Travel;
 import com.yoen.yoen_back.enums.Role;
@@ -24,6 +25,11 @@ public class TravelController {
     private final TravelService travelService;
     private final AuthService authService;
 
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<TravelResponseDto>>> getAllTravelByUser(@AuthenticationPrincipal CustomUserDetails user) {
+        List<TravelResponseDto> dtos = travelService.getAllTravelByUser(user.user());
+        return ResponseEntity.ok(ApiResponse.success(dtos));
+    }
     @GetMapping("/all")
     public ResponseEntity<ApiResponse<List<Travel>>> travel() {
         return ResponseEntity.ok(ApiResponse.success(travelService.getAllTravels()));
