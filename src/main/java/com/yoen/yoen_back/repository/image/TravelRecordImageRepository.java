@@ -16,6 +16,6 @@ public interface TravelRecordImageRepository extends JpaRepository<TravelRecordI
 
     List<TravelRecordImage> findByTravelRecordAndIsActiveTrue(TravelRecord tr);
 
-    @Query("SELECT tri.image FROM TravelRecordImage tri WHERE tri.travelRecord.travelRecordId = :travelRecordId AND tri.travelRecord.isActive = true")
-    Optional<Image> findFirstByTravelRecordOrderByCreatedAtAsc(Long travelRecordId);
+    @Query("SELECT tri.image FROM TravelRecordImage tri WHERE tri.travelRecord.travelRecordId = :travelRecordId AND tri.travelRecord.isActive = true ORDER BY tri.createdAt ASC")
+    List<Image> findFirstByTravelRecordOrderByCreatedAtAsc(Long travelRecordId);
 }

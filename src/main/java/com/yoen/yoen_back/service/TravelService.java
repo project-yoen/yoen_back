@@ -49,8 +49,9 @@ public class TravelService {
             List<TravelRecord> trList = travelRecordRepository.findByTravel_TravelIdAndIsActiveTrue(travel.getTravelId());
             if(!trList.isEmpty()) {
                 TravelRecord tr = trList.get(0);
-                Optional<Image> tri = travelRecordImageRepository.findFirstByTravelRecordOrderByCreatedAtAsc(tr.getTravelRecordId());
-                imageUrl = tri.map(Image::getImageUrl);
+                List<Image> images = travelRecordImageRepository.findFirstByTravelRecordOrderByCreatedAtAsc(tr.getTravelRecordId());
+                Optional<Image> image = images.stream().findFirst();
+                imageUrl = image.map(Image::getImageUrl);
             }
             return new TravelResponseDto(travel.getTravelId(), travel.getTravelName(), travel.getStartDate(), travel.getEndDate(), imageUrl.orElse(""));
         }).toList();
