@@ -52,7 +52,7 @@ public class TravelService {
                 Optional<Image> tri = travelRecordImageRepository.findFirstByTravelRecordOrderByCreatedAtAsc(tr.getTravelRecordId());
                 imageUrl = tri.map(Image::getImageUrl);
             }
-            return new TravelResponseDto(travel.getTravelId(), travel.getTravelName(), travel.getStartDate(), imageUrl.orElse(""));
+            return new TravelResponseDto(travel.getTravelId(), travel.getTravelName(), travel.getStartDate(), travel.getEndDate(), imageUrl.orElse(""));
         }).toList();
     }
     // Todo: 여행의 프로필 이미지 바꾸는 함수 구현

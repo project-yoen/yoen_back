@@ -16,6 +16,7 @@ import com.yoen.yoen_back.repository.travel.TravelRepository;
 import com.yoen.yoen_back.repository.travel.TravelUserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -66,7 +67,8 @@ public class RecordService {
     @Transactional
     public TravelRecordResponseDto createTravelRecord(User user, TravelRecordRequestDto dto, List<MultipartFile> files) {
         Travel tv = travelRepository.getReferenceById(dto.travelId());
-        TravelUser tu = travelUserRepository.getReferenceById(dto.travelUserId());
+//        TravelUser tu = travelUserRepository.getReferenceById(dto.travelUserId());
+        TravelUser tu = travelUserRepository.findByTravelAndUserAndIsActiveTrue(tv, user).orElseThrow(()-> new AccessDeniedException("존재하지 않는 유저입니다."));
         TravelRecord travelRecord = TravelRecord.builder()
                 .travel(tv)
                 .travelUser(tu)
