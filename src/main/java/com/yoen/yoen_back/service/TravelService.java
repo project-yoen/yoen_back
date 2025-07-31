@@ -42,7 +42,8 @@ public class TravelService {
         // Todo: @Query 쓰지 않고 단계별로 조회하기
         List<Travel> tvList = travelUserRepository.findActiveTravelsByUser(user);
         
-        // Todo: TravelList 돌면서 해당 Travel의 travelImage가 비어있을 때만 여행기록 가져오게 변경
+        // Todo: TravelList 돌면서 해당 Travel의 travelImage가 비어있을 때만(유저가 설정한 대표이미지가 없을 때만) 여행기록 가져오게 변경
+        // Todo: 여행에 속한 유저들 정보 보내서 프론트에서 표시할 수 있게 하기
         // Todo: 함수로 빼도 ㄱㅊ
         return tvList.stream().map(travel -> {
             Optional<String> imageUrl = Optional.of("");
