@@ -55,8 +55,10 @@ public class RecordService {
         List<TravelRecord> tvrList = travelRecordRepository.findAllByTravelAndRecordTimeBetweenAndIsActiveTrue(tv, startDateTime, startDateTime.plusDays(1));
 
         return tvrList.stream().map(tvr -> {
-            List<TravelRecordImageDto> trilist = travelRecordImageRepository.findByTravelRecordAndIsActiveTrue(tvr).stream().map(tvri -> new TravelRecordImageDto(tvri.getTravelRecordImageId(), tvri.getImage().getImageUrl())).toList();
-            return new TravelRecordResponseDto(tvr.getTravelRecordId(), tvr.getTitle(), tvr.getContent(), tvr.getRecordTime(), trilist);
+            List<TravelRecordImageDto> trilist = travelRecordImageRepository.findByTravelRecordAndIsActiveTrue(tvr).stream().map(tvri ->
+                    new TravelRecordImageDto(tvri.getTravelRecordImageId(), tvri.getImage().getImageUrl())).toList();
+            return new TravelRecordResponseDto(tvr.getTravelRecordId(), tvr.getTravelUser().getTravelNickname(),
+                    tvr.getTitle(), tvr.getContent(),  tvr.getRecordTime(), trilist);
         }).toList();
     }
 
@@ -92,11 +94,11 @@ public class RecordService {
                 return new TravelRecordImageDto(tmp.getTravelRecordImageId(), image.getImageUrl());
             }).toList();
 
-            return new TravelRecordResponseDto(tr.getTravelRecordId(), tr.getTitle(), tr.getContent(), tr.getRecordTime(), imagesDto);
+            return new TravelRecordResponseDto(tr.getTravelRecordId(), tu.getTravelNickname(), tr.getTitle(), tr.getContent(), tr.getRecordTime(), imagesDto);
         }
         // 이미지 파일이 존재하지 않을 시
 
-        return new TravelRecordResponseDto(tr.getTravelRecordId(), tr.getTitle(), tr.getContent(), tr.getRecordTime(), new ArrayList<>());
+        return new TravelRecordResponseDto(tr.getTravelRecordId(), tu.getTravelNickname(), tr.getTitle(), tr.getContent(), tr.getRecordTime(), new ArrayList<>());
 
     }
 
@@ -111,7 +113,7 @@ public class RecordService {
         tr.setRecordTime(Formatter.getDateTime(dto.recordTime()));
         travelRecordRepository.save(tr);
 
-        return new TravelRecordResponseDto(tr.getTravelRecordId(), tr.getTitle(), tr.getContent(), tr.getRecordTime(), new ArrayList<>());
+        return new TravelRecordResponseDto(tr.getTravelRecordId(), tr.getTravelUser().getTravelNickname(), tr.getTitle(), tr.getContent(), tr.getRecordTime(), new ArrayList<>());
     }
 
     // 기존 여행기록에 사진들을 추가할시 (수정)
