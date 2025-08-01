@@ -6,6 +6,7 @@ import com.yoen.yoen_back.dto.etc.joincode.AcceptJoinRequestDto;
 import com.yoen.yoen_back.dto.etc.joincode.JoinRequestListResponseDto;
 import com.yoen.yoen_back.dto.etc.joincode.UserTravelJoinResponseDto;
 import com.yoen.yoen_back.dto.user.UserResponseDto;
+import com.yoen.yoen_back.entity.image.Image;
 import com.yoen.yoen_back.entity.travel.Travel;
 import com.yoen.yoen_back.entity.travel.TravelJoinRequest;
 import com.yoen.yoen_back.entity.travel.TravelUser;
@@ -88,13 +89,16 @@ public class JoinService {
     // 내 여행에 참여신청한 사람들 출력하는 함수
     public List<JoinRequestListResponseDto> getJoinRequestList(Long travelId){
         List<TravelJoinRequest> tjrList = travelJoinRequestRepository.findByTravel_TravelIdAndIsActiveTrue(travelId);
-        List<JoinRequestListResponseDto> dtos = tjrList.stream().map(
+        return tjrList.stream().map(
                 tjr -> {
                     User user = tjr.getUser();
-                    return new JoinRequestListResponseDto(tjr.getTravelJoinRequestId(), user.getUserId(), user.getName(), tjr.getIsAccepted(), user.getProfileImage());
+                    Image profileImage = user.getProfileImage();
+                    String profileImageUrl = (profileImage != null)
+                            ? profileImage.getImageUrl()
+                            : "https://your-default-image-url.com/default.jpg";
+                    return new JoinRequestListResponseDto(tjr.getTravelJoinRequestId(), user.getGender(), user.getName(), profileImageUrl);
                 }
         ).toList();
-        return dtos;
     }
     // 내 여행에 참여 신청한 사람 승인하는 함수
     public void acceptJoinRequest(AcceptJoinRequestDto dto) {
