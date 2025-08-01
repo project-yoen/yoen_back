@@ -4,6 +4,7 @@ import com.yoen.yoen_back.common.utils.Formatter;
 import com.yoen.yoen_back.dto.travel.TravelRequestDto;
 import com.yoen.yoen_back.dto.travel.TravelResponseDto;
 import com.yoen.yoen_back.dto.travel.TravelUserDto;
+import com.yoen.yoen_back.dto.travel.TravelUserResponseDto;
 import com.yoen.yoen_back.entity.image.Image;
 import com.yoen.yoen_back.entity.image.TravelRecordImage;
 import com.yoen.yoen_back.entity.travel.Travel;
@@ -15,6 +16,7 @@ import com.yoen.yoen_back.repository.image.TravelRecordImageRepository;
 import com.yoen.yoen_back.repository.travel.TravelRecordRepository;
 import com.yoen.yoen_back.repository.travel.TravelRepository;
 import com.yoen.yoen_back.repository.travel.TravelUserRepository;
+import com.yoen.yoen_back.repository.user.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -31,6 +33,7 @@ public class TravelService {
     private final CommonService commonService;
     private final TravelRecordRepository travelRecordRepository;
     private final TravelRecordImageRepository travelRecordImageRepository;
+    private final UserRepository userRepository;
 
 
     public List<Travel> getAllTravels() {
@@ -54,7 +57,7 @@ public class TravelService {
                 Optional<Image> image = images.stream().findFirst();
                 imageUrl = image.map(Image::getImageUrl);
             }
-            return new TravelResponseDto(travel.getTravelId(), travel.getTravelName(), travel.getStartDate(), travel.getEndDate(), imageUrl.orElse(""));
+            return new TravelResponseDto(travel.getTravelId(), travel.getNumOfPeople(), travel.getTravelName(), travel.getStartDate(), travel.getEndDate(), imageUrl.orElse(""));
         }).toList();
     }
     // Todo: 여행의 프로필 이미지 바꾸는 함수 구현
@@ -134,6 +137,19 @@ public class TravelService {
         TravelUser tu = travelUserRepository.findByTravelAndUserAndIsActiveTrue(tv, user)
                 .orElseThrow(() -> new RuntimeException("해당 유저의 TravelUser가 존재하지 않습니다."));
         return new TravelUserDto(tu.getTravelUserId(), tu.getUser().getUserId(), tu.getTravel().getTravelId(), tu.getRole(), tu.getTravelNickname());
+    }
+
+    public List<TravelUserResponseDto> getDetailTravelUser(Travel tv) {
+        List<TravelUser> tuList = travelUserRepository.findByTravelAndIsActiveTrue(tv);
+        return tuList.stream().map(traveluser -> {
+            User user = userRepository.getReferenceById(traveluser.getUser().getUserId());
+            String imageUrl = "";
+            if(user.getProfileImage() != null) {
+                Image image = user.getProfileImage();
+                imageUrl = image.getImageUrl();
+            }
+            return new TravelUserResponseDto(user.getNickname(),traveluser.getTravelNickname(), user.getGender(), user.getBirthday(), imageUrl);
+        }).toList();
     }
 
 
