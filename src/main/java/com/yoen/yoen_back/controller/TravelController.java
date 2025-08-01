@@ -5,6 +5,7 @@ import com.yoen.yoen_back.common.security.CustomUserDetails;
 import com.yoen.yoen_back.dto.travel.TravelRequestDto;
 import com.yoen.yoen_back.dto.travel.TravelResponseDto;
 import com.yoen.yoen_back.dto.travel.TravelUserDto;
+import com.yoen.yoen_back.dto.travel.TravelUserResponseDto;
 import com.yoen.yoen_back.entity.travel.Travel;
 import com.yoen.yoen_back.enums.Role;
 import com.yoen.yoen_back.service.AuthService;
@@ -64,6 +65,13 @@ public class TravelController {
     public List<TravelUserDto> getAllTravelUsers(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam Long travelId) {
         Travel tv = authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.READER, Role.WRITER));
         return travelService.getAllTravelUser(tv);
+    }
+
+    @GetMapping("/userdetail")
+    public ResponseEntity<ApiResponse<List<TravelUserResponseDto>>> getDetailTravelUsers(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam Long travelId) {
+        Travel tv = authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.READER, Role.WRITER));
+        List<TravelUserResponseDto> dtos = travelService.getDetailTravelUser(tv);
+        return ResponseEntity.ok(ApiResponse.success(dtos));
     }
 
 
