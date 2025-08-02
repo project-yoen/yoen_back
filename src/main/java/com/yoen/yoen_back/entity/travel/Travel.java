@@ -30,6 +30,9 @@ public class Travel extends BaseEntity {
     @Column(nullable = false)
     private Long numOfPeople;
 
+    @Column(nullable = false)
+    private Long numOfJoinedPeople;
+
     @Enumerated(EnumType.STRING)
     private Nation nation;
 
