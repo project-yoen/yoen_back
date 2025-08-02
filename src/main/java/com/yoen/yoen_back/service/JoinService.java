@@ -36,6 +36,8 @@ public class JoinService {
     private final TravelRepository travelRepository;
     private final TravelUserRepository travelUserRepository;
 
+    private final TravelService travelService;
+
 
     public String getJoinCode(Long travelId) {
         travelRepository.findById(travelId).orElseThrow(() -> new IllegalStateException("존재하지 않는 여행"));
@@ -96,7 +98,7 @@ public class JoinService {
                     Image profileImage = user.getProfileImage();
                     String profileImageUrl = (profileImage != null)
                             ? profileImage.getImageUrl()
-                            : "https://your-default-image-url.com/default.jpg";
+                            : "";
                     return new JoinRequestListResponseDto(tjr.getTravelJoinRequestId(), user.getGender(), user.getName(), profileImageUrl);
                 }
         ).toList();
@@ -113,13 +115,20 @@ public class JoinService {
         tjr.setIsAccepted(true); // 수락됨을 True로 변경
         tjr.setIsActive(false); // soft delete 수행
         travelJoinRequestRepository.save(tjr);
-        TravelUser tu = TravelUser.builder()
-                .travel(tjr.getTravel())
-                .user(tjr.getUser())
-                .role(dto.role())
-                .travelNickname(tjr.getUser().getNickname())
-                .build();
-        travelUserRepository.save(tu);
+
+        Travel tv = tjr.getTravel();
+        if (travelService.increaseNumOfJoinedPeople(tv)) {
+            TravelUser tu = TravelUser.builder()
+                    .travel(tjr.getTravel())
+                    .user(tjr.getUser())
+                    .role(dto.role())
+                    .travelNickname(tjr.getUser().getNickname())
+                    .build();
+            travelUserRepository.save(tu);
+        } else {
+            throw new IllegalStateException("수용인원을 초과하였습니다.");
+        }
+
     }
     // 내 여행에 참여 신청한 사람 거절하는 함수
     public void rejectJoinRequest(Long travelJoinRequestId) {

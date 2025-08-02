@@ -156,5 +156,34 @@ public class TravelService {
         }).toList();
     }
 
+    public Boolean increaseNumOfJoinedPeople(Travel tv) {
+        Long numOfJoinedPeople = tv.getNumOfJoinedPeople();
+        if (tv.getNumOfPeople() >= numOfJoinedPeople + 1) {
+            tv.setNumOfJoinedPeople(numOfJoinedPeople + 1);
+            travelRepository.save(tv);
+            return true;
+        }
+        return false;
+    }
+
+    public Boolean decreaseNumOfJoinedPeople(Travel tv) {
+        Long numOfJoinedPeople = tv.getNumOfJoinedPeople();
+        if (numOfJoinedPeople - 1 >= 0) {
+            tv.setNumOfJoinedPeople(numOfJoinedPeople - 1);
+            travelRepository.save(tv);
+            return true;
+        }
+        return false;
+    }
+
+    public void leaveTravel(TravelUser tu) {
+        if (decreaseNumOfJoinedPeople(tu.getTravel())) {
+            tu.setIsActive(false);
+            travelUserRepository.save(tu);
+        } else {
+            throw new IllegalStateException("지원자가 음수가 될 수 없습니다.");
+        }
+    }
+
 
 }
