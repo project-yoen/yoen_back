@@ -95,43 +95,43 @@ public class AuthService {
     }
 
     // user와 travelUserId로 일치여부 확인, role과 travelUser role 일치 여부 확인
-    public Travel checkTravelUserRoleByTravel(User user, Long travelId, List<Role> roles) {
+    public TravelUser checkTravelUserRoleByTravel(User user, Long travelId, List<Role> roles) {
         Travel tv = travelRepository.findByTravelIdAndIsActiveTrue(travelId).orElseThrow(() -> new AccessDeniedException("존재하지 않은 여행입니다.")) ;;
         return checkTravelUserRole(user, roles, tv);
     }
 
     // user와 travelUserId로 일치여부 확인, role과 travelUser role 일치 여부 확인
-    public Travel checkTravelUserRoleByPayment(User user, Long paymentId, List<Role> roles) {
+    public TravelUser checkTravelUserRoleByPayment(User user, Long paymentId, List<Role> roles) {
         Payment pm = paymentRepository.findByPaymentIdAndIsActiveTrue(paymentId).orElseThrow(() -> new AccessDeniedException("존재하지 않은 금액기록입니다.")) ;
         return checkTravelUserRole(user, roles, pm.getTravel());
     }
 
-    public Travel checkTravelUserRoleByRecord(User user, Long recordId, List<Role> roles) {
+    public TravelUser checkTravelUserRoleByRecord(User user, Long recordId, List<Role> roles) {
         TravelRecord tr = travelRecordRepository.findByTravelRecordIdAndIsActiveTrue(recordId).orElseThrow(() -> new AccessDeniedException("존재하지 않은 여행기록입니다.")) ;
         return checkTravelUserRole(user, roles, tr.getTravel());
     }
 
-    public Travel checkTravelUserRoleByPaymentImage(User user, Long paymentImageId, List<Role> roles) {
+    public TravelUser checkTravelUserRoleByPaymentImage(User user, Long paymentImageId, List<Role> roles) {
         PaymentImage pi = paymentImageRepository.findByPaymentImageIdAndIsActiveTrue(paymentImageId).orElseThrow(() -> new AccessDeniedException("존재하지 않은 금액기록-사진입니다.")) ;
         return checkTravelUserRole(user, roles, pi.getPayment().getTravel());
     }
 
-    public Travel checkTravelUserRoleByTravelRecordImage(User user, Long travelRecordImageId, List<Role> roles) {
+    public TravelUser checkTravelUserRoleByTravelRecordImage(User user, Long travelRecordImageId, List<Role> roles) {
         TravelRecordImage tri = travelRecordImageRepository.findByTravelRecordImageIdAndIsActiveTrue(travelRecordImageId).orElseThrow(() -> new AccessDeniedException("존재하지 않은 여행기록-사진입니다.")) ;
         return checkTravelUserRole(user, roles, tri.getTravelRecord().getTravel());
     }
 
-    public Travel checkTravelUserRoleByTravelJoinRequest(User user, Long travelJoinRequestId, List<Role> roles) {
+    public TravelUser checkTravelUserRoleByTravelJoinRequest(User user, Long travelJoinRequestId, List<Role> roles) {
         TravelJoinRequest trj = travelJoinRequestRepository.findByTravelJoinRequestIdAndIsActiveTrue(travelJoinRequestId).orElseThrow(() -> new AccessDeniedException("존재하지 않은 승인 요청자입니다."));
         travelUserRepository.findByTravelAndUserAndIsActiveTrue(trj.getTravel(), user).orElseThrow(() -> new AccessDeniedException("승인권한을 가지고 있지 않습니다.")) ;
         return checkTravelUserRole(user, roles, trj.getTravel());
     }
 
-    private Travel checkTravelUserRole(User user, List<Role> roles, Travel travel) {
+    private TravelUser checkTravelUserRole(User user, List<Role> roles, Travel travel) {
         TravelUser tu = travelUserRepository.findByTravelAndUserAndIsActiveTrue(travel, user).orElseThrow(() -> new AccessDeniedException("존재하지 않은 참여자입니다."));
         if (!user.getUserId().equals(tu.getUser().getUserId())) throw new AccessDeniedException("사용자 정보가 일치하지 않습니다.");
         if (!roles.contains(tu.getRole())) throw new AccessDeniedException("접근 권한이 없는 사용자입니다.");
-        return tu.getTravel();
+        return tu;
     }
 
 
