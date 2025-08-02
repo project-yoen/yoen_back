@@ -48,6 +48,7 @@ public class TravelService {
         // Todo: TravelList 돌면서 해당 Travel의 travelImage가 비어있을 때만(유저가 설정한 대표이미지가 없을 때만) 여행기록 가져오게 변경
         // Todo: 여행에 속한 유저들 정보 보내서 프론트에서 표시할 수 있게 하기
         // Todo: 함수로 빼도 ㄱㅊ
+        // Todo: 첫 여행기록에 이미지가 없으면 이미지 있는 여행기록 나올때까지 탐색해야 함
         return tvList.stream().map(travel -> {
             Optional<String> imageUrl = Optional.of("");
             List<TravelRecord> trList = travelRecordRepository.findByTravel_TravelIdAndIsActiveTrue(travel.getTravelId());
