@@ -84,6 +84,7 @@ public class TravelService {
                 .nation(dto.nation())
                 .travelName(dto.travelName())
                 .numOfPeople(dto.numOfPeople())
+                .numOfJoinedPeople(1L)
                 .startDate(Formatter.getDate(dto.startDate()))
                 .endDate(Formatter.getDate(dto.endDate()))
                 .build();
