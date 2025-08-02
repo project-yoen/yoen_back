@@ -6,9 +6,7 @@ import com.yoen.yoen_back.dto.travel.TravelResponseDto;
 import com.yoen.yoen_back.dto.travel.TravelUserDto;
 import com.yoen.yoen_back.dto.travel.TravelUserResponseDto;
 import com.yoen.yoen_back.entity.image.Image;
-import com.yoen.yoen_back.entity.image.TravelRecordImage;
 import com.yoen.yoen_back.entity.travel.Travel;
-import com.yoen.yoen_back.entity.travel.TravelRecord;
 import com.yoen.yoen_back.entity.travel.TravelUser;
 import com.yoen.yoen_back.entity.user.User;
 import com.yoen.yoen_back.enums.Role;
@@ -50,14 +48,18 @@ public class TravelService {
         // Todo: 함수로 빼도 ㄱㅊ
         // Todo: 첫 여행기록에 이미지가 없으면 이미지 있는 여행기록 나올때까지 탐색해야 함
         return tvList.stream().map(travel -> {
-            Optional<String> imageUrl = Optional.of("");
-            List<TravelRecord> trList = travelRecordRepository.findByTravel_TravelIdAndIsActiveTrue(travel.getTravelId());
-            if(!trList.isEmpty()) {
-                TravelRecord tr = trList.get(0);
-                List<Image> images = travelRecordImageRepository.findFirstByTravelRecordOrderByCreatedAtAsc(tr.getTravelRecordId());
-                Optional<Image> image = images.stream().findFirst();
-                imageUrl = image.map(Image::getImageUrl);
-            }
+            Optional<String> imageUrl;
+            List<Image> images = travelRecordImageRepository.findFirstByTravelOrderByCreatedAtAsc(travel.getTravelId());
+            Optional<Image> image = images.stream().findFirst();
+            imageUrl = image.map(Image::getImageUrl);
+
+//            List<TravelRecord> trList = travelRecordRepository.findByTravel_TravelIdAndIsActiveTrue(travel.getTravelId());
+//            if(!trList.isEmpty()) {
+//                TravelRecord tr = trList.get(0);
+//                List<Image> images = travelRecordImageRepository.findFirstByTravelRecordOrderByCreatedAtAsc(travel.getTravelId());
+//                Optional<Image> image = images.stream().findFirst();
+//                imageUrl = image.map(Image::getImageUrl);
+//            }
             return new TravelResponseDto(travel.getTravelId(), travel.getNumOfPeople(), travel.getTravelName(), travel.getStartDate(), travel.getEndDate(), imageUrl.orElse(""));
         }).toList();
     }
@@ -137,7 +139,7 @@ public class TravelService {
     // 여행에 대한 여행 유저 반환하는 함수
     public TravelUserDto getTravelUser(User user, Travel tv) {
         TravelUser tu = travelUserRepository.findByTravelAndUserAndIsActiveTrue(tv, user)
-                .orElseThrow(() -> new RuntimeException("해당 유저의 TravelUser가 존재하지 않습니다."));
+                .orElseThrow(() -> new IllegalStateException("해당 유저의 TravelUser가 존재하지 않습니다."));
         return new TravelUserDto(tu.getTravelUserId(), tu.getUser().getUserId(), tu.getTravel().getTravelId(), tu.getRole(), tu.getTravelNickname());
     }
 
