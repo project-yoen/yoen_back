@@ -36,7 +36,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String token = resolveToken(request);
 
             if (token != null && jwtProvider.validateToken(token)) {
-                log.info("여기1");
                 String userId = jwtProvider.getUserIdFromToken(token);
                 log.info("유저 아이디 {}", userId);
                 User user = userService.findById(Long.parseLong(userId));
