@@ -9,6 +9,7 @@ import com.yoen.yoen_back.dto.payment.settlement.SettlementUserResponseDto;
 import com.yoen.yoen_back.entity.payment.Payment;
 import com.yoen.yoen_back.entity.payment.SettlementUser;
 import com.yoen.yoen_back.entity.travel.Travel;
+import com.yoen.yoen_back.entity.travel.TravelUser;
 import com.yoen.yoen_back.enums.Role;
 import com.yoen.yoen_back.service.AuthService;
 import com.yoen.yoen_back.service.PaymentService;
@@ -32,8 +33,8 @@ public class PaymentController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<PaymentSimpleResponseDto>>> getSimplePayment(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam("travelId") Long travelId, @RequestParam("date") String date) {
-        Travel tv = authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.READER, Role.WRITER));
-        List<PaymentSimpleResponseDto> dtos = paymentService.getAllPaymentResponseDtoByTravelId(tv, date);
+        TravelUser tu = authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.READER, Role.WRITER));
+        List<PaymentSimpleResponseDto> dtos = paymentService.getAllPaymentResponseDtoByTravelId(tu.getTravel(), date);
         return ResponseEntity.ok(ApiResponse.success(dtos));
     }
     @GetMapping("/detail")
@@ -45,8 +46,8 @@ public class PaymentController {
 
     @GetMapping("/all")
     public ResponseEntity<ApiResponse<List<Payment>>> payment(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam("travelId") Long travelId) {
-        Travel tv = authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.READER, Role.WRITER));
-        return ResponseEntity.ok(ApiResponse.success(paymentService.getAllPaymentsByTravel(tv)));
+        TravelUser tu = authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.READER, Role.WRITER));
+        return ResponseEntity.ok(ApiResponse.success(paymentService.getAllPaymentsByTravel(tu.getTravel())));
     }
 
     @PostMapping("/create")

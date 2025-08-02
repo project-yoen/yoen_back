@@ -4,8 +4,8 @@ import com.yoen.yoen_back.common.entity.ApiResponse;
 import com.yoen.yoen_back.common.security.CustomUserDetails;
 import com.yoen.yoen_back.dto.travel.TravelRecordRequestDto;
 import com.yoen.yoen_back.dto.travel.TravelRecordResponseDto;
-import com.yoen.yoen_back.entity.travel.Travel;
 import com.yoen.yoen_back.entity.travel.TravelRecord;
+import com.yoen.yoen_back.entity.travel.TravelUser;
 import com.yoen.yoen_back.enums.Role;
 import com.yoen.yoen_back.service.AuthService;
 import com.yoen.yoen_back.service.RecordService;
@@ -29,8 +29,8 @@ public class RecordController {
 
     @GetMapping("/all")
     public ResponseEntity<ApiResponse<List<TravelRecord>>> travelRecord(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam("travelId") Long travelId) {
-        Travel tv = authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.READER, Role.WRITER));
-        return ResponseEntity.ok(ApiResponse.success(recordService.getAllTravelRecordsByTravel(tv)));
+        TravelUser tu = authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.READER, Role.WRITER));
+        return ResponseEntity.ok(ApiResponse.success(recordService.getAllTravelRecordsByTravel(tu.getTravel())));
     }
 
 
@@ -44,8 +44,8 @@ public class RecordController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<TravelRecordResponseDto>>> getTravelRecordByDate(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam("travelId") Long travelId, @RequestParam("date") String date) {
-        Travel tv = authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.READER, Role.WRITER));
-        return ResponseEntity.ok(ApiResponse.success(recordService.getTravelRecordsByDate(tv, date)));
+        TravelUser tu = authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.READER, Role.WRITER));
+        return ResponseEntity.ok(ApiResponse.success(recordService.getTravelRecordsByDate(tu.getTravel(), date)));
     }
 
 

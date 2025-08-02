@@ -7,6 +7,7 @@ import com.yoen.yoen_back.dto.travel.TravelResponseDto;
 import com.yoen.yoen_back.dto.travel.TravelUserDto;
 import com.yoen.yoen_back.dto.travel.TravelUserResponseDto;
 import com.yoen.yoen_back.entity.travel.Travel;
+import com.yoen.yoen_back.entity.travel.TravelUser;
 import com.yoen.yoen_back.enums.Role;
 import com.yoen.yoen_back.service.AuthService;
 import com.yoen.yoen_back.service.TravelService;
@@ -45,8 +46,8 @@ public class TravelController {
     // TODO: 삭제 (미완) (읽기 권한)
     @DeleteMapping("/delete")
     public ResponseEntity<ApiResponse<String>> deleteTravel(@AuthenticationPrincipal CustomUserDetails userDetails,@RequestBody Long travelId) {
-        Travel tv = authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.WRITER));
-        travelService.deleteTravel(tv);
+        TravelUser tu = authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.WRITER));
+        travelService.deleteTravel(tu.getTravel());
         return ResponseEntity.ok(ApiResponse.success("삭제가 완료되었습니다."));
     }
 
@@ -54,8 +55,8 @@ public class TravelController {
     // 자신의 여행 유저 반환하는 함수 (읽기 권한)
     @GetMapping("/traveluser")
     public ResponseEntity<ApiResponse<TravelUserDto>> getTravelUser(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam Long travelId) {
-        Travel tv = authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.READER, Role.WRITER));
-        TravelUserDto tud = travelService.getTravelUser(userDetails.user(), tv);
+        TravelUser tu = authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.READER, Role.WRITER));
+        TravelUserDto tud = travelService.getTravelUser(userDetails.user(), tu.getTravel());
         return ResponseEntity.ok(ApiResponse.success(tud));
     }
 
@@ -63,17 +64,23 @@ public class TravelController {
     // 여행에 포함된 여행유저들 반환하는 함수 (읽기 권한)
     @GetMapping("/traveluser/all")
     public List<TravelUserDto> getAllTravelUsers(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam Long travelId) {
-        Travel tv = authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.READER, Role.WRITER));
-        return travelService.getAllTravelUser(tv);
+        TravelUser tu = authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.READER, Role.WRITER));
+        return travelService.getAllTravelUser(tu.getTravel());
     }
 
     @GetMapping("/userdetail")
     public ResponseEntity<ApiResponse<List<TravelUserResponseDto>>> getDetailTravelUsers(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam Long travelId) {
-        Travel tv = authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.READER, Role.WRITER));
-        List<TravelUserResponseDto> dtos = travelService.getDetailTravelUser(tv);
+        TravelUser tu = authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.READER, Role.WRITER));
+        List<TravelUserResponseDto> dtos = travelService.getDetailTravelUser(tu.getTravel());
         return ResponseEntity.ok(ApiResponse.success(dtos));
     }
 
+    @PostMapping("/leave/{travelId}")
+    public ResponseEntity<ApiResponse<String>> leaveTravel(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable("travelId") Long travelId) {
+        TravelUser tu = authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.READER, Role.WRITER));
+        travelService.leaveTravel(tu);
+        return ResponseEntity.ok(ApiResponse.success("정상적으로 여행에서 나가졌습니다."));
+    }
 
 }
 
