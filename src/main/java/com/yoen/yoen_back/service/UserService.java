@@ -3,6 +3,7 @@ package com.yoen.yoen_back.service;
 import com.yoen.yoen_back.common.utils.Formatter;
 import com.yoen.yoen_back.dto.user.LoginRequestDto;
 import com.yoen.yoen_back.dto.user.RegisterRequestDto;
+import com.yoen.yoen_back.dto.user.UpdateUserDto;
 import com.yoen.yoen_back.dto.user.UserResponseDto;
 import com.yoen.yoen_back.entity.image.Image;
 import com.yoen.yoen_back.entity.user.User;
@@ -10,6 +11,7 @@ import com.yoen.yoen_back.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.auth.InvalidCredentialsException;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -60,6 +62,15 @@ public class UserService {
         Image profileImage = user.getProfileImage();
         String imageUrl = (profileImage != null) ? profileImage.getImageUrl() : "";
         return new UserResponseDto(user.getUserId(), user.getName(), user.getEmail(), user.getGender(), user.getNickname(), user.getBirthday(), imageUrl);
+    }
+
+    public UserResponseDto updateUser(User user, UpdateUserDto dto) {
+        user.setName(dto.name());
+        user.setNickname(dto.nickname());
+        user.setGender(dto.gender());
+        user.setBirthday(Formatter.getDate(dto.birthday()));
+        userRepository.save(user);
+        return new UserResponseDto(user.getUserId(), user.getName(), user.getEmail(), user.getGender(), user.getNickname(), user.getBirthday(),user.getProfileImage().getImageUrl());
     }
 
 

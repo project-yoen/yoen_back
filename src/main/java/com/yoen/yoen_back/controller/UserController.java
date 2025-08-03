@@ -2,10 +2,7 @@ package com.yoen.yoen_back.controller;
 
 import com.yoen.yoen_back.common.entity.ApiResponse;
 import com.yoen.yoen_back.common.security.CustomUserDetails;
-import com.yoen.yoen_back.dto.user.LoginRequestDto;
-import com.yoen.yoen_back.dto.user.LoginResponseDto;
-import com.yoen.yoen_back.dto.user.RegisterRequestDto;
-import com.yoen.yoen_back.dto.user.UserResponseDto;
+import com.yoen.yoen_back.dto.user.*;
 import com.yoen.yoen_back.service.AuthService;
 import com.yoen.yoen_back.service.UserService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -30,6 +27,12 @@ public class UserController {
         userService.register(dto);
 
         return ResponseEntity.ok(ApiResponse.success("Sign Up Success"));
+    }
+
+    @PostMapping("/update")
+    public ResponseEntity<ApiResponse<UserResponseDto>> updateUser(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody UpdateUserDto dto) {
+
+        return ResponseEntity.ok(ApiResponse.success(userService.updateUser(userDetails.user(), dto)));
     }
 
     @GetMapping("/profile")
