@@ -152,7 +152,7 @@ public class TravelService {
                 Image image = user.getProfileImage();
                 imageUrl = image.getImageUrl();
             }
-            return new TravelUserResponseDto(user.getNickname(),traveluser.getTravelNickname(), user.getGender(), user.getBirthday(), imageUrl);
+            return new TravelUserResponseDto(traveluser.getTravelUserId(), user.getNickname(),traveluser.getTravelNickname(), user.getGender(), user.getBirthday(), imageUrl);
         }).toList();
     }
 
