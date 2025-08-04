@@ -1,6 +1,7 @@
 package com.yoen.yoen_back.entity;
 
 import com.yoen.yoen_back.common.entity.BaseEntity;
+import com.yoen.yoen_back.enums.PaymentType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,7 +23,8 @@ public class Category extends BaseEntity {
     @Column(nullable = false)
     private String categoryName;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String type;
+    private PaymentType type;
 
 }
