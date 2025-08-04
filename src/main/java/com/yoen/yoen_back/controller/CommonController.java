@@ -7,6 +7,7 @@ import com.yoen.yoen_back.dto.etc.DestinationRequestDto;
 import com.yoen.yoen_back.dto.etc.DestinationResponseDto;
 import com.yoen.yoen_back.entity.travel.Destination;
 import com.yoen.yoen_back.enums.Nation;
+import com.yoen.yoen_back.enums.PaymentType;
 import com.yoen.yoen_back.service.CommonService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
@@ -30,8 +31,8 @@ public class CommonController {
     }
 
     @GetMapping("/category")
-    public ResponseEntity<ApiResponse<List<CategoryResponseDto>>> getAllCategory() {
-        List<CategoryResponseDto> dtos = commonService.getCategoryList();
+    public ResponseEntity<ApiResponse<List<CategoryResponseDto>>> getAllCategory(@RequestParam(value = "type") PaymentType type) {
+        List<CategoryResponseDto> dtos = commonService.getCategoryListByType(type);
         return ResponseEntity.ok(ApiResponse.success(dtos));
     }
 
