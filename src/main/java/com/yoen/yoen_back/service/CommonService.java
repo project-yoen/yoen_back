@@ -1,6 +1,7 @@
 package com.yoen.yoen_back.service;
 
 import com.yoen.yoen_back.dto.etc.CategoryRequestDto;
+import com.yoen.yoen_back.dto.etc.CategoryResponseDto;
 import com.yoen.yoen_back.dto.etc.DestinationRequestDto;
 import com.yoen.yoen_back.dto.etc.DestinationResponseDto;
 import com.yoen.yoen_back.entity.Category;
@@ -8,6 +9,7 @@ import com.yoen.yoen_back.entity.travel.Destination;
 import com.yoen.yoen_back.entity.travel.Travel;
 import com.yoen.yoen_back.entity.travel.TravelDestination;
 import com.yoen.yoen_back.enums.Nation;
+import com.yoen.yoen_back.enums.PaymentType;
 import com.yoen.yoen_back.repository.CategoryRepository;
 import com.yoen.yoen_back.repository.travel.DestinationRepository;
 import com.yoen.yoen_back.repository.travel.TravelDestinationRepository;
@@ -85,6 +87,12 @@ public class CommonService {
                 .build();
         categoryRepository.save(category);
         return new CategoryRequestDto(category.getCategoryId(), category.getCategoryName(), category.getType());
+    }
+
+    public List<CategoryResponseDto> getCategoryListByType(PaymentType categoryType) {
+        List<Category> categoryList = categoryRepository.findAllByType(categoryType);
+        return categoryList.stream().map( category ->
+                new CategoryResponseDto( category.getCategoryId(), category.getCategoryName(), category.getType())).toList();
     }
 
 }
