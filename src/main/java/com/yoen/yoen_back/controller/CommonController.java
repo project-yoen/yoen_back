@@ -2,6 +2,7 @@ package com.yoen.yoen_back.controller;
 
 import com.yoen.yoen_back.common.entity.ApiResponse;
 import com.yoen.yoen_back.dto.etc.CategoryRequestDto;
+import com.yoen.yoen_back.dto.etc.CategoryResponseDto;
 import com.yoen.yoen_back.dto.etc.DestinationRequestDto;
 import com.yoen.yoen_back.dto.etc.DestinationResponseDto;
 import com.yoen.yoen_back.entity.travel.Destination;
@@ -26,6 +27,12 @@ public class CommonController {
     public ResponseEntity<ApiResponse<CategoryRequestDto>> createCategory(@RequestBody CategoryRequestDto dto) {
         CategoryRequestDto category = commonService.createCategory(dto);
         return ResponseEntity.ok(ApiResponse.success(category));
+    }
+
+    @GetMapping("/category")
+    public ResponseEntity<ApiResponse<List<CategoryResponseDto>>> getAllCategory() {
+        List<CategoryResponseDto> dtos = commonService.getCategoryList();
+        return ResponseEntity.ok(ApiResponse.success(dtos));
     }
 
     /** 목적지 관련 엔드포인트 **/

@@ -1,6 +1,7 @@
 package com.yoen.yoen_back.service;
 
 import com.yoen.yoen_back.dto.etc.CategoryRequestDto;
+import com.yoen.yoen_back.dto.etc.CategoryResponseDto;
 import com.yoen.yoen_back.dto.etc.DestinationRequestDto;
 import com.yoen.yoen_back.dto.etc.DestinationResponseDto;
 import com.yoen.yoen_back.entity.Category;
@@ -85,6 +86,12 @@ public class CommonService {
                 .build();
         categoryRepository.save(category);
         return new CategoryRequestDto(category.getCategoryId(), category.getCategoryName(), category.getType());
+    }
+
+    public List<CategoryResponseDto> getCategoryList() {
+        List<Category> categoryList = categoryRepository.findAll();
+        return categoryList.stream().map( category ->
+                new CategoryResponseDto( category.getCategoryId(), category.getCategoryName(), category.getType())).toList();
     }
 
 }
