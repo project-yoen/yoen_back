@@ -70,7 +70,9 @@ public class UserService {
         user.setGender(dto.gender());
         user.setBirthday(Formatter.getDate(dto.birthday()));
         userRepository.save(user);
-        return new UserResponseDto(user.getUserId(), user.getName(), user.getEmail(), user.getGender(), user.getNickname(), user.getBirthday(),user.getProfileImage().getImageUrl());
+        Image image = user.getProfileImage();
+        String imageUrl = (image != null) ? image.getImageUrl() : "";
+        return new UserResponseDto(user.getUserId(), user.getName(), user.getEmail(), user.getGender(), user.getNickname(), user.getBirthday(), imageUrl);
     }
 
 
