@@ -87,6 +87,7 @@ public class TravelService {
                 .travelName(dto.travelName())
                 .numOfPeople(dto.numOfPeople())
                 .numOfJoinedPeople(1L)
+                .sharedFund(0L)
                 .startDate(Formatter.getDate(dto.startDate()))
                 .endDate(Formatter.getDate(dto.endDate()))
                 .build();
