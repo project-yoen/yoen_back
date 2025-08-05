@@ -150,6 +150,7 @@ public class RecordService {
     }
 
     // 여행기록 삭제 (삭제)
+    @Transactional
     public void deleteTravelRecord(Long travelRecordId) {
         TravelRecord travelRecord = travelRecordRepository.getReferenceById(travelRecordId);
         // 관련 이미지 가져오기
