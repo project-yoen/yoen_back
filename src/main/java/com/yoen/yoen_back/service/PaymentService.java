@@ -41,6 +41,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+import static java.util.stream.Collectors.toList;
+
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
@@ -75,9 +77,16 @@ public class PaymentService {
     public List<PaymentSimpleResponseDto> getAllPaymentResponseDtoByTravelId(Travel tv, String date) {
         LocalDateTime localDateTime = Formatter.getDateTime(date);
         List<Payment> pmList = paymentRepository.findAllByTravelAndPayTimeBetween(tv, localDateTime, localDateTime.plusDays(1));
-        return pmList.stream().map(payment ->
-                new PaymentSimpleResponseDto(payment.getPaymentId(), payment.getPaymentName(), payment.getCategory().getCategoryName(),
-                        payment.getPayTime(), payment.getTravelUser().getTravelNickname(), payment.getPaymentAccount())).toList();
+        return pmList.stream().map(payment -> {
+            if (payment.getPayerType() == Payer.SHAREDFUND) {
+
+                return new PaymentSimpleResponseDto(payment.getPaymentId(), payment.getPaymentName(), payment.getCategory().getCategoryName(),
+                        payment.getPayTime(), "공금", payment.getPaymentAccount(), Payer.SHAREDFUND);
+            }
+
+            return  new PaymentSimpleResponseDto(payment.getPaymentId(), payment.getPaymentName(), payment.getCategory().getCategoryName(),
+                    payment.getPayTime(), payment.getTravelUser().getTravelNickname(), payment.getPaymentAccount(), Payer.INDIVIDUAL);
+        }).toList();
     }
 
     // TODO: 금액기록 아이디로 금액기록 정보 받기
