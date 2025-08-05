@@ -155,11 +155,10 @@ public class PaymentService {
         // 정산리스트 저장 로직
         List<SettlementResponseDto> settlementResponse = dto.settlementList().stream().map(settlement -> {
             Settlement sm = saveSettlementEntity(payment, settlement);
-
             // 정산 유저 저장 로직
             List<TravelUserDto> travelUsersResponse = getTravelUserDtosBySettlement(settlement, sm);
 
-            return new SettlementResponseDto(sm.getSettlementId(), settlement.paymentId(), settlement.settlementName(), settlement.amount(), sm.getIsPaid(), travelUsersResponse);
+            return new SettlementResponseDto(sm.getSettlementId(), sm.getPayment().getPaymentId(), sm.getSettlementName(), sm.getAmount(), sm.getIsPaid(), travelUsersResponse);
 
         }).toList();
         TravelUser payer = payment.getTravelUser();

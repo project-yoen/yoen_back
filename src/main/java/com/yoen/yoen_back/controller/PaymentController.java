@@ -37,6 +37,7 @@ public class PaymentController {
         List<PaymentSimpleResponseDto> dtos = paymentService.getAllPaymentResponseDtoByTravelId(tu.getTravel(), date);
         return ResponseEntity.ok(ApiResponse.success(dtos));
     }
+
     @GetMapping("/detail")
     public ResponseEntity<ApiResponse<PaymentResponseDto>> getDetailPayment(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam("paymentId")Long paymentId) {
         authService.checkTravelUserRoleByPayment(userDetails.user(), paymentId, List.of(Role.READER, Role.WRITER));
