@@ -55,7 +55,7 @@ public class RecordController {
 
     @DeleteMapping("/delete")
     public ResponseEntity<ApiResponse<String>> deleteTravelRecord(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam("id") Long id) {
-        authService.checkTravelUserRoleByRecord(userDetails.user(), id, List.of(Role.READER, Role.WRITER));
+        authService.checkTravelUserRoleByRecord(userDetails.user(), id, List.of(Role.WRITER));
         recordService.deleteTravelRecord(id);
         return ResponseEntity.ok(ApiResponse.success("성공적으로 삭제되었습니다."));
     }
