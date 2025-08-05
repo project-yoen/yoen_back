@@ -37,11 +37,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-
-import static java.util.stream.Collectors.toList;
 
 @Service
 @RequiredArgsConstructor
@@ -76,7 +73,7 @@ public class PaymentService {
     // TODO: 날짜별 금액기록 리스트 받기
     public List<PaymentSimpleResponseDto> getAllPaymentResponseDtoByTravelId(Travel tv, String date) {
         LocalDateTime localDateTime = Formatter.getDateTime(date);
-        List<Payment> pmList = paymentRepository.findAllByTravelAndPayTimeBetween(tv, localDateTime, localDateTime.plusDays(1));
+        List<Payment> pmList = paymentRepository.findAllByTravelAndPayTimeBetweenAndIsActiveTrue(tv, localDateTime, localDateTime.plusDays(1));
         return pmList.stream().map(payment -> {
             if (payment.getPayerType() == Payer.SHAREDFUND) {
 
@@ -370,12 +367,7 @@ public class PaymentService {
             tv.setSharedFund(tv.getSharedFund() + pm.getPaymentAccount());
             travelRepository.save(tv);
         }
-        // 공금 등록
 
-        // Todo: 금액기록 삭제할 때 공금이였으면 현재 공금에서 삭제되는만큼의 가격을 빼준다..?
-//        if(pm.getType().equals(PaymentType.SHAREDFUND)){
-//
-//        }
         // 금액기록 ID로 paymentImage 찾아오기
         List<PaymentImage> pi = paymentImageRepository.findByPayment_PaymentId(pm.getPaymentId());
         // 돌면서 이미지 soft delete

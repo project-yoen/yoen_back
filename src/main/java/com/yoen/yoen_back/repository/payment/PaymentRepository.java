@@ -11,7 +11,7 @@ import java.util.Optional;
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
     List<Payment> findByTravel_TravelIdAndIsActiveTrue(Long travelId);
 
-    List<Payment> findAllByTravelAndPayTimeBetween(Travel tv, LocalDateTime localDateTime, LocalDateTime localDateTime1);
+    List<Payment> findAllByTravelAndPayTimeBetweenAndIsActiveTrue(Travel tv, LocalDateTime localDateTime, LocalDateTime localDateTime1);
 
     List<Payment> findByTravelAndIsActiveTrue(Travel travel);
 
