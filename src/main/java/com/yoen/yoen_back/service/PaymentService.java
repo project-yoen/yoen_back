@@ -19,6 +19,7 @@ import com.yoen.yoen_back.entity.payment.SettlementUser;
 import com.yoen.yoen_back.entity.travel.Travel;
 import com.yoen.yoen_back.entity.travel.TravelUser;
 import com.yoen.yoen_back.entity.user.User;
+import com.yoen.yoen_back.enums.Gender;
 import com.yoen.yoen_back.enums.Payer;
 import com.yoen.yoen_back.enums.PaymentType;
 import com.yoen.yoen_back.repository.CategoryRepository;
@@ -33,8 +34,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -161,12 +164,15 @@ public class PaymentService {
             return new SettlementResponseDto(sm.getSettlementId(), sm.getPayment().getPaymentId(), sm.getSettlementName(), sm.getAmount(), sm.getIsPaid(), travelUsersResponse);
 
         }).toList();
-        TravelUser tu = payment.getTravelUser();
-        User tmpUser = tu.getUser();
-        String imageUrl = (tmpUser.getProfileImage() != null)? tmpUser.getProfileImage().getImageUrl() : "";
-
-        TravelUserResponseDto payerDto = new TravelUserResponseDto(tu.getTravelUserId(), user.getNickname(), tu.getTravelNickname(), tmpUser.getGender(), tmpUser.getBirthday(), imageUrl);
-
+        TravelUserResponseDto payerDto;
+        if (dto.payerType() == Payer.SHAREDFUND) {
+            payerDto = new TravelUserResponseDto(-1L, "", "", Gender.OTHERS, LocalDate.now(), "");
+        } else {
+            TravelUser tu = payment.getTravelUser();
+            User tmpUser = tu.getUser();
+            String imageUrl = (tmpUser.getProfileImage() != null) ? tmpUser.getProfileImage().getImageUrl() : "";
+            payerDto = new TravelUserResponseDto(tu.getTravelUserId(), user.getNickname(), tu.getTravelNickname(), tmpUser.getGender(), tmpUser.getBirthday(), imageUrl);
+        }
         // 이미지 파일이 존재할시
         if (files != null && !files.isEmpty()) {
             //받은 이미지들을 저장한다
