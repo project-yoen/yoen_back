@@ -8,7 +8,7 @@ import com.yoen.yoen_back.dto.payment.PaymentSimpleResponseDto;
 import com.yoen.yoen_back.dto.payment.settlement.SettlementRequestDto;
 import com.yoen.yoen_back.dto.payment.settlement.SettlementResponseDto;
 import com.yoen.yoen_back.dto.payment.settlement.SettlementUserResponseDto;
-import com.yoen.yoen_back.dto.travel.TravelUserDto;
+import com.yoen.yoen_back.dto.travel.TravelUserResponseDto;
 import com.yoen.yoen_back.entity.Category;
 import com.yoen.yoen_back.entity.ExchangeRate;
 import com.yoen.yoen_back.entity.image.Image;
@@ -156,13 +156,17 @@ public class PaymentService {
         List<SettlementResponseDto> settlementResponse = dto.settlementList().stream().map(settlement -> {
             Settlement sm = saveSettlementEntity(payment, settlement);
             // 정산 유저 저장 로직
-            List<TravelUserDto> travelUsersResponse = getTravelUserDtosBySettlement(settlement, sm);
+            List<TravelUserResponseDto> travelUsersResponse = getTravelUserDtosBySettlement(settlement, sm);
 
             return new SettlementResponseDto(sm.getSettlementId(), sm.getPayment().getPaymentId(), sm.getSettlementName(), sm.getAmount(), sm.getIsPaid(), travelUsersResponse);
 
         }).toList();
-        TravelUser payer = payment.getTravelUser();
-        TravelUserDto payerDto = new TravelUserDto(payer.getTravelUserId(), payer.getTravel().getTravelId(), payer.getUser().getUserId(), payer.getRole(), payer.getTravelNickname());
+        TravelUser tu = payment.getTravelUser();
+        User tmpUser = tu.getUser();
+        String imageUrl = (tmpUser.getProfileImage() != null)? tmpUser.getProfileImage().getImageUrl() : "";
+
+        TravelUserResponseDto payerDto = new TravelUserResponseDto(tu.getTravelUserId(), user.getNickname(), tu.getTravelNickname(), tmpUser.getGender(), tmpUser.getBirthday(), imageUrl);
+
         // 이미지 파일이 존재할시
         if (files != null && !files.isEmpty()) {
             //받은 이미지들을 저장한다
@@ -213,17 +217,19 @@ public class PaymentService {
             Settlement savedSettlement = settlementRepository.save(st);
 
             // 정산 유저 저장 로직
-            List<TravelUserDto> travelUsersResponse = getTravelUserDtosBySettlement(settlement, savedSettlement);
+            List<TravelUserResponseDto> travelUsersResponse = getTravelUserDtosBySettlement(settlement, savedSettlement);
 
             return new SettlementResponseDto(savedSettlement.getSettlementId(), payment.getPaymentId(), savedSettlement.getSettlementName(), savedSettlement.getAmount(), savedSettlement.getIsPaid(), travelUsersResponse);
         }).toList();
     }
 
-    private List<TravelUserDto> getTravelUserDtosBySettlement(SettlementRequestDto settlement, Settlement savedSettlement) {
+    private List<TravelUserResponseDto> getTravelUserDtosBySettlement(SettlementRequestDto settlement, Settlement savedSettlement) {
         return settlement.travelUsers().stream().map(travelUser -> {
             TravelUser tu = travelUserRepository.getReferenceById(travelUser);
             SettlementUser smu = saveSettlementUserEntity(tu, savedSettlement, (long) settlement.travelUsers().size());
-            return new TravelUserDto(tu.getTravelUserId(), tu.getTravel().getTravelId(), tu.getUser().getUserId(), tu.getRole(), tu.getTravelNickname());
+            User user = tu.getUser();
+            String imageUrl = (user.getProfileImage() != null)? user.getProfileImage().getImageUrl() : "";
+            return new TravelUserResponseDto(tu.getTravelUserId(), user.getNickname(), tu.getTravelNickname(), user.getGender(), user.getBirthday(), imageUrl);
         }).toList();
     }
 
@@ -256,8 +262,11 @@ public class PaymentService {
         pm.setPayTime(Formatter.getDateTime(dto.payTime())); // 금액기록 시간
         paymentRepository.save(pm);
 
-        TravelUser payer = pm.getTravelUser();
-        TravelUserDto payerDto = new TravelUserDto(payer.getTravelUserId(), payer.getTravel().getTravelId(), payer.getUser().getUserId(), payer.getRole(), payer.getTravelNickname());
+        TravelUser tu = pm.getTravelUser();
+        User user = tu.getUser();
+        String imageUrl = (user.getProfileImage() != null)? user.getProfileImage().getImageUrl() : "";
+
+        TravelUserResponseDto payerDto = new TravelUserResponseDto(tu.getTravelUserId(), user.getNickname(), tu.getTravelNickname(), user.getGender(), user.getBirthday(), imageUrl);
         return new PaymentResponseDto(pm.getTravel().getTravelId(), pm.getPaymentId(), pm.getCategory().getCategoryId(), pm.getCategory().getCategoryName(), pm.getPayerType(), payerDto,
                 pm.getPaymentMethod(), pm.getPaymentName(), pm.getType(), pm.getExchangeRate(), pm.getPayTime(), pm.getPaymentAccount(), updatedSettlements, new ArrayList<>());
     }
@@ -380,10 +389,12 @@ public class PaymentService {
         //settlement 리스트 돌면서 PaymentResponseDto에 들어갈 SettlementResponseDto 만들기
         List<SettlementResponseDto> stResponseDtoList = stList.stream().map(settlement -> {
                 List<SettlementUser> stuList = settlementUserRepository.findBySettlement(settlement);
-                List<TravelUserDto> tuDtoList = stuList.stream().map(stu -> {
+                List<TravelUserResponseDto> tuDtoList = stuList.stream().map(stu -> {
                     TravelUser tu = stu.getTravelUser();
-                    return new TravelUserDto(tu.getTravelUserId(), pm.getTravel().getTravelId(), tu.getUser().getUserId(),
-                            tu.getRole(), tu.getTravelNickname());
+                    User user = tu.getUser();
+                    String imageUrl = (user.getProfileImage() != null)? user.getProfileImage().getImageUrl() : "";
+
+                    return new TravelUserResponseDto(tu.getTravelUserId(), user.getNickname(), tu.getTravelNickname(), user.getGender(), user.getBirthday(), imageUrl);
                 }).toList();
                 return new SettlementResponseDto(settlement.getSettlementId(), pm.getPaymentId(), settlement.getSettlementName(), settlement.getAmount(),
                         settlement.getIsPaid(), tuDtoList);
@@ -394,8 +405,11 @@ public class PaymentService {
         //PaymentImage 리스트 돌면서 PaymentResponseDto에 들어갈 PaymentImageDtoList 만들기
         List<PaymentImageDto> pmimageDtoList = pmiList.stream().map(paymentImage -> new PaymentImageDto(paymentImage.getPaymentImageId(),
                 paymentImage.getImage().getImageUrl())).toList();
-        TravelUser payer = pm.getTravelUser();
-        TravelUserDto payerDto = new TravelUserDto(payer.getTravelUserId(), payer.getTravel().getTravelId(), payer.getUser().getUserId(), payer.getRole(), payer.getTravelNickname());
+        TravelUser tu = pm.getTravelUser();
+        User user = tu.getUser();
+        String imageUrl = (user.getProfileImage() != null)? user.getProfileImage().getImageUrl() : "";
+
+        TravelUserResponseDto payerDto = new TravelUserResponseDto(tu.getTravelUserId(), user.getNickname(), tu.getTravelNickname(), user.getGender(), user.getBirthday(), imageUrl);
         return new PaymentResponseDto(pm.getTravel().getTravelId(), pm.getPaymentId(), pm.getCategory().getCategoryId(), pm.getCategory().getCategoryName(),
                 pm.getPayerType(), payerDto, pm.getPaymentMethod(), pm.getPaymentName(), pm.getType(), pm.getExchangeRate(), pm.getPayTime(),
                 pm.getPaymentAccount(), stResponseDtoList, pmimageDtoList);

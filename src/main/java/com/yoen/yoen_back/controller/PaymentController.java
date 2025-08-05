@@ -39,7 +39,7 @@ public class PaymentController {
     }
 
     @GetMapping("/detail")
-    public ResponseEntity<ApiResponse<PaymentResponseDto>> getDetailPayment(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam("paymentId")Long paymentId) {
+    public ResponseEntity<ApiResponse<PaymentResponseDto>> getDetailPayment(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam("paymentId") Long paymentId) {
         authService.checkTravelUserRoleByPayment(userDetails.user(), paymentId, List.of(Role.READER, Role.WRITER));
         PaymentResponseDto dto = paymentService.getDetailPayment(paymentId);
         return ResponseEntity.ok(ApiResponse.success(dto));
