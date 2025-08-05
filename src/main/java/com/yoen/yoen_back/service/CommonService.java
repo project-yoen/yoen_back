@@ -80,13 +80,16 @@ public class CommonService {
 
 
     /** 카테고리 관련 **/
-    public CategoryRequestDto createCategory(CategoryRequestDto dto) {
-        Category category = Category.builder()
-                .categoryName(dto.categoryName())
-                .type(dto.categoryType())
-                .build();
-        categoryRepository.save(category);
-        return new CategoryRequestDto(category.getCategoryId(), category.getCategoryName(), category.getType());
+    public List<CategoryResponseDto> createCategory(List<CategoryRequestDto> dto) {
+        return dto.stream().map(category -> {
+            Category newCategory = Category.builder()
+                    .categoryName(category.categoryName())
+                    .type(category.categoryType())
+                    .build();
+            Category savedCategory = categoryRepository.save(newCategory);
+            return new CategoryResponseDto(savedCategory.getCategoryId(),savedCategory.getCategoryName(),savedCategory.getType());
+        }).toList();
+
     }
 
     public List<CategoryResponseDto> getCategoryListByType(PaymentType categoryType) {

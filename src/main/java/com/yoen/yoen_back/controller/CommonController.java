@@ -25,8 +25,8 @@ public class CommonController {
 
     /** 카테고리 관련 엔드포인트 **/
     @PostMapping("/category/create")
-    public ResponseEntity<ApiResponse<CategoryRequestDto>> createCategory(@RequestBody CategoryRequestDto dto) {
-        CategoryRequestDto category = commonService.createCategory(dto);
+    public ResponseEntity<ApiResponse<List<CategoryResponseDto>>> createCategory(@RequestBody List<CategoryRequestDto> dto) {
+        List<CategoryResponseDto> category = commonService.createCategory(dto);
         return ResponseEntity.ok(ApiResponse.success(category));
     }
 
