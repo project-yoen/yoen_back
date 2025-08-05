@@ -8,4 +8,6 @@ import java.util.Optional;
 
 public interface ExchangeRateRepository extends JpaRepository<ExchangeRate, Long> {
     Optional<ExchangeRate> findTopByCreatedAtLessThanOrderByCreatedAtDesc(LocalDateTime createdAt);
+
+    Optional<ExchangeRate> findTopByOrderByCreatedAtAsc();
 }

@@ -40,7 +40,10 @@ public class ExchangeRateUpdateService {
     }
 
     public ExchangeRate getExchangeRate(LocalDateTime time) {
-        return exchangeRateRepository.findTopByCreatedAtLessThanOrderByCreatedAtDesc(time).orElse(null);
+        return exchangeRateRepository.findTopByCreatedAtLessThanOrderByCreatedAtDesc(time).orElseGet(() ->
+                exchangeRateRepository.findTopByOrderByCreatedAtAsc()
+                        .orElseThrow(() -> new IllegalStateException("환율 데이터가 존재하지 않습니다."))
+        );
     }
 
     public ExchangeRate getExchangeRateReverse(String time) {
