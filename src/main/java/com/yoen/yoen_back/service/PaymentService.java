@@ -420,11 +420,18 @@ public class PaymentService {
         //PaymentImage 리스트 돌면서 PaymentResponseDto에 들어갈 PaymentImageDtoList 만들기
         List<PaymentImageDto> pmimageDtoList = pmiList.stream().map(paymentImage -> new PaymentImageDto(paymentImage.getPaymentImageId(),
                 paymentImage.getImage().getImageUrl())).toList();
-        TravelUser tu = pm.getTravelUser();
-        User user = tu.getUser();
-        String imageUrl = (user.getProfileImage() != null)? user.getProfileImage().getImageUrl() : "";
 
-        TravelUserResponseDto payerDto = new TravelUserResponseDto(tu.getTravelUserId(), user.getNickname(), tu.getTravelNickname(), user.getGender(), user.getBirthday(), imageUrl);
+        TravelUser tu = pm.getTravelUser();
+        TravelUserResponseDto payerDto;
+        if(tu != null){
+            User user = tu.getUser();
+            String imageUrl = (user.getProfileImage() != null)? user.getProfileImage().getImageUrl() : "";
+            payerDto = new TravelUserResponseDto(tu.getTravelUserId(), user.getNickname(), tu.getTravelNickname(), user.getGender(), user.getBirthday(), imageUrl);
+        }
+        else{
+            payerDto = new TravelUserResponseDto(-1L, "", "", Gender.OTHERS, LocalDate.now(), "");
+
+        }
         return new PaymentResponseDto(pm.getTravel().getTravelId(), pm.getPaymentId(), pm.getCategory().getCategoryId(), pm.getCategory().getCategoryName(),
                 pm.getPayerType(), payerDto, pm.getPaymentMethod(), pm.getPaymentName(), pm.getType(), pm.getExchangeRate(), pm.getPayTime(),
                 pm.getPaymentAccount(), stResponseDtoList, pmimageDtoList);
