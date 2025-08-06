@@ -72,7 +72,11 @@ public class PaymentService {
 
     // TODO: 날짜별 금액기록 리스트 받기
     public List<PaymentSimpleResponseDto> getAllPaymentResponseDtoByTravelId(Travel tv, String date) {
-        LocalDateTime localDateTime = Formatter.getDateTime(date);
+        LocalDateTime localDateTime = Formatter.getDateTime(date)
+                .withHour(0)
+                .withMinute(0)
+                .withSecond(0)
+                .withNano(0);
         List<Payment> pmList = paymentRepository.findAllByTravelAndPayTimeBetweenAndIsActiveTrue(tv, localDateTime, localDateTime.plusDays(1));
         return pmList.stream().map(payment -> {
             if (payment.getPayerType() == Payer.SHAREDFUND) {
