@@ -95,7 +95,7 @@ public class PaymentService {
 
     public Payment savePaymentEntity(PaymentRequestDto dto) {
         // isActive는 무조건 true
-        Category category = categoryRepository.getReferenceById(dto.categoryId());
+        Category category = categoryRepository.findById(dto.categoryId()).orElse(null);
         TravelUser tu = travelUserRepository.findByTravelUserIdAndIsActiveTrue(dto.travelUserId()).orElse(null);
 
         // 환율 가져오는 로직
