@@ -84,6 +84,10 @@ public class PaymentService {
                 return new PaymentSimpleResponseDto(payment.getPaymentId(), payment.getPaymentName(), payment.getCategory().getCategoryName(),
                         payment.getPayTime(), "공금", payment.getPaymentAccount(), Payer.SHAREDFUND);
             }
+            if (payment.getType() == PaymentType.SHAREDFUND) {
+                return new PaymentSimpleResponseDto(payment.getPaymentId(), payment.getPaymentName(), "공금 채우기",
+                        payment.getPayTime(),  payment.getTravelUser().getTravelNickname(), payment.getPaymentAccount(), Payer.SHAREDFUND);
+            }
 
             return  new PaymentSimpleResponseDto(payment.getPaymentId(), payment.getPaymentName(), payment.getCategory().getCategoryName(),
                     payment.getPayTime(), payment.getTravelUser().getTravelNickname(), payment.getPaymentAccount(), Payer.INDIVIDUAL);
