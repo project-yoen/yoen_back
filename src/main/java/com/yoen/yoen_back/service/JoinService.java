@@ -106,18 +106,15 @@ public class JoinService {
     // 내 여행에 참여 신청한 사람 승인하는 함수
     public void acceptJoinRequest(AcceptJoinRequestDto dto) {
         TravelJoinRequest tjr = travelJoinRequestRepository.getReferenceById(dto.travelJoinRequestId());
-        // Todo: 여행에 사람이 들어오면 Travel객체의 numOfJoinedPeople을 1 증가시켜야 함. (방식에 대한 고민 필요)
-        /**
-         * 1. TravelEntity 자체에 인원수를 1 증가시키는 메서드를 작성한다. (간단하고 추천)
-         *
-         * 2. 이벤트 기반 처리를 도입해서 인원수를 증가시키는 이벤트를 발행하고 Travel에서 읽어서 처리하게 한다. (현재 서비스 크기엔 과할 수도 있음. 복잡함)
-         */
+        User joinUser = tjr.getUser();
+        Travel joinTravel = tjr.getTravel();
+
         tjr.setIsAccepted(true); // 수락됨을 True로 변경
         tjr.setIsActive(false); // soft delete 수행
         travelJoinRequestRepository.save(tjr);
+        Optional<TravelUser> travelUser = travelUserRepository.findByTravelAndUserAndIsActiveTrue(joinTravel, joinUser);
 
-        Travel tv = tjr.getTravel();
-        if (travelService.increaseNumOfJoinedPeople(tv)) {
+        if (travelUser.isEmpty() && travelService.increaseNumOfJoinedPeople(joinTravel)) {
             TravelUser tu = TravelUser.builder()
                     .travel(tjr.getTravel())
                     .user(tjr.getUser())

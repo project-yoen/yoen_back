@@ -15,10 +15,7 @@ import lombok.*;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Entity
-@Table(name = "travelusers",
-        uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"travel_id", "user_id"})
-        })
+@Table(name = "travelusers")
 public class TravelUser extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

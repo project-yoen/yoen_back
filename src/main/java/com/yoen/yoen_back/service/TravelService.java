@@ -14,11 +14,14 @@ import com.yoen.yoen_back.repository.travel.TravelUserRepository;
 import com.yoen.yoen_back.repository.user.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TravelService {
@@ -159,7 +162,9 @@ public class TravelService {
 
     public List<TravelUserResponseDto> getDetailTravelUser(Travel tv) {
         List<TravelUser> tuList = travelUserRepository.findByTravelAndIsActiveTrue(tv);
-        return tuList.stream().map(traveluser -> {
+        return tuList.stream()
+                .sorted(Comparator.comparing(tu -> tu.getUser().getNickname(), String.CASE_INSENSITIVE_ORDER))
+                .map(traveluser -> {
             User user = userRepository.getReferenceById(traveluser.getUser().getUserId());
             String imageUrl = "";
             if(user.getProfileImage() != null) {
@@ -183,6 +188,7 @@ public class TravelService {
     public Boolean decreaseNumOfJoinedPeople(Travel tv) {
         Long numOfJoinedPeople = tv.getNumOfJoinedPeople();
         if (numOfJoinedPeople - 1 >= 0) {
+            log.info(String.valueOf(numOfJoinedPeople - 1));
             tv.setNumOfJoinedPeople(numOfJoinedPeople - 1);
             travelRepository.save(tv);
             return true;
