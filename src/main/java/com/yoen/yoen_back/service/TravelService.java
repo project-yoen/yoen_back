@@ -1,10 +1,7 @@
 package com.yoen.yoen_back.service;
 
 import com.yoen.yoen_back.common.utils.Formatter;
-import com.yoen.yoen_back.dto.travel.TravelRequestDto;
-import com.yoen.yoen_back.dto.travel.TravelResponseDto;
-import com.yoen.yoen_back.dto.travel.TravelUserDto;
-import com.yoen.yoen_back.dto.travel.TravelUserResponseDto;
+import com.yoen.yoen_back.dto.travel.*;
 import com.yoen.yoen_back.entity.image.Image;
 import com.yoen.yoen_back.entity.travel.Travel;
 import com.yoen.yoen_back.entity.travel.TravelUser;
@@ -142,6 +139,13 @@ public class TravelService {
         TravelUser tu = travelUserRepository.findByTravelAndUserAndIsActiveTrue(tv, user)
                 .orElseThrow(() -> new IllegalStateException("해당 유저의 TravelUser가 존재하지 않습니다."));
         return new TravelUserDto(tu.getTravelUserId(), tu.getUser().getUserId(), tu.getTravel().getTravelId(), tu.getRole(), tu.getTravelNickname());
+    }
+
+    // 여행에 대한 여행 유저 반환하는 함수
+    public void updateTravelUserNickname(TravelNicknameUpdateDto dto) {
+        TravelUser tu = travelUserRepository.findByTravelUserIdAndIsActiveTrue(dto.travelUserId()).orElseThrow(() -> new IllegalStateException("존재하지 않은 참여자 입니다."));
+        tu.setTravelNickname(dto.travelNickname());
+        travelUserRepository.save(tu);
     }
 
     public List<TravelUserResponseDto> getDetailTravelUser(Travel tv) {

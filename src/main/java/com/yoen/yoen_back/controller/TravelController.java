@@ -2,10 +2,7 @@ package com.yoen.yoen_back.controller;
 
 import com.yoen.yoen_back.common.entity.ApiResponse;
 import com.yoen.yoen_back.common.security.CustomUserDetails;
-import com.yoen.yoen_back.dto.travel.TravelRequestDto;
-import com.yoen.yoen_back.dto.travel.TravelResponseDto;
-import com.yoen.yoen_back.dto.travel.TravelUserDto;
-import com.yoen.yoen_back.dto.travel.TravelUserResponseDto;
+import com.yoen.yoen_back.dto.travel.*;
 import com.yoen.yoen_back.entity.travel.Travel;
 import com.yoen.yoen_back.entity.travel.TravelUser;
 import com.yoen.yoen_back.enums.Role;
@@ -58,6 +55,13 @@ public class TravelController {
         TravelUser tu = authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.READER, Role.WRITER));
         TravelUserDto tud = travelService.getTravelUser(userDetails.user(), tu.getTravel());
         return ResponseEntity.ok(ApiResponse.success(tud));
+    }
+
+    @PostMapping("/traveluser/nickname")
+    public ResponseEntity<ApiResponse<String>> updateTravelNickname(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody TravelNicknameUpdateDto dto) {
+        TravelUser tu = authService.checkTravelUserRoleByTravel(userDetails.user(), dto.travelId(), List.of(Role.READER, Role.WRITER));
+        travelService.updateTravelUserNickname(dto);
+        return ResponseEntity.ok(ApiResponse.success("정상적으로 트레블 닉네임이 변경되었습니다."));
     }
 
 
