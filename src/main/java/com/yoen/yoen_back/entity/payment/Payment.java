@@ -34,7 +34,7 @@ public class Payment extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private Travel travel;
 
-    @JoinColumn(name = "category_id", nullable = false)
+    @JoinColumn(name = "category_id")
     @ManyToOne(fetch = FetchType.LAZY)
     private Category category;
 
