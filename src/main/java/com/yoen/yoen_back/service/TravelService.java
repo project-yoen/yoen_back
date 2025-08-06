@@ -67,8 +67,10 @@ public class TravelService {
 
     public TravelResponseDto getTravelDetail(Long travelId) {
         Travel tv = travelRepository.getReferenceById(travelId);
+        String imageUrl = Optional.ofNullable(tv.getTravelImage())
+                .map(Image::getImageUrl).orElse("");
         return new TravelResponseDto(tv.getTravelId(), tv.getNumOfPeople(), tv.getNumOfJoinedPeople(), tv.getNation(), tv.getSharedFund(), tv.getTravelName(),
-                tv.getStartDate(), tv.getEndDate(), Optional.ofNullable(tv.getTravelImage().getImageUrl()).orElse(""));
+                tv.getStartDate(), tv.getEndDate(), imageUrl);
     }
     // Todo: 여행의 프로필 이미지 바꾸는 함수 구현
 
