@@ -60,8 +60,15 @@ public class TravelService {
 //                Optional<Image> image = images.stream().findFirst();
 //                imageUrl = image.map(Image::getImageUrl);
 //            }
-            return new TravelResponseDto(travel.getTravelId(), travel.getNumOfPeople(), travel.getTravelName(), travel.getStartDate(), travel.getEndDate(), imageUrl.orElse(""));
+            return new TravelResponseDto(travel.getTravelId(), travel.getNumOfPeople(), travel.getNumOfJoinedPeople(), travel.getNation(), travel.getSharedFund(),
+                    travel.getTravelName(), travel.getStartDate(), travel.getEndDate(), imageUrl.orElse(""));
         }).toList();
+    }
+
+    public TravelResponseDto getTravelDetail(Long travelId) {
+        Travel tv = travelRepository.getReferenceById(travelId);
+        return new TravelResponseDto(tv.getTravelId(), tv.getNumOfPeople(), tv.getNumOfJoinedPeople(), tv.getNation(), tv.getSharedFund(), tv.getTravelName(),
+                tv.getStartDate(), tv.getEndDate(), Optional.ofNullable(tv.getTravelImage().getImageUrl()).orElse(""));
     }
     // Todo: 여행의 프로필 이미지 바꾸는 함수 구현
 
