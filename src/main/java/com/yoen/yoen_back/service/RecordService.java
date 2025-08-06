@@ -51,7 +51,11 @@ public class RecordService {
 
     // TODO: 날짜별 여행기록 리스트 받기
     public List<TravelRecordResponseDto> getTravelRecordsByDate(Travel tv, String date) {
-        LocalDateTime startDateTime = Formatter.getDateTime(date);
+        LocalDateTime startDateTime = Formatter.getDateTime(date)
+                .withHour(0)
+                .withMinute(0)
+                .withSecond(0)
+                .withNano(0);
         List<TravelRecord> tvrList = travelRecordRepository.findAllByTravelAndRecordTimeBetweenAndIsActiveTrue(tv, startDateTime, startDateTime.plusDays(1));
 
         return tvrList.stream().map(tvr -> {
