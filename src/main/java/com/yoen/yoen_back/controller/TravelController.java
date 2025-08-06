@@ -82,5 +82,11 @@ public class TravelController {
         return ResponseEntity.ok(ApiResponse.success("정상적으로 여행에서 나가졌습니다."));
     }
 
+    @GetMapping("/detail")
+    public ResponseEntity<ApiResponse<TravelResponseDto>> getTravelDetail(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam Long travelId) {
+        authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.READER, Role.WRITER));
+        TravelResponseDto dto = travelService.getTravelDetail(travelId);
+        return ResponseEntity.ok(ApiResponse.success(dto));
+    }
 }
 
