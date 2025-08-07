@@ -141,7 +141,6 @@ public class RecordService {
                 }
         ).toList();
     }
-    // Todo: 대표이미지를 바꿨을 때 기존 대표이미지가 사용되는것인지 확인하고 쓰이는 곳 없으면 삭제
     // 기존 여행기록에서 사진을 삭제할시 (수정)
     public void deleteTravelRecordImage(Long travelRecordImageId) {
         TravelRecordImage tri = travelRecordImageRepository.findWithTravelAndImageById(travelRecordImageId)
