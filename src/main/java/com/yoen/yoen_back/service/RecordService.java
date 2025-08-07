@@ -141,16 +141,17 @@ public class RecordService {
 
     // 기존 여행기록에서 사진을 삭제할시 (수정)
     public void deleteTravelRecordImage(Long travelRecordImageId) {
-        Optional<TravelRecordImage> paymentImage = travelRecordImageRepository.findByTravelRecordImageIdAndIsActiveTrue(travelRecordImageId);
-        paymentImage.ifPresent(image -> {
-            // 사진 모집단 삭제 (클라우드 삭제)
-            Image img = image.getImage();
-            imageService.deleteImage(img.getImageId());
-
-            // paymentImage 삭제
-            image.setIsActive(false);
-            travelRecordImageRepository.save(image);
-        });
+        TravelRecordImage tri = travelRecordImageRepository.findWithTravelAndImageById(travelRecordImageId)
+                .orElseThrow(() -> new IllegalArgumentException("이미지를 찾을 수 없습니다."));
+        Image recordImage = tri.getImage();
+        Image travelImage = tri.getTravelRecord().getTravel().getTravelImage();
+        if(recordImage != null && recordImage.equals(travelImage)) {
+            throw new IllegalStateException("대표이미지는 삭제되지 않습니다.");
+        }
+        imageService.deleteImage(recordImage.getImageId());
+        // recordImage 삭제
+        tri.setIsActive(false);
+        travelRecordImageRepository.save(tri);
     }
 
     // 여행기록 삭제 (삭제)
