@@ -27,7 +27,7 @@ JOIN FETCH tri.travelRecord tr
 JOIN FETCH tr.travel t
 JOIN FETCH tri.image img
 JOIN FETCH t.travelImage ti
-WHERE tri.travelRecordImageId = :id
+WHERE tri.travelRecordImageId = :travelRecordImageId AND tri.isActive = true
 """)
     Optional<TravelRecordImage> findWithTravelAndImageById(@Param("travelRecordImageId") Long id);
 }
