@@ -35,9 +35,9 @@ public class TravelController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<ApiResponse<Travel>> setTravel(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody TravelRequestDto dto) {
-        Travel tv = travelService.createTravel(userDetails.user(), dto);
-        return ResponseEntity.ok(ApiResponse.success(tv));
+    public ResponseEntity<ApiResponse<TravelResponseDto>> setTravel(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody TravelRequestDto dto) {
+        TravelResponseDto responseDto = travelService.createTravel(userDetails.user(), dto);
+        return ResponseEntity.ok(ApiResponse.success(responseDto));
     }
 
     // TODO: 삭제 (미완) (읽기 권한)

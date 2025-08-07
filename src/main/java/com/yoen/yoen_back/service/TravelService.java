@@ -118,11 +118,13 @@ public class TravelService {
 
 
     @Transactional
-    public Travel createTravel(User user, TravelRequestDto dto) {
+    public TravelResponseDto createTravel(User user, TravelRequestDto dto) {
         Travel tv = saveTravelEntity(dto);
         saveTravelUserEntity(tv, user);
         commonService.createTravelDestination(tv, dto.destinationIds());
-        return tv;
+        String imageUrl = Optional.ofNullable(tv.getTravelImage()).map(Image::getImageUrl).orElse("");
+        return new TravelResponseDto(tv.getTravelId(), tv.getNumOfPeople(), tv.getNumOfJoinedPeople(), tv.getNation(), tv.getSharedFund(),
+        tv.getTravelName(), tv.getStartDate(), tv.getEndDate(), imageUrl);
     }
 
     @Transactional
