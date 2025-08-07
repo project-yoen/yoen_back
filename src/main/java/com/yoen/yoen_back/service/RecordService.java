@@ -141,7 +141,6 @@ public class RecordService {
                 }
         ).toList();
     }
-
     // 기존 여행기록에서 사진을 삭제할시 (수정)
     public void deleteTravelRecordImage(Long travelRecordImageId) {
         TravelRecordImage tri = travelRecordImageRepository.findWithTravelAndImageById(travelRecordImageId)
