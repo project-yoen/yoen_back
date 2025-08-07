@@ -10,12 +10,12 @@ import com.yoen.yoen_back.service.AuthService;
 import com.yoen.yoen_back.service.TravelService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
 @RestController
 @RequiredArgsConstructor
 @SecurityRequirement(name = "JWT_AUTH")
@@ -84,6 +84,13 @@ public class TravelController {
         TravelUser tu = authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.READER, Role.WRITER));
         travelService.leaveTravel(tu);
         return ResponseEntity.ok(ApiResponse.success("정상적으로 여행에서 나가졌습니다."));
+    }
+
+    @PostMapping("/image/update")
+    public ResponseEntity<ApiResponse<String>> updateTravelProfileImage(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody TravelProfileImageDto request) {
+        TravelUser tu = authService.checkTravelUserRoleByTravel(userDetails.user(), request.travelId(), List.of(Role.READER, Role.WRITER));
+        travelService.updateTravelProfileImage(tu.getTravel(), request);
+        return ResponseEntity.ok(ApiResponse.success("정상적으로 여행 이미지를 저장하였습니다."));
     }
 
     @GetMapping("/detail")

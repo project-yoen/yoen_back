@@ -73,7 +73,6 @@ public class RecordService {
     @Transactional
     public TravelRecordResponseDto createTravelRecord(User user, TravelRecordRequestDto dto, List<MultipartFile> files) {
         Travel tv = travelRepository.getReferenceById(dto.travelId());
-//        TravelUser tu = travelUserRepository.getReferenceById(dto.travelUserId());
         TravelUser tu = travelUserRepository.findByTravelAndUserAndIsActiveTrue(tv, user).orElseThrow(()-> new AccessDeniedException("존재하지 않는 유저입니다."));
         TravelRecord travelRecord = TravelRecord.builder()
                 .travel(tv)
@@ -88,6 +87,8 @@ public class RecordService {
         // 이미지 파일이 존재할 시
         if (files != null && !files.isEmpty()) {
             List<Image> images = imageService.saveImages(user, files); // 클라우드에 업로드 및 image 레포지토리에 저장
+            // travel 대표이미지 설정 안되어있으면 첫번째로 등록하는걸로 하기
+            if (tv.getTravelImage() == null) tv.setTravelImage(images.get(0));
             // TODO: 여기서부턴 좀 수정이 있어야할거 같음 지금 이미지를 불러다가 응답하는게 좀 복잡함 (왜 세개로 분리했는지 고민)
             List<TravelRecordImageDto> imagesDto = images.stream().map(image -> {
                 TravelRecordImage tri = TravelRecordImage.builder()
@@ -141,13 +142,13 @@ public class RecordService {
 
     // 기존 여행기록에서 사진을 삭제할시 (수정)
     public void deleteTravelRecordImage(Long travelRecordImageId) {
-        Optional<TravelRecordImage> paymentImage = travelRecordImageRepository.findByTravelRecordImageIdAndIsActiveTrue(travelRecordImageId);
-        paymentImage.ifPresent(image -> {
+        Optional<TravelRecordImage> recordImage = travelRecordImageRepository.findByTravelRecordImageIdAndIsActiveTrue(travelRecordImageId);
+        recordImage.ifPresent(image -> {
             // 사진 모집단 삭제 (클라우드 삭제)
             Image img = image.getImage();
             imageService.deleteImage(img.getImageId());
 
-            // paymentImage 삭제
+            // recordImage 삭제
             image.setIsActive(false);
             travelRecordImageRepository.save(image);
         });

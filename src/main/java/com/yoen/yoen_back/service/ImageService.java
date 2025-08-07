@@ -31,6 +31,10 @@ public class ImageService {
         return imageRepository.save(image);
     }
 
+    public Optional<Image> getImageById(Long imageId) {
+        return imageRepository.findByImageIdAndIsActiveTrue(imageId);
+    }
+
     // image 여러개를 한번에 클라우드에 저장하고 로컬DB에 저장하는 함수
     public List<Image> saveImages(User user, List<MultipartFile> files) {
         List<UploadedImage> uploadedImages = imageUploadService.uploadImages(user, files);

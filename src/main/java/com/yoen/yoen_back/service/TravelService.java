@@ -3,6 +3,7 @@ package com.yoen.yoen_back.service;
 import com.yoen.yoen_back.common.utils.Formatter;
 import com.yoen.yoen_back.dto.travel.*;
 import com.yoen.yoen_back.entity.image.Image;
+import com.yoen.yoen_back.entity.image.TravelRecordImage;
 import com.yoen.yoen_back.entity.travel.Travel;
 import com.yoen.yoen_back.entity.travel.TravelUser;
 import com.yoen.yoen_back.entity.user.User;
@@ -32,6 +33,7 @@ public class TravelService {
     private final TravelRecordRepository travelRecordRepository;
     private final TravelRecordImageRepository travelRecordImageRepository;
     private final UserRepository userRepository;
+    private final ImageService imageService;
 
 
     public List<Travel> getAllTravels() {
@@ -48,20 +50,13 @@ public class TravelService {
         // Todo: 함수로 빼도 ㄱㅊ
         // Todo: 첫 여행기록에 이미지가 없으면 이미지 있는 여행기록 나올때까지 탐색해야 함
         return tvList.stream().map(travel -> {
-            Optional<String> imageUrl;
-            List<Image> images = travelRecordImageRepository.findFirstByTravelOrderByCreatedAtAsc(travel.getTravelId());
-            Optional<Image> image = images.stream().findFirst();
-            imageUrl = image.map(Image::getImageUrl);
-
-//            List<TravelRecord> trList = travelRecordRepository.findByTravel_TravelIdAndIsActiveTrue(travel.getTravelId());
-//            if(!trList.isEmpty()) {
-//                TravelRecord tr = trList.get(0);
-//                List<Image> images = travelRecordImageRepository.findFirstByTravelRecordOrderByCreatedAtAsc(travel.getTravelId());
-//                Optional<Image> image = images.stream().findFirst();
-//                imageUrl = image.map(Image::getImageUrl);
-//            }
+            // travel에 이미지 있는지확인
+            Image image = travel.getTravelImage();
+            if (image != null) return new TravelResponseDto(travel.getTravelId(), travel.getNumOfPeople(), travel.getNumOfJoinedPeople(), travel.getNation(), travel.getSharedFund(),
+                    travel.getTravelName(), travel.getStartDate(), travel.getEndDate(), image.getImageUrl());
             return new TravelResponseDto(travel.getTravelId(), travel.getNumOfPeople(), travel.getNumOfJoinedPeople(), travel.getNation(), travel.getSharedFund(),
-                    travel.getTravelName(), travel.getStartDate(), travel.getEndDate(), imageUrl.orElse(""));
+                    travel.getTravelName(), travel.getStartDate(), travel.getEndDate(), "");
+
         }).toList();
     }
 
@@ -196,6 +191,17 @@ public class TravelService {
         return false;
     }
 
+    @Transactional
+    public void updateTravelProfileImage(Travel tv, TravelProfileImageDto request) {
+        log.info(String.valueOf(request.recordImageId()));
+        Optional<TravelRecordImage> tri = travelRecordImageRepository.findByTravelRecordImageIdAndIsActiveTrue(request.recordImageId());
+        tri.ifPresent(travelRecordImage -> {
+            Image image = travelRecordImage.getImage();
+            log.info(String.valueOf(image.getImageUrl()));
+            tv.setTravelImage(image);
+        });
+    }
+
     public void leaveTravel(TravelUser tu) {
         if (decreaseNumOfJoinedPeople(tu.getTravel())) {
             tu.setIsActive(false);
@@ -204,6 +210,5 @@ public class TravelService {
             throw new IllegalStateException("지원자가 음수가 될 수 없습니다.");
         }
     }
-
 
 }
