@@ -16,6 +16,7 @@ import com.yoen.yoen_back.repository.travel.TravelRepository;
 import com.yoen.yoen_back.repository.travel.TravelUserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RecordService {
@@ -145,13 +147,15 @@ public class RecordService {
                 .orElseThrow(() -> new IllegalArgumentException("이미지를 찾을 수 없습니다."));
         Image recordImage = tri.getImage();
         Image travelImage = tri.getTravelRecord().getTravel().getTravelImage();
-        if(recordImage != null && recordImage.equals(travelImage)) {
-            throw new IllegalStateException("대표이미지는 삭제되지 않습니다.");
+        if(recordImage != null && !recordImage.equals(travelImage)) {
+            imageService.deleteImage(recordImage.getImageId());
+            // recordImage 삭제
+            tri.setIsActive(false);
+            travelRecordImageRepository.save(tri);
         }
-        imageService.deleteImage(recordImage.getImageId());
-        // recordImage 삭제
-        tri.setIsActive(false);
-        travelRecordImageRepository.save(tri);
+        else{
+            log.info("대표이미지는 삭제되지 않습니다.");
+        }
     }
 
     // 여행기록 삭제 (삭제)
