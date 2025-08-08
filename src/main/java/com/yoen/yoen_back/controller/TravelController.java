@@ -10,10 +10,10 @@ import com.yoen.yoen_back.service.AuthService;
 import com.yoen.yoen_back.service.TravelService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 @RestController
@@ -87,9 +87,9 @@ public class TravelController {
     }
 
     @PostMapping("/image/update")
-    public ResponseEntity<ApiResponse<String>> updateTravelProfileImage(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody TravelProfileImageDto request) {
+    public ResponseEntity<ApiResponse<String>> updateTravelProfileImage(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestPart("dto") TravelProfileImageDto request,  @RequestPart(name = "image", required = false) MultipartFile image) {
         TravelUser tu = authService.checkTravelUserRoleByTravel(userDetails.user(), request.travelId(), List.of(Role.READER, Role.WRITER));
-        travelService.updateTravelProfileImage(userDetails.user(), tu.getTravel(), request);
+        travelService.updateTravelProfileImage(userDetails.user(), tu.getTravel(), request, image);
         return ResponseEntity.ok(ApiResponse.success("정상적으로 여행 이미지를 저장하였습니다."));
     }
 

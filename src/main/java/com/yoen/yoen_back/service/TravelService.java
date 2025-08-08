@@ -17,6 +17,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Comparator;
 import java.util.List;
@@ -194,19 +195,25 @@ public class TravelService {
     }
 
     @Transactional
-    public void updateTravelProfileImage(User user, Travel tv, TravelProfileImageDto request) {
+    public void updateTravelProfileImage(User user, Travel tv, TravelProfileImageDto request, MultipartFile image) {
         Image tvImage = tv.getTravelImage();
         if (tvImage != null) {
             imageService.deleteImage(tvImage);
         }
-        log.info(String.valueOf(request.recordImageId()));
-        Optional<TravelRecordImage> tri = travelRecordImageRepository.findByTravelRecordImageIdAndIsActiveTrue(request.recordImageId());
-        tri.ifPresent(travelRecordImage -> {
-            Image image = travelRecordImage.getImage();
-            Image profileImage = imageService.saveImageByUrl(user, image.getImageUrl());
+        if (request.recordImageId() != -1) {
+            Optional<TravelRecordImage> tri = travelRecordImageRepository.findByTravelRecordImageIdAndIsActiveTrue(request.recordImageId());
+            tri.ifPresent(travelRecordImage -> {
+                Image tmpImage = travelRecordImage.getImage();
+                Image profileImage = imageService.saveImageByUrl(user, tmpImage.getImageUrl());
+                tv.setTravelImage(profileImage);
+            });
+        } else {
+            Image profileImage = imageService.saveImage(user, image);
             tv.setTravelImage(profileImage);
-        });
+        }
+
     }
+
 
     public void leaveTravel(TravelUser tu) {
         if (decreaseNumOfJoinedPeople(tu.getTravel())) {
