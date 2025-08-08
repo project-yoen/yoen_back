@@ -4,6 +4,7 @@ import com.yoen.yoen_back.common.entity.BaseEntity;
 import com.yoen.yoen_back.entity.Category;
 import com.yoen.yoen_back.entity.travel.Travel;
 import com.yoen.yoen_back.entity.travel.TravelUser;
+import com.yoen.yoen_back.enums.Currency;
 import com.yoen.yoen_back.enums.Payer;
 import com.yoen.yoen_back.enums.PaymentMethod;
 import com.yoen.yoen_back.enums.PaymentType;
@@ -54,6 +55,9 @@ public class Payment extends BaseEntity {
     private LocalDateTime payTime;
 
     private Long paymentAccount;
+
+    @Enumerated(EnumType.STRING)
+    private Currency currency;
 
     @Enumerated(EnumType.STRING)
     private PaymentType type = PaymentType.PAYMENT;

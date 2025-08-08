@@ -19,9 +19,7 @@ import com.yoen.yoen_back.entity.payment.SettlementUser;
 import com.yoen.yoen_back.entity.travel.Travel;
 import com.yoen.yoen_back.entity.travel.TravelUser;
 import com.yoen.yoen_back.entity.user.User;
-import com.yoen.yoen_back.enums.Gender;
-import com.yoen.yoen_back.enums.Payer;
-import com.yoen.yoen_back.enums.PaymentType;
+import com.yoen.yoen_back.enums.*;
 import com.yoen.yoen_back.repository.CategoryRepository;
 import com.yoen.yoen_back.repository.image.PaymentImageRepository;
 import com.yoen.yoen_back.repository.payment.PaymentRepository;
@@ -82,15 +80,15 @@ public class PaymentService {
             if (payment.getPayerType() == Payer.SHAREDFUND) {
 
                 return new PaymentSimpleResponseDto(payment.getPaymentId(), payment.getPaymentName(), payment.getCategory().getCategoryName(),
-                        payment.getPayTime(), "공금", payment.getPaymentAccount(), Payer.SHAREDFUND);
+                        payment.getPayTime(), "공금", payment.getPaymentAccount(), Payer.SHAREDFUND, PaymentType.PAYMENT, payment.getCurrency());
             }
             if (payment.getType() == PaymentType.SHAREDFUND) {
                 return new PaymentSimpleResponseDto(payment.getPaymentId(), payment.getPaymentName(), "공금 채우기",
-                        payment.getPayTime(),  payment.getTravelUser().getTravelNickname(), payment.getPaymentAccount(), Payer.SHAREDFUND);
+                        payment.getPayTime(),  payment.getTravelUser().getTravelNickname(), payment.getPaymentAccount(), Payer.INDIVIDUAL, PaymentType.SHAREDFUND, payment.getCurrency());
             }
 
             return  new PaymentSimpleResponseDto(payment.getPaymentId(), payment.getPaymentName(), payment.getCategory().getCategoryName(),
-                    payment.getPayTime(), payment.getTravelUser().getTravelNickname(), payment.getPaymentAccount(), Payer.INDIVIDUAL);
+                    payment.getPayTime(), payment.getTravelUser().getTravelNickname(), payment.getPaymentAccount(), Payer.INDIVIDUAL, PaymentType.PAYMENT, payment.getCurrency());
         }).toList();
     }
 
@@ -113,6 +111,7 @@ public class PaymentService {
                 .payTime(payTime)
                 .category(category)
                 .payerType(dto.payerType())
+                .currency(dto.currency())
                 .paymentAccount(dto.paymentAccount())
                 .exchangeRate(exchangeRate.getExchangeRate())
                 .travelUser(tu)
@@ -137,16 +136,18 @@ public class PaymentService {
         return settlementRepository.save(sm);
     }
 
-    public SettlementUser saveSettlementUserEntity(TravelUser tu, Settlement sm, Long size) {
-        SettlementUser su = SettlementUser.builder()
-                .travelUser(tu)
-                .settlement(sm)
-                .amount(sm.getAmount() / size)
-                .isPaid(sm.getIsPaid())
-                .build();
+    public SettlementUser saveSettlementUserEntity(TravelUser tu, Settlement sm, Long size, Payment payment) {
+            Long amount = (payment.getCurrency() == Currency.YEN)? Math.round(sm.getAmount() * payment.getExchangeRate()) : sm.getAmount();
+            SettlementUser su = SettlementUser.builder()
+                    .travelUser(tu)
+                    .settlement(sm)
+                    .amount(amount / size)
+                    .isPaid(sm.getIsPaid())
+                    .build();
 
-        // 정산 유저 저장
-        return settlementUserRepository.save(su);
+            // 정산 유저 저장
+            return settlementUserRepository.save(su);
+
     }
 
     // 정산 객체를 저장 -> 정산 객체와 금액기록을 매핑 -> 정산 객체에 정산_유저 객체 매핑 -> 함수 3개를 모은 createPayment 선언
@@ -156,24 +157,35 @@ public class PaymentService {
         Payment payment = savePaymentEntity(dto);
         if (payment.getType().equals(PaymentType.SHAREDFUND)) {
             Travel tv = travelRepository.getReferenceById(dto.travelId());
-            tv.setSharedFund(tv.getSharedFund() + payment.getPaymentAccount());
+            double leftAmount;
+            if (tv.getNation() == Nation.JAPAN) {
+                leftAmount = tv.getSharedFund() + payment.getPaymentAccount() * payment.getExchangeRate();
+            } else {
+                leftAmount = tv.getSharedFund() + payment.getPaymentAccount();
+            }
+            tv.setSharedFund(Math.round(leftAmount));
             travelRepository.save(tv);
         }
 
         if (payment.getType().equals(PaymentType.PAYMENT) && payment.getPayerType().equals(Payer.SHAREDFUND)) {
             Travel tv = travelRepository.getReferenceById(dto.travelId());
-            if (tv.getSharedFund() - payment.getPaymentAccount() < 0) {
+            double leftAmount;
+            if (tv.getNation() == Nation.JAPAN) {
+                leftAmount = tv.getSharedFund() - payment.getPaymentAccount() * payment.getExchangeRate();
+            } else {
+                leftAmount = tv.getSharedFund() - payment.getPaymentAccount();
+            }
+            if (leftAmount < 0) {
                 throw new IllegalStateException("잔액이 부족합니다.");
             }
-            tv.setSharedFund(tv.getSharedFund() - payment.getPaymentAccount());
-            travelRepository.save(tv);
+            tv.setSharedFund(Math.round(leftAmount));
         }
 
         // 정산리스트 저장 로직
         List<SettlementResponseDto> settlementResponse = dto.settlementList().stream().map(settlement -> {
             Settlement sm = saveSettlementEntity(payment, settlement);
             // 정산 유저 저장 로직
-            List<TravelUserResponseDto> travelUsersResponse = getTravelUserDtosBySettlement(settlement, sm);
+            List<TravelUserResponseDto> travelUsersResponse = getTravelUserAndSaveSettlementUsers(payment, settlement, sm);
 
             return new SettlementResponseDto(sm.getSettlementId(), sm.getPayment().getPaymentId(), sm.getSettlementName(), sm.getAmount(), sm.getIsPaid(), travelUsersResponse);
 
@@ -205,12 +217,12 @@ public class PaymentService {
                     }
             ).toList();
             return new PaymentResponseDto(payment.getTravel().getTravelId(), payment.getPaymentId(), payment.getCategory().getCategoryId(), payment.getCategory().getCategoryName(), payment.getPayerType(), payerDto,
-                    payment.getPaymentMethod(), payment.getPaymentName(), payment.getType(), payment.getExchangeRate(), payment.getPayTime(), payment.getPaymentAccount(), settlementResponse, imagesDto);
+                    payment.getPaymentMethod(), payment.getPaymentName(), payment.getType(), payment.getExchangeRate(), payment.getPayTime(), payment.getPaymentAccount(), payment.getCurrency(), settlementResponse, imagesDto);
         }
 
         // 아미지 파일이 존재 안할시
         return new PaymentResponseDto(payment.getTravel().getTravelId(), payment.getPaymentId(), payment.getCategory().getCategoryId(), payment.getCategory().getCategoryName(), payment.getPayerType(), payerDto,
-                payment.getPaymentMethod(), payment.getPaymentName(), payment.getType(), payment.getExchangeRate(), payment.getPayTime(), payment.getPaymentAccount(), settlementResponse, new ArrayList<>());
+                payment.getPaymentMethod(), payment.getPaymentName(), payment.getType(), payment.getExchangeRate(), payment.getPayTime(), payment.getPaymentAccount(), payment.getCurrency(), settlementResponse, new ArrayList<>());
 
     }
 
@@ -232,21 +244,21 @@ public class PaymentService {
             // 정산 유저 저장 로직
             settlement.travelUsers().forEach(travelUser -> {
                 TravelUser tu = travelUserRepository.getReferenceById(travelUser);
-                SettlementUser smu = saveSettlementUserEntity(tu, st, (long) settlement.travelUsers().size());
+                SettlementUser smu = saveSettlementUserEntity(tu, st, (long) settlement.travelUsers().size(), payment);
             });
             Settlement savedSettlement = settlementRepository.save(st);
 
             // 정산 유저 저장 로직
-            List<TravelUserResponseDto> travelUsersResponse = getTravelUserDtosBySettlement(settlement, savedSettlement);
+            List<TravelUserResponseDto> travelUsersResponse = getTravelUserAndSaveSettlementUsers(payment, settlement, savedSettlement);
 
-            return new SettlementResponseDto(savedSettlement.getSettlementId(), payment.getPaymentId(), savedSettlement.getSettlementName(), savedSettlement.getAmount(), savedSettlement.getIsPaid(), travelUsersResponse);
+            return new SettlementResponseDto(savedSettlement.getSettlementId(), payment.getPaymentId(), savedSettlement.getSettlementName(), savedSettlement.getAmount(),  savedSettlement.getIsPaid(), travelUsersResponse);
         }).toList();
     }
 
-    private List<TravelUserResponseDto> getTravelUserDtosBySettlement(SettlementRequestDto settlement, Settlement savedSettlement) {
+    private List<TravelUserResponseDto> getTravelUserAndSaveSettlementUsers(Payment payment, SettlementRequestDto settlement, Settlement savedSettlement) {
         return settlement.travelUsers().stream().map(travelUser -> {
             TravelUser tu = travelUserRepository.getReferenceById(travelUser);
-            SettlementUser smu = saveSettlementUserEntity(tu, savedSettlement, (long) settlement.travelUsers().size());
+            SettlementUser smu = saveSettlementUserEntity(tu, savedSettlement, (long) settlement.travelUsers().size(), payment);
             User user = tu.getUser();
             String imageUrl = (user.getProfileImage() != null)? user.getProfileImage().getImageUrl() : "";
             return new TravelUserResponseDto(tu.getTravelUserId(), user.getNickname(), tu.getTravelNickname(), user.getGender(), user.getBirthday(), imageUrl);
@@ -288,7 +300,7 @@ public class PaymentService {
 
         TravelUserResponseDto payerDto = new TravelUserResponseDto(tu.getTravelUserId(), user.getNickname(), tu.getTravelNickname(), user.getGender(), user.getBirthday(), imageUrl);
         return new PaymentResponseDto(pm.getTravel().getTravelId(), pm.getPaymentId(), pm.getCategory().getCategoryId(), pm.getCategory().getCategoryName(), pm.getPayerType(), payerDto,
-                pm.getPaymentMethod(), pm.getPaymentName(), pm.getType(), pm.getExchangeRate(), pm.getPayTime(), pm.getPaymentAccount(), updatedSettlements, new ArrayList<>());
+                pm.getPaymentMethod(), pm.getPaymentName(), pm.getType(), pm.getExchangeRate(), pm.getPayTime(), pm.getPaymentAccount(), pm.getCurrency(), updatedSettlements, new ArrayList<>());
     }
 
     // 기존 금액기록에 사진을 추가할시
@@ -429,11 +441,11 @@ public class PaymentService {
             payerDto = new TravelUserResponseDto(tu.getTravelUserId(), user.getNickname(), tu.getTravelNickname(), user.getGender(), user.getBirthday(), imageUrl);
         }
         else{
-            payerDto = new TravelUserResponseDto(-1L, "", "", Gender.OTHERS, LocalDate.now(), "");
+            payerDto = new TravelUserResponseDto(-1L, "공금", "공금", Gender.OTHERS, LocalDate.now(), "");
 
         }
         return new PaymentResponseDto(pm.getTravel().getTravelId(), pm.getPaymentId(), pm.getCategory().getCategoryId(), pm.getCategory().getCategoryName(),
                 pm.getPayerType(), payerDto, pm.getPaymentMethod(), pm.getPaymentName(), pm.getType(), pm.getExchangeRate(), pm.getPayTime(),
-                pm.getPaymentAccount(), stResponseDtoList, pmimageDtoList);
+                pm.getPaymentAccount(), pm.getCurrency(), stResponseDtoList, pmimageDtoList);
     }
 }
