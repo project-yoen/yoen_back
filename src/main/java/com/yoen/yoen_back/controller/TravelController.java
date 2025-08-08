@@ -89,7 +89,7 @@ public class TravelController {
     @PostMapping("/image/update")
     public ResponseEntity<ApiResponse<String>> updateTravelProfileImage(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody TravelProfileImageDto request) {
         TravelUser tu = authService.checkTravelUserRoleByTravel(userDetails.user(), request.travelId(), List.of(Role.READER, Role.WRITER));
-        travelService.updateTravelProfileImage(tu.getTravel(), request);
+        travelService.updateTravelProfileImage(userDetails.user(), tu.getTravel(), request);
         return ResponseEntity.ok(ApiResponse.success("정상적으로 여행 이미지를 저장하였습니다."));
     }
 

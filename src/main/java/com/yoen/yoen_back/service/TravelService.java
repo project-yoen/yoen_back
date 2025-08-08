@@ -194,13 +194,17 @@ public class TravelService {
     }
 
     @Transactional
-    public void updateTravelProfileImage(Travel tv, TravelProfileImageDto request) {
+    public void updateTravelProfileImage(User user, Travel tv, TravelProfileImageDto request) {
+        Image tvImage = tv.getTravelImage();
+        if (tvImage != null) {
+            imageService.deleteImage(tvImage);
+        }
         log.info(String.valueOf(request.recordImageId()));
         Optional<TravelRecordImage> tri = travelRecordImageRepository.findByTravelRecordImageIdAndIsActiveTrue(request.recordImageId());
         tri.ifPresent(travelRecordImage -> {
             Image image = travelRecordImage.getImage();
-            log.info(String.valueOf(image.getImageUrl()));
-            tv.setTravelImage(image);
+            Image profileImage = imageService.saveImageByUrl(user, image.getImageUrl());
+            tv.setTravelImage(profileImage);
         });
     }
 

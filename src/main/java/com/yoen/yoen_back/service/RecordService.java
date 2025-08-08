@@ -90,7 +90,11 @@ public class RecordService {
         if (files != null && !files.isEmpty()) {
             List<Image> images = imageService.saveImages(user, files); // 클라우드에 업로드 및 image 레포지토리에 저장
             // travel 대표이미지 설정 안되어있으면 첫번째로 등록하는걸로 하기
-            if (tv.getTravelImage() == null) tv.setTravelImage(images.get(0));
+            if (tv.getTravelImage() == null) {
+                log.info(images.get(0).getImageUrl());
+                Image profileImage = imageService.saveImageByUrl(user, images.get(0).getImageUrl());
+                tv.setTravelImage(profileImage);
+            }
             // TODO: 여기서부턴 좀 수정이 있어야할거 같음 지금 이미지를 불러다가 응답하는게 좀 복잡함 (왜 세개로 분리했는지 고민)
             List<TravelRecordImageDto> imagesDto = images.stream().map(image -> {
                 TravelRecordImage tri = TravelRecordImage.builder()
@@ -145,17 +149,13 @@ public class RecordService {
     public void deleteTravelRecordImage(Long travelRecordImageId) {
         TravelRecordImage tri = travelRecordImageRepository.findWithTravelAndImageById(travelRecordImageId)
                 .orElseThrow(() -> new IllegalArgumentException("이미지를 찾을 수 없습니다."));
+
+        // 이미지 삭제
         Image recordImage = tri.getImage();
-        Image travelImage = tri.getTravelRecord().getTravel().getTravelImage();
-        if(recordImage != null && !recordImage.equals(travelImage)) {
-            imageService.deleteImage(recordImage.getImageId());
-            // recordImage 삭제
-            tri.setIsActive(false);
-            travelRecordImageRepository.save(tri);
-        }
-        else{
-            log.info("대표이미지는 삭제되지 않습니다.");
-        }
+        imageService.deleteImage(recordImage.getImageId());
+        // recordImage 삭제
+        tri.setIsActive(false);
+        travelRecordImageRepository.save(tri);
     }
 
     // 여행기록 삭제 (삭제)
