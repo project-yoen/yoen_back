@@ -1,10 +1,7 @@
 package com.yoen.yoen_back.service;
 
 import com.yoen.yoen_back.common.utils.Formatter;
-import com.yoen.yoen_back.dto.payment.PaymentImageDto;
-import com.yoen.yoen_back.dto.payment.PaymentRequestDto;
-import com.yoen.yoen_back.dto.payment.PaymentResponseDto;
-import com.yoen.yoen_back.dto.payment.PaymentSimpleResponseDto;
+import com.yoen.yoen_back.dto.payment.*;
 import com.yoen.yoen_back.dto.payment.settlement.SettlementParticipantDto;
 import com.yoen.yoen_back.dto.payment.settlement.SettlementRequestDto;
 import com.yoen.yoen_back.dto.payment.settlement.SettlementResponseDto;
@@ -69,8 +66,8 @@ public class PaymentService {
     }
 
 
-    // TODO: 날짜별 금액기록 리스트 받기
-    public List<PaymentSimpleResponseDto> getAllPaymentResponseDtoByTravelId(Travel tv, String date) {
+    // 날짜별 금액기록 리스트 받기
+    public List<PaymentSimpleResponseDto> getAllPaymentResponseDtoByTravelIdAndDate(Travel tv, String date) {
         LocalDateTime localDateTime = Formatter.getDateTime(date)
                 .withHour(0)
                 .withMinute(0)
@@ -92,6 +89,8 @@ public class PaymentService {
                     payment.getPayTime(), payment.getTravelUser().getTravelNickname(), payment.getPaymentAccount(), Payer.INDIVIDUAL, PaymentType.PAYMENT, payment.getCurrency());
         }).toList();
     }
+
+//    public List<PaymentSimpleResponseDto> get
 
     // TODO: 금액기록 아이디로 금액기록 정보 받기
 
@@ -452,4 +451,5 @@ public class PaymentService {
                 pm.getPayerType(), payerDto, pm.getPaymentMethod(), pm.getPaymentName(), pm.getType(), pm.getExchangeRate(), pm.getPayTime(),
                 pm.getPaymentAccount(), pm.getCurrency(), stResponseDtoList, pmimageDtoList);
     }
+
 }
