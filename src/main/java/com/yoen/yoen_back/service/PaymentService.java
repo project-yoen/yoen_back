@@ -27,6 +27,7 @@ import com.yoen.yoen_back.repository.travel.TravelRepository;
 import com.yoen.yoen_back.repository.travel.TravelUserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -67,13 +68,63 @@ public class PaymentService {
 
 
     // 날짜별 금액기록 리스트 받기
-    public List<PaymentSimpleResponseDto> getAllPaymentResponseDtoByTravelIdAndDate(Travel tv, String date) {
+    public List<PaymentSimpleResponseDto> getAllPaymentResponseDtoByTravelIdAndDate(Travel tv, String date, PaymentType paymentType) {
         LocalDateTime localDateTime = Formatter.getDateTime(date)
                 .withHour(0)
                 .withMinute(0)
                 .withSecond(0)
                 .withNano(0);
-        List<Payment> pmList = paymentRepository.findAllByTravelAndPayTimeBetweenAndIsActiveTrue(tv, localDateTime, localDateTime.plusDays(1));
+        if (paymentType == PaymentType.PAYMENT) {
+            return getPaymentByTravelIdAndDate(tv, localDateTime, paymentType);
+        } else if (paymentType == PaymentType.SHAREDFUND) {
+            return getSharedFundByTravelIdAndDate(tv, localDateTime, paymentType);
+        } else if (paymentType == PaymentType.PREPAYMENT) {
+            return getPrePaymentByTravelId(tv, paymentType);
+        } else {
+            return getPaymentAndSharedFundByTravelId(tv, localDateTime, paymentType);
+        }
+    }
+
+    // 날짜별 Payment를 가져오는 메서드
+    public List<PaymentSimpleResponseDto> getPaymentByTravelIdAndDate(Travel tv, LocalDateTime localDateTime, PaymentType paymentType) {
+        List<Payment> pmList = paymentRepository.findAllByTravelAndPaymentTypeAndPayTimeBetweenAndIsActiveTrue(tv, localDateTime, localDateTime.plusDays(1), paymentType);
+        return pmList.stream().map(payment -> {
+            if (payment.getPayerType() == Payer.SHAREDFUND) {
+                return new PaymentSimpleResponseDto(payment.getPaymentId(), payment.getPaymentName(), payment.getCategory().getCategoryName(),
+                        payment.getPayTime(), "공금", payment.getPaymentAccount(), Payer.SHAREDFUND, PaymentType.PAYMENT, payment.getCurrency());
+            }
+            return new PaymentSimpleResponseDto(payment.getPaymentId(), payment.getPaymentName(), payment.getCategory().getCategoryName(),
+                    payment.getPayTime(), payment.getTravelUser().getTravelNickname(), payment.getPaymentAccount(), Payer.INDIVIDUAL, PaymentType.PAYMENT, payment.getCurrency());
+        }).toList();
+    }
+
+    // 날짜별 sharedFund를 가져오는 메서드
+    public List<PaymentSimpleResponseDto> getSharedFundByTravelIdAndDate(Travel tv, LocalDateTime localDateTime, PaymentType paymentType) {
+        List<Payment> pmList = paymentRepository.findAllByTravelAndPaymentTypeAndPayTimeBetweenAndIsActiveTrue(tv, localDateTime, localDateTime.plusDays(1), paymentType);
+        return pmList.stream().map(payment -> {
+            if (payment.getType() == PaymentType.SHAREDFUND) {
+                return new PaymentSimpleResponseDto(payment.getPaymentId(), payment.getPaymentName(), "공금 채우기",
+                        payment.getPayTime(), payment.getTravelUser().getTravelNickname(), payment.getPaymentAccount(), Payer.INDIVIDUAL, PaymentType.SHAREDFUND, payment.getCurrency());
+            }
+            return new PaymentSimpleResponseDto(payment.getPaymentId(), payment.getPaymentName(), payment.getCategory().getCategoryName(),
+                    payment.getPayTime(), payment.getTravelUser().getTravelNickname(), payment.getPaymentAccount(), Payer.INDIVIDUAL, PaymentType.PAYMENT, payment.getCurrency());
+        }).toList();
+
+    }
+
+    // 여행에 있는 PrePayment를 가져오는 메서드
+    public List<PaymentSimpleResponseDto> getPrePaymentByTravelId(Travel tv, PaymentType paymentType) {
+        List<Payment> pmList = paymentRepository.findAllByTravelAndPaymentTypeAndIsActiveTrue(tv, paymentType);
+        return pmList.stream().map(payment ->
+                new PaymentSimpleResponseDto(payment.getPaymentId(), payment.getPaymentName(), payment.getCategory().getCategoryName(),
+                        payment.getPayTime(), payment.getTravelUser().getTravelNickname(), payment.getPaymentAccount(),
+                        Payer.INDIVIDUAL, PaymentType.PAYMENT, payment.getCurrency())).toList();
+    }
+
+    // 날짜별 sharedFund와 Payment를 모두 가져오는 메서드
+    public List<PaymentSimpleResponseDto> getPaymentAndSharedFundByTravelId(Travel tv, LocalDateTime localDateTime, PaymentType paymentType) {
+        List<Payment> pmList = paymentRepository.findAllByTravelAndTypeInAndPayTimeBetweenAndIsActiveTrue(
+                tv, List.of(PaymentType.PAYMENT, PaymentType.SHAREDFUND), localDateTime, localDateTime.plusDays(1));
         return pmList.stream().map(payment -> {
             if (payment.getPayerType() == Payer.SHAREDFUND) {
 
@@ -82,16 +133,13 @@ public class PaymentService {
             }
             if (payment.getType() == PaymentType.SHAREDFUND) {
                 return new PaymentSimpleResponseDto(payment.getPaymentId(), payment.getPaymentName(), "공금 채우기",
-                        payment.getPayTime(),  payment.getTravelUser().getTravelNickname(), payment.getPaymentAccount(), Payer.INDIVIDUAL, PaymentType.SHAREDFUND, payment.getCurrency());
+                        payment.getPayTime(), payment.getTravelUser().getTravelNickname(), payment.getPaymentAccount(), Payer.INDIVIDUAL, PaymentType.SHAREDFUND, payment.getCurrency());
             }
 
-            return  new PaymentSimpleResponseDto(payment.getPaymentId(), payment.getPaymentName(), payment.getCategory().getCategoryName(),
+            return new PaymentSimpleResponseDto(payment.getPaymentId(), payment.getPaymentName(), payment.getCategory().getCategoryName(),
                     payment.getPayTime(), payment.getTravelUser().getTravelNickname(), payment.getPaymentAccount(), Payer.INDIVIDUAL, PaymentType.PAYMENT, payment.getCurrency());
         }).toList();
     }
-
-//    public List<PaymentSimpleResponseDto> get
-
     // TODO: 금액기록 아이디로 금액기록 정보 받기
 
 
@@ -137,16 +185,16 @@ public class PaymentService {
     }
 
     public SettlementUser saveSettlementUserEntity(TravelUser tu, Settlement sm, Long size, Payment payment, Boolean isPaid) {
-            Long amount = (payment.getCurrency() == Currency.YEN)? Math.round(sm.getAmount() * payment.getExchangeRate()) : sm.getAmount();
-            SettlementUser su = SettlementUser.builder()
-                    .travelUser(tu)
-                    .settlement(sm)
-                    .amount(amount / size)
-                    .isPaid(isPaid)
-                    .build();
+        Long amount = (payment.getCurrency() == Currency.YEN) ? Math.round(sm.getAmount() * payment.getExchangeRate()) : sm.getAmount();
+        SettlementUser su = SettlementUser.builder()
+                .travelUser(tu)
+                .settlement(sm)
+                .amount(amount / size)
+                .isPaid(isPaid)
+                .build();
 
-            // 정산 유저 저장
-            return settlementUserRepository.save(su);
+        // 정산 유저 저장
+        return settlementUserRepository.save(su);
 
     }
 
@@ -257,7 +305,7 @@ public class PaymentService {
             // 정산 유저 저장 로직
             List<SettlementParticipantDto> travelUsersResponse = getTravelUserAndSaveSettlementUsers(payment, settlement, savedSettlement);
 
-            return new SettlementResponseDto(savedSettlement.getSettlementId(), payment.getPaymentId(), savedSettlement.getSettlementName(), savedSettlement.getAmount(),  savedSettlement.getIsPaid(), travelUsersResponse);
+            return new SettlementResponseDto(savedSettlement.getSettlementId(), payment.getPaymentId(), savedSettlement.getSettlementName(), savedSettlement.getAmount(), savedSettlement.getIsPaid(), travelUsersResponse);
         }).toList();
     }
 
@@ -300,7 +348,7 @@ public class PaymentService {
 
         TravelUser tu = pm.getTravelUser();
         User user = tu.getUser();
-        String imageUrl = (user.getProfileImage() != null)? user.getProfileImage().getImageUrl() : "";
+        String imageUrl = (user.getProfileImage() != null) ? user.getProfileImage().getImageUrl() : "";
 
         TravelUserResponseDto payerDto = new TravelUserResponseDto(tu.getTravelUserId(), user.getNickname(), tu.getTravelNickname(), user.getGender(), user.getBirthday(), imageUrl);
         return new PaymentResponseDto(pm.getTravel().getTravelId(), pm.getPaymentId(), pm.getCategory().getCategoryId(), pm.getCategory().getCategoryName(), pm.getPayerType(), payerDto,
@@ -409,6 +457,7 @@ public class PaymentService {
         pm.setIsActive(false);
         paymentRepository.save(pm);
     }
+
     //PaymentId로 Payment찾고 settlement 안의 paymentId로 settlement 찾고 travelUser를 찾아서 PaymentResponseDto채워서 보내기
     //금액기록을 클릭했을 때 세부적인 내용을 반환하는 메서드
     public PaymentResponseDto getDetailPayment(Long paymentId) {
@@ -419,15 +468,15 @@ public class PaymentService {
         List<Settlement> stList = settlementRepository.findByPayment_PaymentId(paymentId);
         //settlement 리스트 돌면서 PaymentResponseDto에 들어갈 SettlementResponseDto 만들기
         List<SettlementResponseDto> stResponseDtoList = stList.stream().map(settlement -> {
-                List<SettlementUser> stuList = settlementUserRepository.findBySettlement(settlement);
-                List<SettlementParticipantDto> tuDtoList = stuList.stream().map(stu -> {
-                    TravelUser tu = stu.getTravelUser();
-                    User user = tu.getUser();
+            List<SettlementUser> stuList = settlementUserRepository.findBySettlement(settlement);
+            List<SettlementParticipantDto> tuDtoList = stuList.stream().map(stu -> {
+                TravelUser tu = stu.getTravelUser();
+                User user = tu.getUser();
 
-                    return new SettlementParticipantDto(tu.getTravelUserId(), tu.getTravelNickname(), stu.getIsPaid());
-                }).toList();
-                return new SettlementResponseDto(settlement.getSettlementId(), pm.getPaymentId(), settlement.getSettlementName(), settlement.getAmount(),
-                        settlement.getIsPaid(), tuDtoList);
+                return new SettlementParticipantDto(tu.getTravelUserId(), tu.getTravelNickname(), stu.getIsPaid());
+            }).toList();
+            return new SettlementResponseDto(settlement.getSettlementId(), pm.getPaymentId(), settlement.getSettlementName(), settlement.getAmount(),
+                    settlement.getIsPaid(), tuDtoList);
         }).toList();
 
         //PaymentImage에 존재하는 이미지 PayemntId로 가져오기
@@ -438,12 +487,11 @@ public class PaymentService {
 
         TravelUser tu = pm.getTravelUser();
         TravelUserResponseDto payerDto;
-        if(tu != null){
+        if (tu != null) {
             User user = tu.getUser();
-            String imageUrl = (user.getProfileImage() != null)? user.getProfileImage().getImageUrl() : "";
+            String imageUrl = (user.getProfileImage() != null) ? user.getProfileImage().getImageUrl() : "";
             payerDto = new TravelUserResponseDto(tu.getTravelUserId(), user.getNickname(), tu.getTravelNickname(), user.getGender(), user.getBirthday(), imageUrl);
-        }
-        else{
+        } else {
             payerDto = new TravelUserResponseDto(-1L, "공금", "공금", Gender.OTHERS, LocalDate.now(), "");
 
         }
