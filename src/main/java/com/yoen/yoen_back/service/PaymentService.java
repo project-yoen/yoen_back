@@ -125,11 +125,11 @@ public class PaymentService {
     }
 
 
-    public Settlement saveSettlementEntity(Payment payment, SettlementRequestDto dto) {
+    public Settlement saveSettlementEntity(Payment payment, SettlementRequestDto dto, Boolean isPaid) {
         Settlement sm = Settlement.builder()
                 .payment(payment)
                 .amount(dto.amount())
-                .isPaid(dto.isPaid())
+                .isPaid(isPaid)
                 .settlementName(dto.settlementName())
                 .build();
 
@@ -184,9 +184,12 @@ public class PaymentService {
 
         // 정산리스트 저장 로직
         List<SettlementResponseDto> settlementResponse = dto.settlementList().stream().map(settlement -> {
-            Settlement sm = saveSettlementEntity(payment, settlement);
+            boolean allPaid = settlement.travelUsers()
+                    .stream()
+                    .allMatch(SettlementParticipantDto::isPaid);
+            Settlement sm = saveSettlementEntity(payment, settlement, allPaid);
             // 정산 유저 저장 로직
-            List<TravelUserResponseDto> travelUsersResponse = getTravelUserAndSaveSettlementUsers(payment, settlement, sm);
+            List<SettlementParticipantDto> travelUsersResponse = getTravelUserAndSaveSettlementUsers(payment, settlement, sm);
 
             return new SettlementResponseDto(sm.getSettlementId(), sm.getPayment().getPaymentId(), sm.getSettlementName(), sm.getAmount(), sm.getIsPaid(), travelUsersResponse);
 
@@ -241,7 +244,10 @@ public class PaymentService {
         preSettlements.forEach(this::deleteSettlement);
 
         return dto.stream().map(settlement -> {
-            Settlement st = saveSettlementEntity(payment, settlement);
+            boolean allPaid = settlement.travelUsers()
+                    .stream()
+                    .allMatch(SettlementParticipantDto::isPaid);
+            Settlement st = saveSettlementEntity(payment, settlement, allPaid);
             // 정산 유저 저장 로직
             settlement.travelUsers().forEach(travelUser -> {
                 TravelUser tu = travelUserRepository.getReferenceById(travelUser.travelUserId());
@@ -250,19 +256,17 @@ public class PaymentService {
             Settlement savedSettlement = settlementRepository.save(st);
 
             // 정산 유저 저장 로직
-            List<TravelUserResponseDto> travelUsersResponse = getTravelUserAndSaveSettlementUsers(payment, settlement, savedSettlement);
+            List<SettlementParticipantDto> travelUsersResponse = getTravelUserAndSaveSettlementUsers(payment, settlement, savedSettlement);
 
             return new SettlementResponseDto(savedSettlement.getSettlementId(), payment.getPaymentId(), savedSettlement.getSettlementName(), savedSettlement.getAmount(),  savedSettlement.getIsPaid(), travelUsersResponse);
         }).toList();
     }
 
-    private List<TravelUserResponseDto> getTravelUserAndSaveSettlementUsers(Payment payment, SettlementRequestDto settlement, Settlement savedSettlement) {
+    private List<SettlementParticipantDto> getTravelUserAndSaveSettlementUsers(Payment payment, SettlementRequestDto settlement, Settlement savedSettlement) {
         return settlement.travelUsers().stream().map(travelUser -> {
             TravelUser tu = travelUserRepository.getReferenceById(travelUser.travelUserId());
             SettlementUser smu = saveSettlementUserEntity(tu, savedSettlement, (long) settlement.travelUsers().size(), payment, travelUser.isPaid());
-            User user = tu.getUser();
-            String imageUrl = (user.getProfileImage() != null)? user.getProfileImage().getImageUrl() : "";
-            return new TravelUserResponseDto(tu.getTravelUserId(), user.getNickname(), tu.getTravelNickname(), user.getGender(), user.getBirthday(), imageUrl);
+            return new SettlementParticipantDto(tu.getTravelUserId(), tu.getTravelNickname(), smu.getIsPaid());
         }).toList();
     }
 
@@ -417,12 +421,11 @@ public class PaymentService {
         //settlement 리스트 돌면서 PaymentResponseDto에 들어갈 SettlementResponseDto 만들기
         List<SettlementResponseDto> stResponseDtoList = stList.stream().map(settlement -> {
                 List<SettlementUser> stuList = settlementUserRepository.findBySettlement(settlement);
-                List<TravelUserResponseDto> tuDtoList = stuList.stream().map(stu -> {
+                List<SettlementParticipantDto> tuDtoList = stuList.stream().map(stu -> {
                     TravelUser tu = stu.getTravelUser();
                     User user = tu.getUser();
-                    String imageUrl = (user.getProfileImage() != null)? user.getProfileImage().getImageUrl() : "";
 
-                    return new TravelUserResponseDto(tu.getTravelUserId(), user.getNickname(), tu.getTravelNickname(), user.getGender(), user.getBirthday(), imageUrl);
+                    return new SettlementParticipantDto(tu.getTravelUserId(), tu.getTravelNickname(), stu.getIsPaid());
                 }).toList();
                 return new SettlementResponseDto(settlement.getSettlementId(), pm.getPaymentId(), settlement.getSettlementName(), settlement.getAmount(),
                         settlement.getIsPaid(), tuDtoList);
