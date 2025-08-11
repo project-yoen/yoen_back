@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public interface SettlementRepository extends JpaRepository<Settlement, Long> {
     Optional<Settlement> findBySettlementIdAndIsActiveTrue(Long settlementId);
-    List<Settlement> findByPayment_PaymentId(Long paymentId);
+    List<Settlement> findByPayment_PaymentIdAndIsActiveTrue(Long paymentId);
 
-    List<Settlement> findByPayment(Payment payment);
+    List<Settlement> findByPaymentAndIsActiveTrue(Payment payment);
 }

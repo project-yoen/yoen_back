@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface SettlementUserRepository extends JpaRepository<SettlementUser, Long> {
-    List<SettlementUser> findAllBySettlement_SettlementId(Long settlementId);
+    List<SettlementUser> findAllBySettlementAndIsActiveTrue(Settlement settlement);
 
-    List<SettlementUser> findBySettlement(Settlement settlement);
+    List<SettlementUser> findBySettlementAndIsActiveTrue(Settlement settlement);
 }
