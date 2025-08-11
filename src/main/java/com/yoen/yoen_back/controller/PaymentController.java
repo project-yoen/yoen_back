@@ -10,6 +10,7 @@ import com.yoen.yoen_back.entity.payment.Payment;
 import com.yoen.yoen_back.entity.payment.SettlementUser;
 import com.yoen.yoen_back.entity.travel.Travel;
 import com.yoen.yoen_back.entity.travel.TravelUser;
+import com.yoen.yoen_back.enums.PaymentType;
 import com.yoen.yoen_back.enums.Role;
 import com.yoen.yoen_back.service.AuthService;
 import com.yoen.yoen_back.service.PaymentService;
@@ -20,6 +21,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.EnumSet;
 import java.util.List;
 
 @RestController
@@ -32,9 +34,9 @@ public class PaymentController {
     private final AuthService authService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<PaymentSimpleResponseDto>>> getSimplePayment(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam("travelId") Long travelId, @RequestParam("date") String date) {
+    public ResponseEntity<ApiResponse<List<PaymentSimpleResponseDto>>> getSimplePayment(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam("travelId") Long travelId, @RequestParam("date") String date, @RequestParam(value = "type", required = false)PaymentType type) {
         TravelUser tu = authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.READER, Role.WRITER));
-        List<PaymentSimpleResponseDto> dtos = paymentService.getAllPaymentResponseDtoByTravelIdAndDate(tu.getTravel(), date);
+        List<PaymentSimpleResponseDto> dtos = paymentService.getAllPaymentResponseDtoByTravelIdAndDate(tu.getTravel(), date, type);
         return ResponseEntity.ok(ApiResponse.success(dtos));
     }
 
