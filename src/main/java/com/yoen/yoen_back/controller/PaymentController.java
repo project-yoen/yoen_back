@@ -83,6 +83,13 @@ public class PaymentController {
         paymentService.deletePayment(paymentId);
         return ResponseEntity.ok(ApiResponse.success("Payment deleted successfully"));
     }
+
+    @PostMapping("/update")
+    public ResponseEntity<ApiResponse<String>> updatePayment(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestPart("dto") PaymentRequestDto dto, @RequestPart(value = "images", required = false) List<MultipartFile> files) {
+        authService.checkTravelUserRoleByTravel(userDetails.user(), dto.travelId(), List.of(Role.WRITER));
+        paymentService.updatePayment(userDetails.user(), dto, files);
+        return ResponseEntity.ok(ApiResponse.success("Payment updated successfully"));
+    }
     // 테스트용 (필요 시 PaymentService의 메서드 public으로 바꾸고 사용)
 //  @DeleteMapping("/settlement/delete")
 //  public ResponseEntity<ApiResponse<String>> deleteSettlement(@RequestParam("settlementId") Long settlementId) {

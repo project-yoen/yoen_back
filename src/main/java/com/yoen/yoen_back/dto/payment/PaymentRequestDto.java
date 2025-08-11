@@ -10,5 +10,5 @@ import java.util.List;
 
 public record PaymentRequestDto(Long paymentId, Long travelId, Long travelUserId, Long categoryId, Payer payerType, String payTime,
                                 Long paymentAccount, String paymentName, PaymentMethod paymentMethod, Currency currency,
-                                List<SettlementRequestDto> settlementList, PaymentType paymentType) {
+                                List<SettlementRequestDto> settlementList, List<Long> removeImageIds, PaymentType paymentType) {
 }

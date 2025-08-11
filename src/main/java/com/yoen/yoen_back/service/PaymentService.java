@@ -27,6 +27,7 @@ import com.yoen.yoen_back.repository.travel.TravelRepository;
 import com.yoen.yoen_back.repository.travel.TravelUserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -36,6 +37,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
@@ -252,7 +254,7 @@ public class PaymentService {
         // 이미지 파일이 존재할시
         if (files != null && !files.isEmpty()) {
             //받은 이미지들을 저장한다
-            List<Image> images = imageService.saveImages(user, files);
+            List<Image> images = getSaveImages(user, files);
 
             //이미지 리스트를 하나하나 변환하여 DTO List로 저장한다
             List<PaymentImageDto> imagesDto = images.stream().map(
@@ -276,6 +278,10 @@ public class PaymentService {
 
     }
 
+    private List<Image> getSaveImages(User user, List<MultipartFile> files) {
+        return imageService.saveImages(user, files);
+    }
+
     // 정산유저 테스트
     public List<SettlementUserResponseDto> getAllSettlementUsers() {
         List<SettlementUser> stuList = settlementUserRepository.findAll();
@@ -294,17 +300,11 @@ public class PaymentService {
                     .stream()
                     .allMatch(SettlementParticipantDto::isPaid);
             Settlement st = saveSettlementEntity(payment, settlement, allPaid);
-            // 정산 유저 저장 로직
-            settlement.travelUsers().forEach(travelUser -> {
-                TravelUser tu = travelUserRepository.getReferenceById(travelUser.travelUserId());
-                SettlementUser smu = saveSettlementUserEntity(tu, st, (long) settlement.travelUsers().size(), payment, travelUser.isPaid());
-            });
-            Settlement savedSettlement = settlementRepository.save(st);
 
             // 정산 유저 저장 로직
-            List<SettlementParticipantDto> travelUsersResponse = getTravelUserAndSaveSettlementUsers(payment, settlement, savedSettlement);
+            List<SettlementParticipantDto> travelUsersResponse = getTravelUserAndSaveSettlementUsers(payment, settlement, st);
 
-            return new SettlementResponseDto(savedSettlement.getSettlementId(), payment.getPaymentId(), savedSettlement.getSettlementName(), savedSettlement.getAmount(), savedSettlement.getIsPaid(), travelUsersResponse);
+            return new SettlementResponseDto(st.getSettlementId(), payment.getPaymentId(), st.getSettlementName(), st.getAmount(), st.getIsPaid(), travelUsersResponse);
         }).toList();
     }
 
@@ -318,46 +318,111 @@ public class PaymentService {
 
     // 사진을 제외한 금액기록을 수정할시
     // Todo: 이미지 처리 해야하는데.. 지금 맨 처음 금액기록을 생성할 때는 이미지랑 금액기록이랑 한번에 보내는데 수정할때도 동일한 방식을 사용하면 시간이 너무 오래 걸릴거같아서
-    public PaymentResponseDto updatePayment(PaymentRequestDto dto) {
+    public void updatePayment(User user, PaymentRequestDto dto, List<MultipartFile> files) {
         Payment pm = paymentRepository.getReferenceById(dto.paymentId());
+        Travel tv = travelRepository.getReferenceById(dto.travelId());
+        // 결제 방법 (개인, 공금)
+        long shared = getShared(dto, pm, tv);
 
-        // 1.공금을 채운 경우 (전체 금액이 높아졌을 때)
-        if (dto.paymentType().equals(PaymentType.SHAREDFUND)) {
-            Travel tv = travelRepository.getReferenceById(dto.travelId());
-            if (tv.getSharedFund() + dto.paymentAccount() - pm.getPaymentAccount() < 0) {
-                throw new IllegalStateException("잔액이 충분하지 않습니다.(공금이 음수)");
-            } else {
-                tv.setSharedFund(tv.getSharedFund() - pm.getPaymentAccount() + dto.paymentAccount());
-                travelRepository.save(tv);
-            }
-        }
-        List<Settlement> settlements = settlementRepository.findByPayment(pm);
+
+        // 3) 잔액 반영 저장
+        tv.setSharedFund(shared);
+        travelRepository.save(tv);
+
+        List<Settlement> settlements = settlementRepository.findByPaymentAndIsActiveTrue(pm);
+        log.info("PRESETTLEMENTS");
+        settlements.forEach(settlement -> {
+            log.info(String.valueOf(settlement.getSettlementId()));
+        });
         // 기존 settlement들 삭제 후 다시 생성 그리고 settlementResponseDto 반환
         List<SettlementResponseDto> updatedSettlements = updateSettlement(pm, settlements, dto.settlementList());
 
+        Category category = null;
+        if (dto.paymentType() != PaymentType.SHAREDFUND) {
+            category = categoryRepository.getReferenceById(dto.categoryId());
+        }
 
-        pm.setCategory(categoryRepository.getReferenceById(dto.categoryId())); // 카테고리
+        TravelUser newTravelUser = null;
+        if (dto.payerType() != Payer.SHAREDFUND) {
+            newTravelUser = travelUserRepository.getReferenceById(dto.travelUserId());
+        }
+        pm.setTravelUser(newTravelUser);
+        pm.setCategory(category); // 카테고리
         pm.setPayerType(dto.payerType()); // 개인 or 공금
         pm.setPaymentMethod(dto.paymentMethod()); // 카드 or 현금
         pm.setPaymentAccount(dto.paymentAccount()); // 돈 총합
         pm.setExchangeRate(exchangeRateUpdateService.getExchangeRate(Formatter.getDateTime(dto.payTime())).getExchangeRate()); // 환율
         pm.setPaymentName(dto.paymentName()); // 금액기록 이름
         pm.setPayTime(Formatter.getDateTime(dto.payTime())); // 금액기록 시간
-        paymentRepository.save(pm);
+        Payment newPayment = paymentRepository.save(pm);
 
-        TravelUser tu = pm.getTravelUser();
-        User user = tu.getUser();
-        String imageUrl = (user.getProfileImage() != null) ? user.getProfileImage().getImageUrl() : "";
+        dto.removeImageIds().forEach(paymentImageRepository::deleteById);
 
-        TravelUserResponseDto payerDto = new TravelUserResponseDto(tu.getTravelUserId(), user.getNickname(), tu.getTravelNickname(), user.getGender(), user.getBirthday(), imageUrl);
-        return new PaymentResponseDto(pm.getTravel().getTravelId(), pm.getPaymentId(), pm.getCategory().getCategoryId(), pm.getCategory().getCategoryName(), pm.getPayerType(), payerDto,
-                pm.getPaymentMethod(), pm.getPaymentName(), pm.getType(), pm.getExchangeRate(), pm.getPayTime(), pm.getPaymentAccount(), pm.getCurrency(), updatedSettlements, new ArrayList<>());
+        // 이미지 파일이 존재할시
+        if (files != null && !files.isEmpty()) {
+            //받은 이미지들을 저장한다
+            List<Image> images = getSaveImages(user, files);
+
+            //이미지 리스트를 하나하나 변환하여 DTO List로 저장한다
+            List<PaymentImageDto> imagesDto = images.stream().map(
+                    image -> {
+                        PaymentImage pi = PaymentImage.builder()
+                                .image(image)
+                                .payment(newPayment)
+                                .build();
+                        PaymentImage tmp = paymentImageRepository.save(pi);
+
+                        return new PaymentImageDto(tmp.getPaymentImageId(), image.getImageUrl());
+                    }
+            ).toList();
+        }
+    }
+
+    private static long getShared(PaymentRequestDto dto, Payment pm, Travel tv) {
+        Payer prevPayer = pm.getPayerType();
+        Payer nextPayer = dto.payerType();
+        // 공금을 채운건지 아닌지
+        PaymentType prevType = pm.getType();
+        PaymentType nextType = dto.paymentType();
+
+        long shared = tv.getSharedFund();                 // 공금 잔액
+        long prevAmt = pm.getPaymentAccount();            // 이전 결제/충전 금액
+        long nextAmt = dto.paymentAccount();              // 새 결제/충전 금액
+
+        // 0) 입력 방어: 동시에 공금 결제 + 공금 충전이면 비정상으로 간주 (원하면 제거 가능)
+//        if (nextPayer == Payer.SHAREDFUND && nextType == PaymentType.SHAREDFUND) {
+//            throw new IllegalStateException("공금 결제와 공금 충전을 동시에 처리할 수 없습니다.");
+//        }
+
+        // 1) 이전 기록 효과 되돌리기
+        // 기존 결제가 공금으로 결제된 경우: 공금에서 빠졌던 금액을 되돌려 더한다.
+        if (prevPayer == Payer.SHAREDFUND) {
+            shared += prevAmt;
+        }
+        // 기존 기록이 공금 충전인 경우: 충전되어 더해졌던 금액을 되돌려 뺀다.
+        if (prevType == PaymentType.SHAREDFUND) {
+            shared -= prevAmt;
+        }
+
+        // 2) 새 기록 적용
+        // 새로 공금 결제로 바뀐 경우: 공금에서 차감 (잔액 체크)
+        if (nextPayer == Payer.SHAREDFUND) {
+            if (shared < nextAmt) {
+                throw new IllegalStateException("잔액이 충분하지 않습니다.(공금이 음수)");
+            }
+            shared -= nextAmt;
+        }
+        // 새로 공금 충전으로 바뀐 경우: 공금에 가산
+        if (nextType == PaymentType.SHAREDFUND) {
+            shared += nextAmt;
+        }
+        return shared;
     }
 
     // 기존 금액기록에 사진을 추가할시
     public void updatePaymentImages(User user, Long paymentId, List<MultipartFile> files) {
         //받은 이미지들을 저장한다
-        List<Image> images = imageService.saveImages(user, files);
+        List<Image> images = getSaveImages(user, files);
         Payment pm = paymentRepository.getReferenceById(paymentId);
         //이미지 리스트를 하나하나 변환하여 DTO List로 저장한다
         List<PaymentImageDto> imagesDto = images.stream().map(
@@ -392,7 +457,7 @@ public class PaymentService {
         Optional<Settlement> settlement = settlementRepository.findBySettlementIdAndIsActiveTrue(settlementId);
 
         settlement.ifPresent(stm -> {
-            List<SettlementUser> su = settlementUserRepository.findAllBySettlement_SettlementId(stm.getSettlementId());
+            List<SettlementUser> su = settlementUserRepository.findAllBySettlementAndIsActiveTrue(stm);
             su.forEach(stmu -> {
                 // 관련 정산 유저 소프트 삭제
                 stmu.setIsActive(false);
@@ -408,8 +473,10 @@ public class PaymentService {
 
     // settlement로 settlement관련 모든거 지우는함수
     private void deleteSettlement(Settlement settlement) {
-        List<SettlementUser> su = settlementUserRepository.findAllBySettlement_SettlementId(settlement.getSettlementId());
+        List<SettlementUser> su = settlementUserRepository.findAllBySettlementAndIsActiveTrue(settlement);
+
         su.forEach(stmu -> {
+            log.info("DELETED SETTLEMENTUSER: {}", stmu.getSettlementUserId());
             // 관련 정산 유저 소프트 삭제
             stmu.setIsActive(false);
             settlementUserRepository.save(stmu);
@@ -447,7 +514,7 @@ public class PaymentService {
         });
 
         // 마찬가지로 정산들 찾아와서 soft delete
-        List<Settlement> st = settlementRepository.findByPayment_PaymentId(pm.getPaymentId());
+        List<Settlement> st = settlementRepository.findByPayment_PaymentIdAndIsActiveTrue(pm.getPaymentId());
         st.forEach(settlement -> {
             deleteSettlement(settlement.getSettlementId());
         });
@@ -464,10 +531,10 @@ public class PaymentService {
         Payment pm = paymentRepository.getReferenceById(paymentId);
 
         //Payment에 속한 settlement 리스트 받아오기
-        List<Settlement> stList = settlementRepository.findByPayment_PaymentId(paymentId);
+        List<Settlement> stList = settlementRepository.findByPayment_PaymentIdAndIsActiveTrue(paymentId);
         //settlement 리스트 돌면서 PaymentResponseDto에 들어갈 SettlementResponseDto 만들기
         List<SettlementResponseDto> stResponseDtoList = stList.stream().map(settlement -> {
-            List<SettlementUser> stuList = settlementUserRepository.findBySettlement(settlement);
+            List<SettlementUser> stuList = settlementUserRepository.findBySettlementAndIsActiveTrue(settlement);
             List<SettlementParticipantDto> tuDtoList = stuList.stream().map(stu -> {
                 TravelUser tu = stu.getTravelUser();
                 User user = tu.getUser();
@@ -494,7 +561,12 @@ public class PaymentService {
             payerDto = new TravelUserResponseDto(-1L, "공금", "공금", Gender.OTHERS, LocalDate.now(), "");
 
         }
-        return new PaymentResponseDto(pm.getTravel().getTravelId(), pm.getPaymentId(), pm.getCategory().getCategoryId(), pm.getCategory().getCategoryName(),
+
+        Category category = null;
+        if (!pm.getType().equals(PaymentType.SHAREDFUND)) {
+            category = pm.getCategory();
+        }
+        return new PaymentResponseDto(pm.getTravel().getTravelId(), pm.getPaymentId(), (category != null)? category.getCategoryId() : -1, (category != null)? category.getCategoryName() : "공금채우기",
                 pm.getPayerType(), payerDto, pm.getPaymentMethod(), pm.getPaymentName(), pm.getType(), pm.getExchangeRate(), pm.getPayTime(),
                 pm.getPaymentAccount(), pm.getCurrency(), stResponseDtoList, pmimageDtoList);
     }
