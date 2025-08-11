@@ -205,7 +205,7 @@ public class PaymentService {
         if (payment.getType().equals(PaymentType.SHAREDFUND)) {
             Travel tv = travelRepository.getReferenceById(dto.travelId());
             double leftAmount;
-            if (tv.getNation() == Nation.JAPAN) {
+            if (dto.currency() == Currency.YEN) {
                 leftAmount = tv.getSharedFund() + payment.getPaymentAccount() * payment.getExchangeRate();
             } else {
                 leftAmount = tv.getSharedFund() + payment.getPaymentAccount();
@@ -217,7 +217,7 @@ public class PaymentService {
         if (payment.getType().equals(PaymentType.PAYMENT) && payment.getPayerType().equals(Payer.SHAREDFUND)) {
             Travel tv = travelRepository.getReferenceById(dto.travelId());
             double leftAmount;
-            if (tv.getNation() == Nation.JAPAN) {
+            if (dto.currency() == Currency.YEN) {
                 leftAmount = tv.getSharedFund() - payment.getPaymentAccount() * payment.getExchangeRate();
             } else {
                 leftAmount = tv.getSharedFund() - payment.getPaymentAccount();
