@@ -27,7 +27,6 @@ import com.yoen.yoen_back.repository.travel.TravelRepository;
 import com.yoen.yoen_back.repository.travel.TravelUserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -87,7 +86,7 @@ public class PaymentService {
 
     // 날짜별 Payment를 가져오는 메서드
     public List<PaymentSimpleResponseDto> getPaymentByTravelIdAndDate(Travel tv, LocalDateTime localDateTime, PaymentType paymentType) {
-        List<Payment> pmList = paymentRepository.findAllByTravelAndPaymentTypeAndPayTimeBetweenAndIsActiveTrue(tv, localDateTime, localDateTime.plusDays(1), paymentType);
+        List<Payment> pmList = paymentRepository.findAllByTravelAndTypeAndPayTimeBetweenAndIsActiveTrue(tv, paymentType, localDateTime, localDateTime.plusDays(1));
         return pmList.stream().map(payment -> {
             if (payment.getPayerType() == Payer.SHAREDFUND) {
                 return new PaymentSimpleResponseDto(payment.getPaymentId(), payment.getPaymentName(), payment.getCategory().getCategoryName(),
@@ -100,7 +99,7 @@ public class PaymentService {
 
     // 날짜별 sharedFund를 가져오는 메서드
     public List<PaymentSimpleResponseDto> getSharedFundByTravelIdAndDate(Travel tv, LocalDateTime localDateTime, PaymentType paymentType) {
-        List<Payment> pmList = paymentRepository.findAllByTravelAndPaymentTypeAndPayTimeBetweenAndIsActiveTrue(tv, localDateTime, localDateTime.plusDays(1), paymentType);
+        List<Payment> pmList = paymentRepository.findAllByTravelAndTypeAndPayTimeBetweenAndIsActiveTrue(tv, paymentType, localDateTime, localDateTime.plusDays(1));
         return pmList.stream().map(payment -> {
             if (payment.getType() == PaymentType.SHAREDFUND) {
                 return new PaymentSimpleResponseDto(payment.getPaymentId(), payment.getPaymentName(), "공금 채우기",
@@ -114,7 +113,7 @@ public class PaymentService {
 
     // 여행에 있는 PrePayment를 가져오는 메서드
     public List<PaymentSimpleResponseDto> getPrePaymentByTravelId(Travel tv, PaymentType paymentType) {
-        List<Payment> pmList = paymentRepository.findAllByTravelAndPaymentTypeAndIsActiveTrue(tv, paymentType);
+        List<Payment> pmList = paymentRepository.findAllByTravelAndTypeAndIsActiveTrue(tv, paymentType);
         return pmList.stream().map(payment ->
                 new PaymentSimpleResponseDto(payment.getPaymentId(), payment.getPaymentName(), payment.getCategory().getCategoryName(),
                         payment.getPayTime(), payment.getTravelUser().getTravelNickname(), payment.getPaymentAccount(),

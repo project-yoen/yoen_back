@@ -13,13 +13,13 @@ import java.util.Optional;
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
     List<Payment> findByTravel_TravelIdAndIsActiveTrue(Long travelId);
 
-    List<Payment> findAllByTravelAndPaymentTypeAndPayTimeBetweenAndIsActiveTrue(Travel tv, LocalDateTime localDateTime, LocalDateTime localDateTime1, PaymentType paymentType);
+    List<Payment> findAllByTravelAndTypeAndPayTimeBetweenAndIsActiveTrue(Travel tv, PaymentType paymentType, LocalDateTime localDateTime, LocalDateTime localDateTime1);
 
     List<Payment> findByTravelAndIsActiveTrue(Travel travel);
 
     Optional<Payment> findByPaymentIdAndIsActiveTrue(Long paymentId);
 
-    List<Payment> findAllByTravelAndPaymentTypeAndIsActiveTrue(Travel tv, PaymentType paymentType);
+    List<Payment> findAllByTravelAndTypeAndIsActiveTrue(Travel tv, PaymentType paymentType);
 
     List<Payment> findAllByTravelAndTypeInAndPayTimeBetweenAndIsActiveTrue(
             Travel tv,
