@@ -5,6 +5,7 @@ import com.yoen.yoen_back.dto.payment.PaymentImageDto;
 import com.yoen.yoen_back.dto.payment.PaymentRequestDto;
 import com.yoen.yoen_back.dto.payment.PaymentResponseDto;
 import com.yoen.yoen_back.dto.payment.PaymentSimpleResponseDto;
+import com.yoen.yoen_back.dto.payment.settlement.SettlementParticipantDto;
 import com.yoen.yoen_back.dto.payment.settlement.SettlementRequestDto;
 import com.yoen.yoen_back.dto.payment.settlement.SettlementResponseDto;
 import com.yoen.yoen_back.dto.payment.settlement.SettlementUserResponseDto;
@@ -136,13 +137,13 @@ public class PaymentService {
         return settlementRepository.save(sm);
     }
 
-    public SettlementUser saveSettlementUserEntity(TravelUser tu, Settlement sm, Long size, Payment payment) {
+    public SettlementUser saveSettlementUserEntity(TravelUser tu, Settlement sm, Long size, Payment payment, Boolean isPaid) {
             Long amount = (payment.getCurrency() == Currency.YEN)? Math.round(sm.getAmount() * payment.getExchangeRate()) : sm.getAmount();
             SettlementUser su = SettlementUser.builder()
                     .travelUser(tu)
                     .settlement(sm)
                     .amount(amount / size)
-                    .isPaid(sm.getIsPaid())
+                    .isPaid(isPaid)
                     .build();
 
             // 정산 유저 저장
@@ -243,8 +244,8 @@ public class PaymentService {
             Settlement st = saveSettlementEntity(payment, settlement);
             // 정산 유저 저장 로직
             settlement.travelUsers().forEach(travelUser -> {
-                TravelUser tu = travelUserRepository.getReferenceById(travelUser);
-                SettlementUser smu = saveSettlementUserEntity(tu, st, (long) settlement.travelUsers().size(), payment);
+                TravelUser tu = travelUserRepository.getReferenceById(travelUser.travelUserId());
+                SettlementUser smu = saveSettlementUserEntity(tu, st, (long) settlement.travelUsers().size(), payment, travelUser.isPaid());
             });
             Settlement savedSettlement = settlementRepository.save(st);
 
@@ -257,8 +258,8 @@ public class PaymentService {
 
     private List<TravelUserResponseDto> getTravelUserAndSaveSettlementUsers(Payment payment, SettlementRequestDto settlement, Settlement savedSettlement) {
         return settlement.travelUsers().stream().map(travelUser -> {
-            TravelUser tu = travelUserRepository.getReferenceById(travelUser);
-            SettlementUser smu = saveSettlementUserEntity(tu, savedSettlement, (long) settlement.travelUsers().size(), payment);
+            TravelUser tu = travelUserRepository.getReferenceById(travelUser.travelUserId());
+            SettlementUser smu = saveSettlementUserEntity(tu, savedSettlement, (long) settlement.travelUsers().size(), payment, travelUser.isPaid());
             User user = tu.getUser();
             String imageUrl = (user.getProfileImage() != null)? user.getProfileImage().getImageUrl() : "";
             return new TravelUserResponseDto(tu.getTravelUserId(), user.getNickname(), tu.getTravelNickname(), user.getGender(), user.getBirthday(), imageUrl);
