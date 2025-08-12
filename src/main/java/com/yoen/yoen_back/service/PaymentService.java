@@ -88,7 +88,7 @@ public class PaymentService {
 
             // date가 null인 경우 type에 따라서 모든 기록 반환
         } else {
-            return getPrePaymentByTravelId(tv, paymentType);
+            return getPaymentByTypeAndTravelId(tv, paymentType);
 
         }
     }
@@ -122,7 +122,7 @@ public class PaymentService {
 
 
     // 여행에 있는 Payment를 type에 따라 가져오는 메서드
-    public List<PaymentSimpleResponseDto> getPrePaymentByTravelId(Travel tv, PaymentType paymentType) {
+    public List<PaymentSimpleResponseDto> getPaymentByTypeAndTravelId(Travel tv, PaymentType paymentType) {
         List<Payment> pmList = paymentRepository.findAllByTravelAndTypeAndIsActiveTrue(tv, paymentType);
         return pmList.stream().map(payment ->
                 new PaymentSimpleResponseDto(payment.getPaymentId(), payment.getPaymentName(), payment.getCategory().getCategoryName(),
