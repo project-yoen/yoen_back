@@ -28,6 +28,7 @@ import com.yoen.yoen_back.repository.travel.TravelUserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -70,19 +71,25 @@ public class PaymentService {
 
     // 날짜별 금액기록 리스트 받기
     public List<PaymentSimpleResponseDto> getAllPaymentResponseDtoByTravelIdAndDate(Travel tv, String date, PaymentType paymentType) {
-        LocalDateTime localDateTime = Formatter.getDateTime(date)
-                .withHour(0)
-                .withMinute(0)
-                .withSecond(0)
-                .withNano(0);
-        if (paymentType == PaymentType.PAYMENT) {
-            return getPaymentByTravelIdAndDate(tv, localDateTime, paymentType);
-        } else if (paymentType == PaymentType.SHAREDFUND) {
-            return getSharedFundByTravelIdAndDate(tv, localDateTime, paymentType);
-        } else if (paymentType == PaymentType.PREPAYMENT) {
-            return getPrePaymentByTravelId(tv, paymentType);
+        // date가 전달된 경우 해당 날짜의 기록을 반환
+        if (date != null) {
+            LocalDateTime localDateTime = Formatter.getDateTime(date)
+                    .withHour(0)
+                    .withMinute(0)
+                    .withSecond(0)
+                    .withNano(0);
+            if (paymentType == PaymentType.PAYMENT) {
+                return getPaymentByTravelIdAndDate(tv, localDateTime, paymentType);
+            } else if (paymentType == PaymentType.SHAREDFUND) {
+                return getSharedFundByTravelIdAndDate(tv, localDateTime, paymentType);
+            } else {
+                return getPaymentAndSharedFundByTravelId(tv, localDateTime, paymentType);
+            }
+
+            // date가 null인 경우 type에 따라서 모든 기록 반환
         } else {
-            return getPaymentAndSharedFundByTravelId(tv, localDateTime, paymentType);
+            return getPrePaymentByTravelId(tv, paymentType);
+
         }
     }
 
@@ -113,7 +120,8 @@ public class PaymentService {
 
     }
 
-    // 여행에 있는 PrePayment를 가져오는 메서드
+
+    // 여행에 있는 Payment를 type에 따라 가져오는 메서드
     public List<PaymentSimpleResponseDto> getPrePaymentByTravelId(Travel tv, PaymentType paymentType) {
         List<Payment> pmList = paymentRepository.findAllByTravelAndTypeAndIsActiveTrue(tv, paymentType);
         return pmList.stream().map(payment ->
@@ -566,7 +574,7 @@ public class PaymentService {
         if (!pm.getType().equals(PaymentType.SHAREDFUND)) {
             category = pm.getCategory();
         }
-        return new PaymentResponseDto(pm.getTravel().getTravelId(), pm.getPaymentId(), (category != null)? category.getCategoryId() : -1, (category != null)? category.getCategoryName() : "공금채우기",
+        return new PaymentResponseDto(pm.getTravel().getTravelId(), pm.getPaymentId(), (category != null) ? category.getCategoryId() : -1, (category != null) ? category.getCategoryName() : "공금채우기",
                 pm.getPayerType(), payerDto, pm.getPaymentMethod(), pm.getPaymentName(), pm.getType(), pm.getExchangeRate(), pm.getPayTime(),
                 pm.getPaymentAccount(), pm.getCurrency(), stResponseDtoList, pmimageDtoList);
     }
