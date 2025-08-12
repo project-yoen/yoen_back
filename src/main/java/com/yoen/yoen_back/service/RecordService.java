@@ -1,9 +1,10 @@
 package com.yoen.yoen_back.service;
 
 import com.yoen.yoen_back.common.utils.Formatter;
-import com.yoen.yoen_back.dto.travel.TravelRecordImageDto;
-import com.yoen.yoen_back.dto.travel.TravelRecordRequestDto;
-import com.yoen.yoen_back.dto.travel.TravelRecordResponseDto;
+import com.yoen.yoen_back.dto.record.TravelRecordImageDto;
+import com.yoen.yoen_back.dto.record.TravelRecordRequestDto;
+import com.yoen.yoen_back.dto.record.TravelRecordResponseDto;
+import com.yoen.yoen_back.dto.record.TravelRecordUpdateDto;
 import com.yoen.yoen_back.entity.image.Image;
 import com.yoen.yoen_back.entity.image.TravelRecordImage;
 import com.yoen.yoen_back.entity.travel.Travel;
@@ -24,7 +25,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -115,15 +115,42 @@ public class RecordService {
 
     // 사진을 제외한 여행기록을 수정할시 (수정)
     @Transactional
-    public TravelRecordResponseDto updateTravelRecord(TravelRecordRequestDto dto) {
+    public TravelRecordResponseDto updateTravelRecord(User user, TravelRecordUpdateDto dto, List<MultipartFile> files) {
         TravelRecord tr = travelRecordRepository.getReferenceById(dto.travelRecordId());
+        Travel tv = tr.getTravel();
+        TravelUser tu = tr.getTravelUser();
+        log.info(dto.removeImageIds().toString());
+        // 이미지 삭제
+        dto.removeImageIds().forEach(this::deleteTravelRecordImage);
 
         // 수정
+        tr.setTravelUser(tu);
         tr.setTitle(dto.title());
         tr.setContent(dto.content());
         tr.setRecordTime(Formatter.getDateTime(dto.recordTime()));
         travelRecordRepository.save(tr);
 
+        // 이미지 파일이 존재할 시
+        if (files != null && !files.isEmpty()) {
+            List<Image> images = imageService.saveImages(user, files); // 클라우드에 업로드 및 image 레포지토리에 저장
+            // travel 대표이미지 설정 안되어있으면 첫번째로 등록하는걸로 하기
+            if (tv.getTravelImage() == null) {
+                log.info(images.get(0).getImageUrl());
+                Image profileImage = imageService.saveImageByUrl(user, images.get(0).getImageUrl());
+                tv.setTravelImage(profileImage);
+            }
+            // TODO: 여기서부턴 좀 수정이 있어야할거 같음 지금 이미지를 불러다가 응답하는게 좀 복잡함 (왜 세개로 분리했는지 고민)
+            List<TravelRecordImageDto> imagesDto = images.stream().map(image -> {
+                TravelRecordImage tri = TravelRecordImage.builder()
+                        .image(image)
+                        .travelRecord(tr)
+                        .build();
+                TravelRecordImage tmp = travelRecordImageRepository.save(tri); // travelRecordImage 레포에 image들 저장
+                return new TravelRecordImageDto(tmp.getTravelRecordImageId(), image.getImageUrl());
+            }).toList();
+
+            return new TravelRecordResponseDto(tr.getTravelRecordId(), tu.getTravelNickname(), tr.getTitle(), tr.getContent(), tr.getRecordTime(), imagesDto);
+        }
         return new TravelRecordResponseDto(tr.getTravelRecordId(), tr.getTravelUser().getTravelNickname(), tr.getTitle(), tr.getContent(), tr.getRecordTime(), new ArrayList<>());
     }
 
@@ -163,7 +190,7 @@ public class RecordService {
     public void deleteTravelRecord(Long travelRecordId) {
         TravelRecord travelRecord = travelRecordRepository.getReferenceById(travelRecordId);
         // 관련 이미지 가져오기
-        List<TravelRecordImage> images = travelRecordImageRepository.findAllByTravelRecord_TravelRecordId(travelRecordId);
+        List<TravelRecordImage> images = travelRecordImageRepository.findAllByTravelRecordAndIsActiveTrue(travelRecord);
         // 관련 이미지 삭제
         images.forEach(image -> {
             // 이미지 모집단 중 삭제

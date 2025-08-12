@@ -2,8 +2,9 @@ package com.yoen.yoen_back.controller;
 
 import com.yoen.yoen_back.common.entity.ApiResponse;
 import com.yoen.yoen_back.common.security.CustomUserDetails;
-import com.yoen.yoen_back.dto.travel.TravelRecordRequestDto;
-import com.yoen.yoen_back.dto.travel.TravelRecordResponseDto;
+import com.yoen.yoen_back.dto.record.TravelRecordRequestDto;
+import com.yoen.yoen_back.dto.record.TravelRecordResponseDto;
+import com.yoen.yoen_back.dto.record.TravelRecordUpdateDto;
 import com.yoen.yoen_back.entity.travel.TravelRecord;
 import com.yoen.yoen_back.entity.travel.TravelUser;
 import com.yoen.yoen_back.enums.Role;
@@ -41,6 +42,15 @@ public class RecordController {
         TravelRecordResponseDto trd = recordService.createTravelRecord(userDetails.user(), dto, files);
         return ResponseEntity.ok(ApiResponse.success(trd));
     }
+
+    // 여행 기록 작성하는 함수 (RequestParts를 쓰거나 아니면 두개로 분리해야함)
+    @PostMapping("/update")
+    public ResponseEntity<ApiResponse<TravelRecordResponseDto>> updateTravelRecord(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestPart("dto") TravelRecordUpdateDto dto, @RequestPart(value = "images", required = false) List<MultipartFile> files) {
+        authService.checkTravelUserRoleByTravel(userDetails.user(), dto.travelId(), List.of(Role.WRITER));
+        TravelRecordResponseDto trd = recordService.updateTravelRecord(userDetails.user(), dto, files);
+        return ResponseEntity.ok(ApiResponse.success(trd));
+    }
+
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<TravelRecordResponseDto>>> getTravelRecordByDate(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam("travelId") Long travelId, @RequestParam("date") String date) {

@@ -1,4 +1,4 @@
-package com.yoen.yoen_back.dto.travel;
+package com.yoen.yoen_back.dto.record;
 
 import java.time.LocalDateTime;
 import java.util.List;

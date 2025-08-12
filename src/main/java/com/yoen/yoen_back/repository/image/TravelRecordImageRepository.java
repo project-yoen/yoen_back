@@ -13,7 +13,7 @@ import java.util.Optional;
 public interface TravelRecordImageRepository extends JpaRepository<TravelRecordImage, Long> {
     Optional<TravelRecordImage> findByTravelRecordImageIdAndIsActiveTrue(Long travelRecordImageId);
 
-    List<TravelRecordImage> findAllByTravelRecord_TravelRecordId(Long travelRecordId);
+    List<TravelRecordImage> findAllByTravelRecordAndIsActiveTrue(TravelRecord travelRecord);
 
     List<TravelRecordImage> findByTravelRecordAndIsActiveTrue(TravelRecord tr);
 
