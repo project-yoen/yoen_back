@@ -186,7 +186,7 @@ public class PaymentService {
     }
 
     public SettlementUser saveSettlementUserEntity(TravelUser tu, Settlement sm, Long size, Payment payment, Boolean isPaid) {
-        Long amount = (payment.getCurrency() == Currency.YEN) ? Math.round(sm.getAmount() * payment.getExchangeRate()) : sm.getAmount();
+        Long amount = (payment.getCurrency() != Currency.WON) ? Math.round(sm.getAmount() * payment.getExchangeRate()) : sm.getAmount();
         SettlementUser su = SettlementUser.builder()
                 .travelUser(tu)
                 .settlement(sm)
@@ -207,7 +207,7 @@ public class PaymentService {
         if (payment.getType().equals(PaymentType.SHAREDFUND)) {
             Travel tv = travelRepository.getReferenceById(dto.travelId());
             double leftAmount;
-            if (dto.currency() == Currency.YEN) {
+            if (dto.currency() != Currency.WON) {
                 leftAmount = tv.getSharedFund() + payment.getPaymentAccount() * payment.getExchangeRate();
             } else {
                 leftAmount = tv.getSharedFund() + payment.getPaymentAccount();
@@ -219,7 +219,7 @@ public class PaymentService {
         if (payment.getType().equals(PaymentType.PAYMENT) && payment.getPayerType().equals(Payer.SHAREDFUND)) {
             Travel tv = travelRepository.getReferenceById(dto.travelId());
             double leftAmount;
-            if (dto.currency() == Currency.YEN) {
+            if (dto.currency() != Currency.WON) {
                 leftAmount = tv.getSharedFund() - payment.getPaymentAccount() * payment.getExchangeRate();
             } else {
                 leftAmount = tv.getSharedFund() - payment.getPaymentAccount();
