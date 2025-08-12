@@ -34,7 +34,7 @@ public class PaymentController {
     private final AuthService authService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<PaymentSimpleResponseDto>>> getSimplePayment(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam("travelId") Long travelId, @RequestParam("date") String date, @RequestParam(value = "type", required = false)PaymentType type) {
+    public ResponseEntity<ApiResponse<List<PaymentSimpleResponseDto>>> getSimplePayment(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam("travelId") Long travelId, @RequestParam(value = "date", required = false) String date, @RequestParam(value = "type", required = false)PaymentType type) {
         TravelUser tu = authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.READER, Role.WRITER));
         List<PaymentSimpleResponseDto> dtos = paymentService.getAllPaymentResponseDtoByTravelIdAndDate(tu.getTravel(), date, type);
         return ResponseEntity.ok(ApiResponse.success(dtos));
