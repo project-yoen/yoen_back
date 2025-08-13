@@ -357,6 +357,7 @@ public class PaymentService {
         pm.setTravelUser(newTravelUser);
         pm.setCategory(category); // 카테고리
         pm.setPayerType(dto.payerType()); // 개인 or 공금
+        pm.setCurrency(dto.currency());
         pm.setPaymentMethod(dto.paymentMethod()); // 카드 or 현금
         pm.setPaymentAccount(dto.paymentAccount()); // 돈 총합
         pm.setExchangeRate(exchangeRateUpdateService.getExchangeRate(Formatter.getDateTime(dto.payTime())).getExchangeRate()); // 환율
@@ -422,7 +423,9 @@ public class PaymentService {
         }
         // 새로 공금 충전으로 바뀐 경우: 공금에 가산
         if (nextType == PaymentType.SHAREDFUND) {
-            shared += nextAmt;
+            if (shared < nextAmt) {
+                throw new IllegalStateException("잔액이 충분하지 않습니다.(공금이 음수)");
+            }
         }
         return shared;
     }
