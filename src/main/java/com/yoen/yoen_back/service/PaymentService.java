@@ -423,9 +423,10 @@ public class PaymentService {
         }
         // 새로 공금 충전으로 바뀐 경우: 공금에 가산
         if (nextType == PaymentType.SHAREDFUND) {
-            if (shared < nextAmt) {
+            if (shared + nextAmt < 0) {
                 throw new IllegalStateException("잔액이 충분하지 않습니다.(공금이 음수)");
             }
+            shared += nextAmt;
         }
         return shared;
     }
