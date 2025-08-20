@@ -5,6 +5,7 @@ import com.yoen.yoen_back.common.security.CustomUserDetails;
 import com.yoen.yoen_back.dto.payment.PaymentRequestDto;
 import com.yoen.yoen_back.dto.payment.PaymentResponseDto;
 import com.yoen.yoen_back.dto.payment.PaymentSimpleResponseDto;
+import com.yoen.yoen_back.dto.payment.settlement.SettlementResultResponseDto;
 import com.yoen.yoen_back.dto.payment.settlement.SettlementUserResponseDto;
 import com.yoen.yoen_back.entity.payment.Payment;
 import com.yoen.yoen_back.entity.payment.SettlementUser;
@@ -90,6 +91,21 @@ public class PaymentController {
         paymentService.updatePayment(userDetails.user(), dto, files);
         return ResponseEntity.ok(ApiResponse.success("Payment updated successfully"));
     }
+
+    @GetMapping("/settlemnt")
+    public ResponseEntity<ApiResponse<SettlementResultResponseDto>> getSettlement(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam("travelId") Long travelId,
+            @RequestParam("includePreUseAmount") Boolean includePreUseAmount,
+            @RequestParam("includeSharedFund") Boolean includeSharedFund,
+            @RequestParam("includeRecordedAmount") Boolean includeRecordedAmount,
+            @RequestParam("startAt") String startAt,
+            @RequestParam("endAt") String endAt
+            ) {
+        TravelUser tu = authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.WRITER));
+        return ResponseEntity.ok(ApiResponse.success(paymentService.getSettlement(tu.getTravel(), includePreUseAmount, includeSharedFund, includeRecordedAmount, startAt, endAt)));
+    }
+
     // 테스트용 (필요 시 PaymentService의 메서드 public으로 바꾸고 사용)
 //  @DeleteMapping("/settlement/delete")
 //  public ResponseEntity<ApiResponse<String>> deleteSettlement(@RequestParam("settlementId") Long settlementId) {

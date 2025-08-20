@@ -10,4 +10,5 @@ public interface SettlementUserRepository extends JpaRepository<SettlementUser, 
     List<SettlementUser> findAllBySettlementAndIsActiveTrue(Settlement settlement);
 
     List<SettlementUser> findBySettlementAndIsActiveTrue(Settlement settlement);
+
 }

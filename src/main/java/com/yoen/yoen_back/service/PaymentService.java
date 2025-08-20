@@ -2,10 +2,7 @@ package com.yoen.yoen_back.service;
 
 import com.yoen.yoen_back.common.utils.Formatter;
 import com.yoen.yoen_back.dto.payment.*;
-import com.yoen.yoen_back.dto.payment.settlement.SettlementParticipantDto;
-import com.yoen.yoen_back.dto.payment.settlement.SettlementRequestDto;
-import com.yoen.yoen_back.dto.payment.settlement.SettlementResponseDto;
-import com.yoen.yoen_back.dto.payment.settlement.SettlementUserResponseDto;
+import com.yoen.yoen_back.dto.payment.settlement.*;
 import com.yoen.yoen_back.dto.travel.TravelUserResponseDto;
 import com.yoen.yoen_back.entity.Category;
 import com.yoen.yoen_back.entity.ExchangeRate;
@@ -18,6 +15,7 @@ import com.yoen.yoen_back.entity.travel.Travel;
 import com.yoen.yoen_back.entity.travel.TravelUser;
 import com.yoen.yoen_back.entity.user.User;
 import com.yoen.yoen_back.enums.*;
+import com.yoen.yoen_back.enums.Currency;
 import com.yoen.yoen_back.repository.CategoryRepository;
 import com.yoen.yoen_back.repository.image.PaymentImageRepository;
 import com.yoen.yoen_back.repository.payment.PaymentRepository;
@@ -30,13 +28,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -581,6 +578,91 @@ public class PaymentService {
         return new PaymentResponseDto(pm.getTravel().getTravelId(), pm.getPaymentId(), (category != null) ? category.getCategoryId() : -1, (category != null) ? category.getCategoryName() : "공금채우기",
                 pm.getPayerType(), payerDto, pm.getPaymentMethod(), pm.getPaymentName(), pm.getType(), pm.getExchangeRate(), pm.getPayTime(),
                 pm.getPaymentAccount(), pm.getCurrency(), stResponseDtoList, pmimageDtoList);
+    }
+
+    public SettlementResultResponseDto getSettlement(Travel tv, Boolean includePreUseAmount, Boolean includeSharedFund, Boolean includeRecordedAmount, String startAt, String endAt) {
+        LocalDateTime startDateTime = Formatter.getDateTime(startAt);
+        LocalDateTime endDateTime = Formatter.getDateTime(endAt);
+        List<PaymentType> paymentOptionList = new ArrayList<>();
+
+        if (includePreUseAmount) {paymentOptionList.add(PaymentType.PREPAYMENT);}
+        if (includeSharedFund) {paymentOptionList.add(PaymentType.SHAREDFUND);}
+        if (includeRecordedAmount) {paymentOptionList.add(PaymentType.PAYMENT);}
+
+
+        List<Settlement> settlementList = settlementRepository.findSettlementByOptions(tv, paymentOptionList, startDateTime, endDateTime);
+        List<TravelUser> travelUserList = travelUserRepository.findByTravelAndIsActiveTrue(tv);
+        int travelUserCount = travelUserList.size();
+        Long[][] totalSettlementAmount = new Long[travelUserCount][travelUserCount];
+
+        for (int i = 0; i < travelUserCount; i++) {
+            for (int j = 0; j < travelUserCount; j++) {
+                totalSettlementAmount[i][j] = 0L;
+            }
+        }
+
+        Map<Long, Integer> hashMap = new HashMap<>();
+        for (int i = 0; i < travelUserList.size(); i++) {
+            hashMap.put(travelUserList.get(i).getTravelUserId(), i);
+        }
+
+
+        List<SettlementPaymentTypeDto> paymentTypeList = List.of(
+                getSettlementPaymentTypeDto(settlementList, PaymentType.PREPAYMENT, totalSettlementAmount, hashMap),
+                getSettlementPaymentTypeDto(settlementList, PaymentType.PAYMENT, totalSettlementAmount, hashMap),
+                getSettlementPaymentTypeDto(settlementList, PaymentType.SHAREDFUND, totalSettlementAmount, hashMap)
+        );
+        List<SettlementResponseUserDetailDto> settlementResponseUserDetailDtoList = new ArrayList<>();
+
+        hashMap.forEach((travelUserId, index) -> {
+            String receiverNickname = travelUserRepository.getReferenceById(travelUserId).getTravelNickname();
+            List<SettlementUserDetailsDto> settlementUserDetailsDto = new ArrayList<>();
+            for (int i = 0; i < travelUserCount; i++){
+                if (i == index) continue;
+                String senderNickname = travelUserList.get(i).getTravelNickname();
+                settlementUserDetailsDto.add(new SettlementUserDetailsDto(senderNickname, totalSettlementAmount[index][i]));
+            }
+            settlementResponseUserDetailDtoList.add(new SettlementResponseUserDetailDto(receiverNickname, settlementUserDetailsDto));
+
+        });
+
+        return new SettlementResultResponseDto(settlementResponseUserDetailDtoList, paymentTypeList);
+    }
+
+
+    private SettlementPaymentTypeDto getSettlementPaymentTypeDto(List<Settlement> settlementList, PaymentType paymentType, Long[][] totalSettlementAmount, Map<Long, Integer> hashMap) {
+        List<Settlement> prePaymentList = settlementList.stream().filter(tmp -> tmp.getPayment().getType() == paymentType).toList();
+
+        List<SettlementResponseUserDetailDto> responseUserDto = prePaymentList.stream().filter(tmp -> tmp.getPayment().getPayerType() != Payer.SHAREDFUND) // 건너뛰기
+                .map(tmp -> {
+            Payment payment = tmp.getPayment();
+            List <SettlementUser> stuList = settlementUserRepository.findBySettlementAndIsActiveTrue(tmp);
+            Integer receiverIndex = hashMap.get(payment.getTravelUser().getTravelUserId());
+            List<SettlementUserDetailsDto> userDetailsDto = stuList.stream().map(stu -> {
+                Integer senderIndex = hashMap.get(stu.getTravelUser().getTravelUserId());
+                Long senderAmount = stu.getAmount();
+                // 정산이 안된것에 대하여
+                if (!stu.getIsPaid()) {
+                    // 돈을 보내는사람이 지금 받을돈이 있다면 (그리고 받을돈이 보내야할돈보다 더 많다면)
+                    if (totalSettlementAmount[senderIndex][receiverIndex] - senderAmount >= 0) {
+                        totalSettlementAmount[senderIndex][receiverIndex] -= senderAmount;
+                    }
+                    // 돈을 보내는 사람이 지금 받을돈이 없거나, 줘야할 돈 보다 적다면
+                    else {
+                        senderAmount -= totalSettlementAmount[senderIndex][receiverIndex];
+                        totalSettlementAmount[senderIndex][receiverIndex] = 0L;
+                        totalSettlementAmount[receiverIndex][senderIndex] += senderAmount;
+                    }
+                }
+
+
+                return new SettlementUserDetailsDto(stu.getTravelUser().getTravelNickname(), payment.getPaymentId(), payment.getPaymentName(), stu.getAmount(), stu.getIsPaid(), payment.getPayTime());
+            }
+            ).toList();
+            return new SettlementResponseUserDetailDto(payment.getTravelUser().getTravelNickname(), userDetailsDto);
+        }).toList();
+
+        return  new SettlementPaymentTypeDto(paymentType, responseUserDto);
     }
 
 }
