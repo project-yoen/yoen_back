@@ -92,7 +92,7 @@ public class PaymentController {
         return ResponseEntity.ok(ApiResponse.success("Payment updated successfully"));
     }
 
-    @GetMapping("/settlemnt")
+    @GetMapping("/settlement")
     public ResponseEntity<ApiResponse<SettlementResultResponseDto>> getSettlement(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam("travelId") Long travelId,
@@ -106,7 +106,7 @@ public class PaymentController {
         return ResponseEntity.ok(ApiResponse.success(paymentService.getSettlement(tu.getTravel(), includePreUseAmount, includeSharedFund, includeRecordedAmount, startAt, endAt)));
     }
 
-    @PostMapping("/settlemnt/confirm")
+    @PostMapping("/settlement/confirm")
     public ResponseEntity<ApiResponse<String>> doSettlement(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam("travelId") Long travelId,

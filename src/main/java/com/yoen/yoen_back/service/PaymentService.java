@@ -593,17 +593,17 @@ public class PaymentService {
         List<Settlement> settlementList = settlementRepository.findSettlementByOptions(tv, paymentOptionList, startDateTime, endDateTime);
         List<TravelUser> travelUserList = travelUserRepository.findByTravelAndIsActiveTrue(tv);
         int travelUserCount = travelUserList.size();
-        Long[][] totalSettlementAmount = new Long[travelUserCount][travelUserCount];
+        Long[][] totalSettlementAmount = new Long[travelUserCount + 1][travelUserCount + 1];
 
-        for (int i = 0; i < travelUserCount; i++) {
-            for (int j = 0; j < travelUserCount; j++) {
+        for (int i = 0; i <= travelUserCount; i++) {
+            for (int j = 0; j <= travelUserCount; j++) {
                 totalSettlementAmount[i][j] = 0L;
             }
         }
 
         Map<Long, Integer> hashMap = new HashMap<>();
-        for (int i = 0; i < travelUserList.size(); i++) {
-            hashMap.put(travelUserList.get(i).getTravelUserId(), i);
+        for (int i = 1 ; i <= travelUserList.size(); i++) {
+            hashMap.put(travelUserList.get(i-1).getTravelUserId(), i);
         }
 
 
@@ -617,10 +617,10 @@ public class PaymentService {
         hashMap.forEach((travelUserId, index) -> {
             String receiverNickname = travelUserRepository.getReferenceById(travelUserId).getTravelNickname();
             List<SettlementUserDetailsDto> settlementUserDetailsDto = new ArrayList<>();
-            for (int i = 0; i < travelUserCount; i++){
+            for (int i = 1; i <= travelUserCount; i++){
                 if (i == index) continue;
-                String senderNickname = travelUserList.get(i).getTravelNickname();
-                settlementUserDetailsDto.add(new SettlementUserDetailsDto(senderNickname, totalSettlementAmount[index][i]));
+                String senderNickname = travelUserList.get(i-1).getTravelNickname();
+                settlementUserDetailsDto.add(new SettlementUserDetailsDto(senderNickname, totalSettlementAmount[index][i] + totalSettlementAmount[0][i]/travelUserCount ));
             }
             settlementResponseUserDetailDtoList.add(new SettlementResponseUserDetailDto(receiverNickname, settlementUserDetailsDto));
 
@@ -651,12 +651,11 @@ public class PaymentService {
 
     private SettlementPaymentTypeDto getSettlementPaymentTypeDto(List<Settlement> settlementList, PaymentType paymentType, Long[][] totalSettlementAmount, Map<Long, Integer> hashMap) {
         List<Settlement> paymentList = settlementList.stream().filter(tmp -> tmp.getPayment().getType() == paymentType).toList();
-
-        List<SettlementResponseUserDetailDto> responseUserDto = paymentList.stream().filter(tmp -> tmp.getPayment().getPayerType() != Payer.SHAREDFUND) // 건너뛰기
+        List<SettlementResponseUserDetailDto> responseUserDto = paymentList.stream()
                 .map(tmp -> {
             Payment payment = tmp.getPayment();
             List <SettlementUser> stuList = settlementUserRepository.findBySettlementAndIsActiveTrue(tmp);
-            Integer receiverIndex = hashMap.get(payment.getTravelUser().getTravelUserId());
+            int receiverIndex = (payment.getTravelUser() != null)? hashMap.get(payment.getTravelUser().getTravelUserId()) : 0; // 여기 문제
             List<SettlementUserDetailsDto> userDetailsDto = stuList.stream().map(stu -> {
                 Integer senderIndex = hashMap.get(stu.getTravelUser().getTravelUserId());
                 Long senderAmount = stu.getAmount();
@@ -675,10 +674,11 @@ public class PaymentService {
                 }
 
 
-                return new SettlementUserDetailsDto(stu.getTravelUser().getTravelNickname(), payment.getPaymentId(), payment.getPaymentName(), stu.getAmount(), stu.getIsPaid(), payment.getPayTime());
+                return new SettlementUserDetailsDto(stu.getTravelUser().getTravelNickname(), payment.getPaymentId(), payment.getPaymentName(), stu.getSettlement().getSettlementName(), stu.getAmount(), stu.getIsPaid(), payment.getPayTime());
             }
             ).toList();
-            return new SettlementResponseUserDetailDto(payment.getTravelUser().getTravelNickname(), userDetailsDto);
+            String paymentTravelNickname = (payment.getTravelUser() != null)? payment.getTravelUser().getTravelNickname() : "공금" ;
+            return new SettlementResponseUserDetailDto(paymentTravelNickname, userDetailsDto);
         }).toList();
 
         return  new SettlementPaymentTypeDto(paymentType, responseUserDto);
@@ -689,7 +689,7 @@ public class PaymentService {
     protected void doSettlementPaymentTypeDto(List<Settlement> settlementList, PaymentType paymentType) {
         List<Settlement> paymentList = settlementList.stream().filter(tmp -> tmp.getPayment().getType() == paymentType).toList();
 
-        paymentList.stream().filter(tmp -> tmp.getPayment().getPayerType() != Payer.SHAREDFUND) // 건너뛰기
+        paymentList
                 .forEach(tmp -> {
                     List <SettlementUser> stuList = settlementUserRepository.findBySettlementAndIsActiveTrue(tmp);
                     stuList.forEach(stu -> {
