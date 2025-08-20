@@ -630,10 +630,29 @@ public class PaymentService {
     }
 
 
-    private SettlementPaymentTypeDto getSettlementPaymentTypeDto(List<Settlement> settlementList, PaymentType paymentType, Long[][] totalSettlementAmount, Map<Long, Integer> hashMap) {
-        List<Settlement> prePaymentList = settlementList.stream().filter(tmp -> tmp.getPayment().getType() == paymentType).toList();
+    @Transactional
+    public void doSettlement(Travel tv, Boolean includePreUseAmount, Boolean includeSharedFund, Boolean includeRecordedAmount, String startAt, String endAt) {
+        LocalDateTime startDateTime = Formatter.getDateTime(startAt);
+        LocalDateTime endDateTime = Formatter.getDateTime(endAt);
+        List<PaymentType> paymentOptionList = new ArrayList<>();
 
-        List<SettlementResponseUserDetailDto> responseUserDto = prePaymentList.stream().filter(tmp -> tmp.getPayment().getPayerType() != Payer.SHAREDFUND) // 건너뛰기
+        if (includePreUseAmount) {paymentOptionList.add(PaymentType.PREPAYMENT);}
+        if (includeSharedFund) {paymentOptionList.add(PaymentType.SHAREDFUND);}
+        if (includeRecordedAmount) {paymentOptionList.add(PaymentType.PAYMENT);}
+
+
+        List<Settlement> settlementList = settlementRepository.findSettlementByOptions(tv, paymentOptionList, startDateTime, endDateTime);
+
+        doSettlementPaymentTypeDto(settlementList, PaymentType.PREPAYMENT);
+        doSettlementPaymentTypeDto(settlementList, PaymentType.PAYMENT);
+        doSettlementPaymentTypeDto(settlementList, PaymentType.SHAREDFUND);
+
+    }
+
+    private SettlementPaymentTypeDto getSettlementPaymentTypeDto(List<Settlement> settlementList, PaymentType paymentType, Long[][] totalSettlementAmount, Map<Long, Integer> hashMap) {
+        List<Settlement> paymentList = settlementList.stream().filter(tmp -> tmp.getPayment().getType() == paymentType).toList();
+
+        List<SettlementResponseUserDetailDto> responseUserDto = paymentList.stream().filter(tmp -> tmp.getPayment().getPayerType() != Payer.SHAREDFUND) // 건너뛰기
                 .map(tmp -> {
             Payment payment = tmp.getPayment();
             List <SettlementUser> stuList = settlementUserRepository.findBySettlementAndIsActiveTrue(tmp);
@@ -663,6 +682,25 @@ public class PaymentService {
         }).toList();
 
         return  new SettlementPaymentTypeDto(paymentType, responseUserDto);
+    }
+
+
+    @Transactional
+    protected void doSettlementPaymentTypeDto(List<Settlement> settlementList, PaymentType paymentType) {
+        List<Settlement> paymentList = settlementList.stream().filter(tmp -> tmp.getPayment().getType() == paymentType).toList();
+
+        paymentList.stream().filter(tmp -> tmp.getPayment().getPayerType() != Payer.SHAREDFUND) // 건너뛰기
+                .forEach(tmp -> {
+                    List <SettlementUser> stuList = settlementUserRepository.findBySettlementAndIsActiveTrue(tmp);
+                    stuList.forEach(stu -> {
+                        // 세부정산완료 처리
+                        stu.setIsPaid(true);
+                            }
+                    );
+                    // 전체 정산완료 처리
+                    tmp.setIsPaid(true);
+                });
+
     }
 
 }

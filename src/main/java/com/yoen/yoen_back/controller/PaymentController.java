@@ -106,6 +106,21 @@ public class PaymentController {
         return ResponseEntity.ok(ApiResponse.success(paymentService.getSettlement(tu.getTravel(), includePreUseAmount, includeSharedFund, includeRecordedAmount, startAt, endAt)));
     }
 
+    @PostMapping("/settlemnt/confirm")
+    public ResponseEntity<ApiResponse<String>> doSettlement(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam("travelId") Long travelId,
+            @RequestParam("includePreUseAmount") Boolean includePreUseAmount,
+            @RequestParam("includeSharedFund") Boolean includeSharedFund,
+            @RequestParam("includeRecordedAmount") Boolean includeRecordedAmount,
+            @RequestParam("startAt") String startAt,
+            @RequestParam("endAt") String endAt
+    ) {
+        TravelUser tu = authService.checkTravelUserRoleByTravel(userDetails.user(), travelId, List.of(Role.WRITER));
+        paymentService.doSettlement(tu.getTravel(), includePreUseAmount, includeSharedFund, includeRecordedAmount, startAt, endAt);
+        return ResponseEntity.ok(ApiResponse.success("모두 정상적으로 정산완료 되었습니다."));
+    }
+
     // 테스트용 (필요 시 PaymentService의 메서드 public으로 바꾸고 사용)
 //  @DeleteMapping("/settlement/delete")
 //  public ResponseEntity<ApiResponse<String>> deleteSettlement(@RequestParam("settlementId") Long settlementId) {
