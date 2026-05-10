@@ -30,12 +30,15 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
+    // UserService가 의존하는 외부 저장소/서비스는 Mock으로 대체한다.
+    // 이렇게 하면 DB나 이미지 업로드 없이 UserService의 순수 로직만 검증할 수 있다.
     @Mock
     private UserRepository userRepository;
 
     @Mock
     private ImageService imageService;
 
+    // @Mock으로 만든 객체들을 UserService 생성자에 주입한다.
     @InjectMocks
     private UserService userService;
 
@@ -51,6 +54,7 @@ class UserServiceTest {
                 "1998-03-12",
                 null
         );
+        // save()에 실제로 전달된 User 객체를 꺼내서 필드와 암호화 여부를 검증한다.
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
 
         userService.register(dto);
@@ -71,6 +75,7 @@ class UserServiceTest {
     void login_returnsUserResponse_whenCredentialsAreValid() throws InvalidCredentialsException {
         User user = userWithEncodedPassword("plain-password");
         user.setProfileImage(image(1L, "https://cdn.example.com/profile.png", "profile.png"));
+        // 로그인 성공 케이스이므로 Repository가 활성 사용자를 찾았다고 가정한다.
         when(userRepository.findByEmailAndIsActiveTrue("hong@example.com")).thenReturn(Optional.of(user));
 
         UserResponseDto response = userService.login(new LoginRequestDto("hong@example.com", "plain-password"));
@@ -87,6 +92,7 @@ class UserServiceTest {
     @Test
     @DisplayName("로그인 시 이메일이 없으면 인증 예외를 던진다")
     void login_throwsException_whenEmailDoesNotExist() {
+        // 이메일로 사용자를 찾지 못하면 UserService가 인증 실패 예외를 던져야 한다.
         when(userRepository.findByEmailAndIsActiveTrue("missing@example.com")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.login(new LoginRequestDto("missing@example.com", "plain-password")))
@@ -96,6 +102,7 @@ class UserServiceTest {
     @Test
     @DisplayName("로그인 시 비밀번호가 틀리면 인증 예외를 던진다")
     void login_throwsException_whenPasswordDoesNotMatch() {
+        // 저장된 비밀번호는 plain-password로 암호화되어 있으므로 wrong-password는 실패해야 한다.
         when(userRepository.findByEmailAndIsActiveTrue("hong@example.com"))
                 .thenReturn(Optional.of(userWithEncodedPassword("plain-password")));
 
@@ -167,6 +174,7 @@ class UserServiceTest {
     @DisplayName("프로필 이미지를 저장하고 기존 이미지가 있으면 삭제한다")
     void saveProfileUrl_savesNewProfileImageAndDeletesPreviousImage() {
         User user = userWithEncodedPassword("plain-password");
+        // 기존 프로필 이미지가 있는 사용자는 새 이미지 저장 후 기존 이미지를 삭제해야 한다.
         Image previousImage = image(1L, "https://cdn.example.com/old.png", "old.png");
         Image newImage = image(2L, "https://cdn.example.com/new.png", "new.png");
         MultipartFile multipartFile = mock(MultipartFile.class);
@@ -208,6 +216,7 @@ class UserServiceTest {
     }
 
     private User userWithEncodedPassword(String rawPassword) {
+        // 로그인 테스트에서 BCrypt 매칭을 검증하기 위한 기본 사용자 fixture.
         return User.builder()
                 .userId(1L)
                 .email("hong@example.com")
@@ -220,6 +229,7 @@ class UserServiceTest {
     }
 
     private Image image(Long imageId, String imageUrl, String objectKey) {
+        // 이미지 업로드를 실제로 하지 않고 프로필 이미지가 있는 상태만 표현한다.
         return Image.builder()
                 .imageId(imageId)
                 .imageUrl(imageUrl)
