@@ -33,6 +33,8 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class CommonServiceTest {
 
+    // CommonService는 목적지/카테고리 Repository만 사용하므로 모두 Mock으로 대체한다.
+    // DB 없이 매핑 생성, soft delete, DTO 변환 로직만 빠르게 검증한다.
     @Mock
     private TravelDestinationRepository travelDestinationRepository;
 
@@ -42,6 +44,7 @@ class CommonServiceTest {
     @Mock
     private CategoryRepository categoryRepository;
 
+    // Mock Repository들을 CommonService 생성자에 주입한다.
     @InjectMocks
     private CommonService commonService;
 
@@ -55,6 +58,7 @@ class CommonServiceTest {
         when(destinationRepository.findByDestinationIdAndIsActiveTrue(100L)).thenReturn(Optional.of(tokyo));
         when(destinationRepository.findByDestinationIdAndIsActiveTrue(101L)).thenReturn(Optional.of(osaka));
         when(travelDestinationRepository.findByTravel_TravelId(10L)).thenReturn(List.of(previousMapping));
+        // save()에 전달된 기존/신규 TravelDestination을 모두 확인하기 위해 캡처한다.
         ArgumentCaptor<TravelDestination> captor = ArgumentCaptor.forClass(TravelDestination.class);
 
         commonService.createTravelDestination(travel, List.of(100L, 101L));
@@ -75,6 +79,7 @@ class CommonServiceTest {
     @DisplayName("존재하지 않는 목적지 ID가 포함되면 예외를 던진다")
     void createTravelDestination_throwsException_whenDestinationDoesNotExist() {
         Travel travel = travel(10L);
+        // 목적지 ID를 찾지 못하면 매핑을 저장하지 않고 예외가 발생해야 한다.
         when(destinationRepository.findByDestinationIdAndIsActiveTrue(999L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> commonService.createTravelDestination(travel, List.of(999L)))
@@ -119,6 +124,7 @@ class CommonServiceTest {
     @DisplayName("목적지 하나를 저장한다")
     void createDestination_savesDestination() {
         DestinationRequestDto request = new DestinationRequestDto("도쿄", Nation.JAPAN);
+        // 생성 DTO가 Destination 엔티티로 제대로 변환되어 저장되는지 확인한다.
         ArgumentCaptor<Destination> captor = ArgumentCaptor.forClass(Destination.class);
 
         commonService.createDestination(request);
@@ -159,6 +165,7 @@ class CommonServiceTest {
                 new CategoryRequestDto(null, "식비", PaymentType.PAYMENT),
                 new CategoryRequestDto(null, "공금", PaymentType.SHAREDFUND)
         );
+        // 실제 DB가 없으므로 save()가 호출되면 ID가 생긴 것처럼 돌려준다.
         when(categoryRepository.save(any(Category.class))).thenAnswer(invocation -> {
             Category category = invocation.getArgument(0);
             if (category.getCategoryName().equals("식비")) {
@@ -201,6 +208,7 @@ class CommonServiceTest {
     }
 
     private Travel travel(Long travelId) {
+        // 목적지 매핑 테스트에서 사용할 기본 여행 fixture.
         return Travel.builder()
                 .travelId(travelId)
                 .travelName("도쿄 여행")
@@ -214,6 +222,7 @@ class CommonServiceTest {
     }
 
     private Destination destination(Long destinationId, String name, Nation nation) {
+        // 목적지 조회/매핑 테스트에서 재사용하는 fixture.
         return Destination.builder()
                 .destinationId(destinationId)
                 .name(name)
@@ -222,6 +231,7 @@ class CommonServiceTest {
     }
 
     private TravelDestination travelDestination(Long travelDestinationId, Travel travel, Destination destination) {
+        // 기존 여행-목적지 매핑을 표현하기 위한 fixture.
         return TravelDestination.builder()
                 .travelDestinationId(travelDestinationId)
                 .travel(travel)
@@ -230,6 +240,7 @@ class CommonServiceTest {
     }
 
     private Category category(Long categoryId, String name, PaymentType type) {
+        // 카테고리 조회 테스트에서 재사용하는 fixture.
         return Category.builder()
                 .categoryId(categoryId)
                 .categoryName(name)
