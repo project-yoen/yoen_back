@@ -15,7 +15,8 @@
 - Java 17, Spring Boot 3.4.7, Gradle.
 - Main dependencies include Spring Web, Security, Data JPA, Data Redis, WebFlux, MyBatis starter, Firebase Admin, Google Cloud Storage, PostgreSQL, JUnit 5, Spring Security Test.
 - Main domains are `user/auth`, `travel`, `payment/settlement`, `record`, `join`, `image`, and `common`.
-- Current test coverage is only the default `@SpringBootTest` context test.
+- Current unit-test coverage includes `FormatterTest`, `AuthServiceTest`, `JoinServiceTest`, and `RecordServiceTest`.
+- The default `@SpringBootTest` context test is disabled until test infrastructure for full context loading is configured.
 - Runtime configuration depends on `.env` values for PostgreSQL, Redis, Firebase, and JWT.
 
 ## Testing Direction
@@ -28,5 +29,6 @@
 ## CI Direction
 - Use GitHub Actions on `pull_request` targeting `main`.
 - First CI goal: run Gradle tests reliably.
+- CI workflow lives at `.github/workflows/ci.yml` and runs `./gradlew test`.
 - Branch protection should require the test check to pass before manual merge into `main`.
 - Keep deployment/CD separate from the first CI milestone.
