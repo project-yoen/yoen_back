@@ -377,6 +377,8 @@ class PaymentServiceTest {
     }
 
     private void stubBasePaymentSave(Category category, TravelUser travelUser, Travel travel, Double exchangeRate) {
+        // createPayment 테스트에서 반복되는 Repository stub을 모아둔 헬퍼.
+        // 결제 저장, 카테고리 조회, 여행 조회, 환율 조회를 기본 성공 상태로 만든다.
         when(categoryRepository.findById(category.getCategoryId())).thenReturn(Optional.of(category));
         if (travelUser != null) {
             when(travelUserRepository.findByTravelUserIdAndIsActiveTrue(travelUser.getTravelUserId()))
@@ -403,6 +405,7 @@ class PaymentServiceTest {
             Currency currency,
             List<SettlementRequestDto> settlements
     ) {
+        // createPayment 입력 DTO fixture. 테스트마다 금액/타입/참여자 목록만 바꿔 사용한다.
         return new PaymentRequestDto(
                 paymentId,
                 travelId,
@@ -421,6 +424,7 @@ class PaymentServiceTest {
     }
 
     private Payment payment(Long paymentId, Travel travel, TravelUser travelUser, Category category, Long amount, PaymentType type, Payer payer) {
+        // 조회/삭제/정산 테스트에 쓰는 Payment fixture.
         return Payment.builder()
                 .paymentId(paymentId)
                 .travel(travel)
@@ -438,6 +442,7 @@ class PaymentServiceTest {
     }
 
     private Settlement settlement(Long settlementId, Payment payment, Long amount, Boolean isPaid) {
+        // Payment에 연결된 정산 단위 fixture.
         return Settlement.builder()
                 .settlementId(settlementId)
                 .payment(payment)
@@ -448,6 +453,7 @@ class PaymentServiceTest {
     }
 
     private SettlementUser settlementUser(Long settlementUserId, Settlement settlement, TravelUser travelUser, Long amount, Boolean isPaid) {
+        // 특정 여행 참여자가 어떤 정산에 얼마를 내야 하는지 표현하는 fixture.
         return SettlementUser.builder()
                 .settlementUserId(settlementUserId)
                 .settlement(settlement)
@@ -458,6 +464,7 @@ class PaymentServiceTest {
     }
 
     private PaymentImage paymentImage(Long paymentImageId, Payment payment, Image image) {
+        // 결제 영수증/첨부 이미지 매핑 fixture.
         return PaymentImage.builder()
                 .paymentImageId(paymentImageId)
                 .payment(payment)
@@ -466,6 +473,7 @@ class PaymentServiceTest {
     }
 
     private Travel travel(Long travelId, Long sharedFund) {
+        // 공금 금액을 테스트마다 바꿔 넣을 수 있는 여행 fixture.
         return Travel.builder()
                 .travelId(travelId)
                 .travelName("도쿄 여행")
@@ -479,6 +487,7 @@ class PaymentServiceTest {
     }
 
     private TravelUser travelUser(Long travelUserId, Travel travel, User user, String travelNickname) {
+        // 결제자 또는 정산 참여자를 표현하는 여행 사용자 fixture.
         return TravelUser.builder()
                 .travelUserId(travelUserId)
                 .travel(travel)
@@ -489,6 +498,7 @@ class PaymentServiceTest {
     }
 
     private User user(Long userId, String email, String nickname) {
+        // PaymentService 테스트에서는 사용자 상세 검증이 목적이 아니므로 필수 필드만 채운다.
         return User.builder()
                 .userId(userId)
                 .email(email)
@@ -501,6 +511,7 @@ class PaymentServiceTest {
     }
 
     private Category category(Long categoryId, String name, PaymentType type) {
+        // 결제 타입과 카테고리명을 함께 검증하기 위한 fixture.
         return Category.builder()
                 .categoryId(categoryId)
                 .categoryName(name)
@@ -509,6 +520,7 @@ class PaymentServiceTest {
     }
 
     private Image image(Long imageId, String imageUrl, String objectKey) {
+        // 실제 이미지 업로드 없이 URL만 가진 이미지 상태를 표현한다.
         return Image.builder()
                 .imageId(imageId)
                 .imageUrl(imageUrl)
