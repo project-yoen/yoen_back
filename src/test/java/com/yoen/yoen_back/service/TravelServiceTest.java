@@ -41,6 +41,8 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class TravelServiceTest {
 
+    // TravelService가 사용하는 Repository와 보조 서비스는 모두 Mock으로 둔다.
+    // 덕분에 DB, 파일 업로드, 목적지 저장 로직 없이 TravelService 로직만 검증한다.
     @Mock
     private TravelRepository travelRepository;
 
@@ -62,6 +64,7 @@ class TravelServiceTest {
     @Mock
     private ImageService imageService;
 
+    // 위 Mock들을 TravelService 생성자에 주입한다.
     @InjectMocks
     private TravelService travelService;
 
@@ -72,6 +75,7 @@ class TravelServiceTest {
         Travel travelWithImage = travel(10L, "도쿄 여행", 3L, 2L, 50000L);
         travelWithImage.setTravelImage(image(1L, "https://cdn.example.com/travel.png", "travel.png"));
         Travel travelWithoutImage = travel(11L, "서울 여행", 2L, 1L, 0L);
+        // 사용자가 참여 중인 여행 목록을 Repository가 반환한다고 가정한다.
         when(travelUserRepository.findActiveTravelsByUser(user))
                 .thenReturn(List.of(travelWithImage, travelWithoutImage));
 
@@ -97,11 +101,13 @@ class TravelServiceTest {
                 "2026-06-05",
                 List.of(100L, 101L)
         );
+        // 실제 DB가 없으므로 save()가 호출되면 ID가 채워진 엔티티처럼 돌려준다.
         when(travelRepository.save(any(Travel.class))).thenAnswer(invocation -> {
             Travel savedTravel = invocation.getArgument(0);
             savedTravel.setTravelId(10L);
             return savedTravel;
         });
+        // 저장된 TravelUser가 작성자 권한으로 만들어졌는지 검증하기 위해 캡처한다.
         ArgumentCaptor<TravelUser> travelUserCaptor = ArgumentCaptor.forClass(TravelUser.class);
 
         TravelResponseDto response = travelService.createTravel(user, request);
@@ -136,6 +142,7 @@ class TravelServiceTest {
                 "2026-07-03",
                 List.of(200L)
         );
+        // 수정 로직은 기존 Travel 엔티티를 가져와 필드를 바꾼 뒤 다시 저장한다.
         when(travelRepository.getReferenceById(10L)).thenReturn(travel);
         when(travelRepository.save(travel)).thenReturn(travel);
 
@@ -170,6 +177,7 @@ class TravelServiceTest {
         User user = user(1L, "alice", "Alice");
         Travel travel = travel(10L, "도쿄 여행", 3L, 1L, 0L);
         TravelUser travelUser = travelUser(100L, travel, user, Role.WRITER, "앨리스");
+        // 현재 사용자와 여행으로 TravelUser를 찾을 수 있어야 정상 응답을 만든다.
         when(travelUserRepository.findByTravelAndUserAndIsActiveTrue(travel, user))
                 .thenReturn(Optional.of(travelUser));
 
@@ -215,6 +223,7 @@ class TravelServiceTest {
         alice.setProfileImage(image(9L, "https://cdn.example.com/alice.png", "alice.png"));
         TravelUser charlieTravelUser = travelUser(102L, travel, charlie, Role.READER, "찰리");
         TravelUser aliceTravelUser = travelUser(101L, travel, alice, Role.WRITER, "앨리스");
+        // 일부러 Charlie, Alice 순서로 반환해서 서비스가 이름 기준 정렬을 하는지 검증한다.
         when(travelUserRepository.findByTravelAndIsActiveTrue(travel))
                 .thenReturn(List.of(charlieTravelUser, aliceTravelUser));
         when(userRepository.getReferenceById(1L)).thenReturn(alice);
@@ -309,6 +318,7 @@ class TravelServiceTest {
         Image oldImage = image(1L, "https://cdn.example.com/old.png", "old.png");
         Image recordImage = image(2L, "https://cdn.example.com/record.png", "record.png");
         Image copiedImage = image(3L, "https://cdn.example.com/copied.png", "copied.png");
+        // 기존 대표 이미지가 있으면 삭제하고, 기록 이미지 URL을 복사해 새 대표 이미지로 사용한다.
         travel.setTravelImage(oldImage);
         TravelRecordImage travelRecordImage = TravelRecordImage.builder()
                 .travelRecord(TravelRecord.builder().travel(travel).build())
@@ -331,6 +341,7 @@ class TravelServiceTest {
         User user = user(1L, "alice", "Alice");
         Travel travel = travel(10L, "도쿄 여행", 3L, 1L, 0L);
         Image uploadedImage = image(2L, "https://cdn.example.com/uploaded.png", "uploaded.png");
+        // 실제 업로드 파일을 만들지 않고 MultipartFile mock으로 이미지 저장 흐름만 검증한다.
         MultipartFile multipartFile = mock(MultipartFile.class);
         when(imageService.saveImage(user, multipartFile)).thenReturn(uploadedImage);
 
@@ -342,6 +353,7 @@ class TravelServiceTest {
     }
 
     private Travel travel(Long travelId, String travelName, Long numOfPeople, Long numOfJoinedPeople, Long sharedFund) {
+        // 여러 테스트에서 재사용하는 기본 여행 fixture.
         return Travel.builder()
                 .travelId(travelId)
                 .travelName(travelName)
@@ -355,6 +367,7 @@ class TravelServiceTest {
     }
 
     private TravelUser travelUser(Long travelUserId, Travel travel, User user, Role role, String travelNickname) {
+        // 여행 참여자와 권한을 표현하는 fixture.
         return TravelUser.builder()
                 .travelUserId(travelUserId)
                 .travel(travel)
@@ -365,6 +378,7 @@ class TravelServiceTest {
     }
 
     private User user(Long userId, String email, String nickname) {
+        // TravelService 테스트에서는 인증/비밀번호가 중요하지 않아 최소 필드만 채운다.
         return User.builder()
                 .userId(userId)
                 .email(email)
@@ -377,6 +391,7 @@ class TravelServiceTest {
     }
 
     private Image image(Long imageId, String imageUrl, String objectKey) {
+        // 이미지가 연결된 상태를 표현하기 위한 fixture.
         return Image.builder()
                 .imageId(imageId)
                 .imageUrl(imageUrl)
