@@ -51,6 +51,8 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class PaymentServiceTest {
 
+    // PaymentService는 결제, 정산, 이미지, 여행 공금 등 의존성이 많다.
+    // 이 테스트에서는 모든 의존성을 Mock으로 두고 PaymentService의 계산/상태 변경만 검증한다.
     @Mock
     private PaymentRepository paymentRepository;
 
@@ -78,6 +80,7 @@ class PaymentServiceTest {
     @Mock
     private ExchangeRateUpdateService exchangeRateUpdateService;
 
+    // 위 Mock들을 PaymentService 생성자에 주입한다.
     @InjectMocks
     private PaymentService paymentService;
 
@@ -110,14 +113,17 @@ class PaymentServiceTest {
                         )
                 ))
         );
+        // 결제 저장에 필요한 공통 Repository 응답을 한 번에 준비한다.
         stubBasePaymentSave(category, payerTravelUser, travel, 1.0);
         when(travelUserRepository.getReferenceById(payerTravelUser.getTravelUserId())).thenReturn(payerTravelUser);
         when(travelUserRepository.getReferenceById(memberTravelUser.getTravelUserId())).thenReturn(memberTravelUser);
+        // 실제 DB가 없으므로 정산 저장 시 ID가 생긴 것처럼 응답한다.
         when(settlementRepository.save(any(Settlement.class))).thenAnswer(invocation -> {
             Settlement settlement = invocation.getArgument(0);
             settlement.setSettlementId(200L);
             return settlement;
         });
+        // 정산 참여자도 저장 후 ID가 생긴 것처럼 응답한다.
         when(settlementUserRepository.save(any(SettlementUser.class))).thenAnswer(invocation -> {
             SettlementUser settlementUser = invocation.getArgument(0);
             settlementUser.setSettlementUserId(settlementUser.getTravelUser().getTravelUserId() + 1000);
@@ -137,6 +143,7 @@ class PaymentServiceTest {
         assertThat(response.settlements().get(0).isPaid()).isFalse();
         assertThat(response.settlements().get(0).travelUsers()).hasSize(2);
 
+        // 각 참여자에게 저장된 정산 금액과 결제 완료 여부를 직접 확인한다.
         ArgumentCaptor<SettlementUser> settlementUserCaptor = ArgumentCaptor.forClass(SettlementUser.class);
         verify(settlementUserRepository, times(2)).save(settlementUserCaptor.capture());
         assertThat(settlementUserCaptor.getAllValues())
@@ -228,6 +235,7 @@ class PaymentServiceTest {
         payment.setCurrency(Currency.YEN);
         payment.setExchangeRate(9.5);
         Settlement settlement = settlement(200L, payment, 1000L, false);
+        // 외화 결제는 settlement.amount * exchangeRate를 먼저 계산한 뒤 인원수로 나눈다.
         when(settlementUserRepository.save(any(SettlementUser.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         SettlementUser result = paymentService.saveSettlementUserEntity(travelUser, settlement, 2L, payment, false);
@@ -250,6 +258,7 @@ class PaymentServiceTest {
         Settlement settlement = settlement(200L, payment, 12000L, false);
         SettlementUser settlementUser = settlementUser(400L, settlement, payerTravelUser, 12000L, false);
         PaymentImage paymentImage = paymentImage(500L, payment, image(30L, "https://cdn.example.com/receipt.png", "receipt.png"));
+        // 상세 조회는 Payment 기준으로 정산 목록, 정산 참여자, 첨부 이미지를 차례로 조립한다.
         when(paymentRepository.getReferenceById(300L)).thenReturn(payment);
         when(settlementRepository.findByPayment_PaymentIdAndIsActiveTrue(300L)).thenReturn(List.of(settlement));
         when(settlementUserRepository.findBySettlementAndIsActiveTrue(settlement)).thenReturn(List.of(settlementUser));
@@ -274,6 +283,7 @@ class PaymentServiceTest {
         TravelUser travelUser = travelUser(100L, travel, user(1L, "payer@example.com", "지민"), "지민");
         Category category = category(20L, "식비", PaymentType.PAYMENT);
         Payment payment = payment(300L, travel, travelUser, category, 12000L, PaymentType.PAYMENT, Payer.INDIVIDUAL);
+        // date 파라미터는 해당 날짜 00:00부터 다음 날 00:00 전까지의 범위로 변환된다.
         when(paymentRepository.findAllByTravelAndTypeAndPayTimeBetweenAndIsActiveTrue(
                 eq(travel),
                 eq(PaymentType.PAYMENT),
@@ -303,6 +313,7 @@ class PaymentServiceTest {
         PaymentImage paymentImage = paymentImage(500L, payment, receiptImage);
         Settlement settlement = settlement(200L, payment, 4000L, false);
         SettlementUser settlementUser = settlementUser(400L, settlement, payer, 4000L, false);
+        // 삭제는 Payment만 지우는 것이 아니라 이미지/정산/정산 참여자까지 soft delete한다.
         when(paymentRepository.getReferenceById(300L)).thenReturn(payment);
         when(paymentImageRepository.findByPayment_PaymentId(300L)).thenReturn(List.of(paymentImage));
         when(paymentImageRepository.findByPaymentImageIdAndIsActiveTrue(500L)).thenReturn(Optional.of(paymentImage));
@@ -332,6 +343,7 @@ class PaymentServiceTest {
         Settlement settlement = settlement(200L, payment, 12000L, false);
         SettlementUser paidPayer = settlementUser(400L, settlement, payer, 6000L, true);
         SettlementUser unpaidMember = settlementUser(401L, settlement, member, 6000L, false);
+        // 기록된 결제만 포함하도록 옵션을 구성하면 PaymentType.PAYMENT 정산만 조회된다.
         when(settlementRepository.findSettlementByOptions(
                 eq(travel),
                 eq(List.of(PaymentType.PAYMENT)),
