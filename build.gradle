@@ -7,6 +7,8 @@ plugins {
 group = 'com.yoen'
 version = '0.0.1-SNAPSHOT'
 
+ext['testcontainers.version'] = '1.21.4'
+
 java {
 	toolchain {
 		languageVersion = JavaLanguageVersion.of(17)
@@ -53,6 +55,8 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:3.0.4'
 	testImplementation 'org.springframework.security:spring-security-test'
+	testImplementation 'org.testcontainers:junit-jupiter:1.21.4'
+	testImplementation 'org.testcontainers:postgresql:1.21.4'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
