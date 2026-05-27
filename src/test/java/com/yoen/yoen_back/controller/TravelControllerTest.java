@@ -57,6 +57,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class TravelControllerTest {
 
+    // TravelController의 권한 체크 위임과 TravelService 호출 흐름을 MVC 레벨에서 검증한다.
     @Autowired
     private MockMvc mockMvc;
 
@@ -72,6 +73,7 @@ class TravelControllerTest {
     @TestConfiguration
     static class TestSecurityConfig {
 
+        // 테스트에서는 JWT 필터를 제외하고 요청별 principal만 직접 주입한다.
         @Bean
         SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {
             http
@@ -83,6 +85,7 @@ class TravelControllerTest {
 
     @Test
     void getAllTravelByUser_authenticatedUser_returnsTravelList() throws Exception {
+        // 인증 사용자 기준 여행 목록 조회가 TravelService로 위임되는지 검증한다.
         CustomUserDetails userDetails = new CustomUserDetails(userEntity());
         when(travelService.getAllTravelByUser(userDetails.user())).thenReturn(List.of(travelResponse()));
 
@@ -99,6 +102,7 @@ class TravelControllerTest {
 
     @Test
     void travel_returnsAllTravels() throws Exception {
+        // 관리자/디버그용 전체 여행 조회 엔드포인트의 응답 매핑을 검증한다.
         Travel travel = travelEntity();
         when(travelService.getAllTravels()).thenReturn(List.of(travel));
 
@@ -114,6 +118,7 @@ class TravelControllerTest {
 
     @Test
     void setTravel_authenticatedUser_createsTravel() throws Exception {
+        // 여행 생성 요청 body와 인증 사용자가 TravelService.createTravel로 전달되는지 검증한다.
         CustomUserDetails userDetails = new CustomUserDetails(userEntity());
         TravelRequestDto request = travelRequest();
         when(travelService.createTravel(userDetails.user(), request)).thenReturn(travelResponse());
@@ -134,6 +139,7 @@ class TravelControllerTest {
 
     @Test
     void deleteTravel_writerUser_deletesTravel() throws Exception {
+        // WRITER 권한 체크 후 여행 삭제 서비스가 호출되는지 검증한다.
         CustomUserDetails userDetails = new CustomUserDetails(userEntity());
         TravelUser travelUser = travelUserEntity(Role.WRITER);
         when(authService.checkTravelUserRoleByTravel(userDetails.user(), 10L, List.of(Role.WRITER))).thenReturn(travelUser);
@@ -154,6 +160,7 @@ class TravelControllerTest {
 
     @Test
     void getTravelUser_authorizedUser_returnsTravelUserDto() throws Exception {
+        // READER/WRITER 권한 확인 후 현재 사용자의 TravelUser DTO를 반환하는지 검증한다.
         CustomUserDetails userDetails = new CustomUserDetails(userEntity());
         TravelUser travelUser = travelUserEntity(Role.READER);
         TravelUserDto response = new TravelUserDto(100L, 1L, 10L, Role.READER, "alice-trip");
@@ -175,6 +182,7 @@ class TravelControllerTest {
 
     @Test
     void updateTravelNickname_authorizedUser_updatesNickname() throws Exception {
+        // 권한 확인 후 여행 내 닉네임 수정 요청이 서비스로 전달되는지 검증한다.
         CustomUserDetails userDetails = new CustomUserDetails(userEntity());
         TravelNicknameUpdateDto request = new TravelNicknameUpdateDto(100L, 10L, "new-nickname");
         TravelUser travelUser = travelUserEntity(Role.READER);
@@ -196,6 +204,7 @@ class TravelControllerTest {
 
     @Test
     void getAllTravelUsers_authorizedUser_returnsTravelUsers() throws Exception {
+        // 여행 참여자 전체 목록은 ApiResponse 없이 리스트를 직접 반환하는 현재 동작을 검증한다.
         CustomUserDetails userDetails = new CustomUserDetails(userEntity());
         TravelUser travelUser = travelUserEntity(Role.WRITER);
         TravelUserDto response = new TravelUserDto(100L, 1L, 10L, Role.WRITER, "alice-trip");
@@ -215,6 +224,7 @@ class TravelControllerTest {
 
     @Test
     void getDetailTravelUsers_authorizedUser_returnsUserDetails() throws Exception {
+        // 여행 참여자 상세 조회가 권한 체크 후 상세 DTO 리스트로 반환되는지 검증한다.
         CustomUserDetails userDetails = new CustomUserDetails(userEntity());
         TravelUser travelUser = travelUserEntity(Role.WRITER);
         TravelUserResponseDto response = new TravelUserResponseDto(100L, "Alice", "alice-trip", Gender.FEMALE, LocalDate.of(2000, 1, 1), "");
@@ -236,6 +246,7 @@ class TravelControllerTest {
 
     @Test
     void leaveTravel_authorizedUser_leavesTravel() throws Exception {
+        // 여행 나가기 요청이 권한 체크 후 TravelService.leaveTravel로 위임되는지 검증한다.
         CustomUserDetails userDetails = new CustomUserDetails(userEntity());
         TravelUser travelUser = travelUserEntity(Role.READER);
         when(authService.checkTravelUserRoleByTravel(userDetails.user(), 10L, List.of(Role.READER, Role.WRITER))).thenReturn(travelUser);
@@ -254,6 +265,7 @@ class TravelControllerTest {
 
     @Test
     void updateTravelProfileImage_authorizedUser_updatesProfileImage() throws Exception {
+        // multipart dto/image 요청이 여행 대표 이미지 수정 서비스로 전달되는지 검증한다.
         CustomUserDetails userDetails = new CustomUserDetails(userEntity());
         TravelUser travelUser = travelUserEntity(Role.READER);
         TravelProfileImageDto request = new TravelProfileImageDto(10L, -1L);
@@ -282,6 +294,7 @@ class TravelControllerTest {
 
     @Test
     void getTravelDetail_authorizedUser_returnsTravelDetail() throws Exception {
+        // 여행 상세 조회가 권한 체크 후 TravelService.getTravelDetail로 위임되는지 검증한다.
         CustomUserDetails userDetails = new CustomUserDetails(userEntity());
         when(authService.checkTravelUserRoleByTravel(userDetails.user(), 10L, List.of(Role.READER, Role.WRITER))).thenReturn(travelUserEntity(Role.READER));
         when(travelService.getTravelDetail(10L)).thenReturn(travelResponse());
@@ -300,10 +313,12 @@ class TravelControllerTest {
     }
 
     private UsernamePasswordAuthenticationToken authenticationToken(CustomUserDetails userDetails) {
+        // @AuthenticationPrincipal에 CustomUserDetails를 주입하기 위한 인증 fixture.
         return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
     }
 
     private User userEntity() {
+        // 컨트롤러 인증/권한 검증에 사용하는 최소 사용자 fixture.
         return User.builder()
                 .userId(1L)
                 .email("alice@example.com")
@@ -316,6 +331,7 @@ class TravelControllerTest {
     }
 
     private Travel travelEntity() {
+        // TravelService mock 응답과 권한 체크 결과에 사용할 여행 fixture.
         return Travel.builder()
                 .travelId(10L)
                 .travelName("Tokyo Trip")
@@ -329,6 +345,7 @@ class TravelControllerTest {
     }
 
     private TravelUser travelUserEntity(Role role) {
+        // AuthService 권한 체크 mock 결과로 반환할 TravelUser fixture.
         return TravelUser.builder()
                 .travelUserId(100L)
                 .travel(travelEntity())
@@ -339,6 +356,7 @@ class TravelControllerTest {
     }
 
     private TravelRequestDto travelRequest() {
+        // 여행 생성 요청 body fixture.
         return new TravelRequestDto(
                 null,
                 "Tokyo Trip",
@@ -351,6 +369,7 @@ class TravelControllerTest {
     }
 
     private TravelResponseDto travelResponse() {
+        // 여행 조회/생성 응답 fixture.
         return new TravelResponseDto(
                 10L,
                 3L,
