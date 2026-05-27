@@ -46,6 +46,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class ImageControllerTest {
 
+    // ImageController의 multipart 업로드와 삭제 요청 매핑을 서비스 mock으로 검증한다.
     @Autowired
     private MockMvc mockMvc;
 
@@ -58,6 +59,7 @@ class ImageControllerTest {
     @TestConfiguration
     static class TestSecurityConfig {
 
+        // 이미지 컨트롤러 테스트에서는 JWT 검증 대신 principal을 직접 주입한다.
         @Bean
         SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {
             http
@@ -69,6 +71,7 @@ class ImageControllerTest {
 
     @Test
     void upload_authenticatedUserAndImage_returnsImageUrl() throws Exception {
+        // 단일 이미지 multipart 요청이 ImageService.saveImage로 전달되는지 검증한다.
         CustomUserDetails userDetails = new CustomUserDetails(userEntity());
         MockMultipartFile imageFile = new MockMultipartFile("image", "image.jpg", "image/jpeg", "image".getBytes());
         Image image = imageEntity(10L, "image.jpg", "https://image.example/image.jpg");
@@ -88,6 +91,7 @@ class ImageControllerTest {
 
     @Test
     void uploadMultiple_authenticatedUserAndImages_returnsImageUrls() throws Exception {
+        // 여러 이미지 multipart 요청이 ImageService.saveImages로 전달되는지 검증한다.
         CustomUserDetails userDetails = new CustomUserDetails(userEntity());
         MockMultipartFile firstImage = new MockMultipartFile("images", "first.jpg", "image/jpeg", "first".getBytes());
         MockMultipartFile secondImage = new MockMultipartFile("images", "second.jpg", "image/jpeg", "second".getBytes());
@@ -111,6 +115,7 @@ class ImageControllerTest {
 
     @Test
     void deleteSingle_existingImage_returnsDeletedMessage() throws Exception {
+        // 이미지 ID path variable이 단일 삭제 서비스로 전달되는지 검증한다.
         when(imageService.deleteImage(10L)).thenReturn("https://image.example/image.jpg");
 
         mockMvc.perform(delete("/image/delete/{imageId}", 10L)
@@ -125,6 +130,7 @@ class ImageControllerTest {
 
     @Test
     void deleteMultiple_existingImages_returnsDeletedMessage() throws Exception {
+        // 이미지 ID 목록 request body가 여러 이미지 삭제 서비스로 전달되는지 검증한다.
         IdListRequest request = new IdListRequest(List.of(10L, 11L));
         when(imageService.deleteImages(List.of(10L, 11L))).thenReturn(List.of("https://image.example/first.jpg", "https://image.example/second.jpg"));
 
@@ -141,10 +147,12 @@ class ImageControllerTest {
     }
 
     private UsernamePasswordAuthenticationToken authenticationToken(CustomUserDetails userDetails) {
+        // @AuthenticationPrincipal에 CustomUserDetails를 주입하기 위한 인증 fixture.
         return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
     }
 
     private User userEntity() {
+        // 이미지 업로드 요청의 인증 사용자 fixture.
         return User.builder()
                 .userId(1L)
                 .email("alice@example.com")
@@ -157,6 +165,7 @@ class ImageControllerTest {
     }
 
     private Image imageEntity(Long imageId, String objectKey, String imageUrl) {
+        // ImageService mock이 반환할 이미지 fixture.
         return Image.builder()
                 .imageId(imageId)
                 .user(userEntity())
