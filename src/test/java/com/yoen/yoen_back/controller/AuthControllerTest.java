@@ -28,6 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc(addFilters = false)
 class AuthControllerTest {
 
+    // AuthController만 MVC slice로 띄우고 AuthService는 mock으로 대체한다.
     @Autowired
     private MockMvc mockMvc;
 
@@ -39,6 +40,7 @@ class AuthControllerTest {
 
     @Test
     void refreshToken_validRefreshToken_returnsTokenResponse() throws Exception {
+        // refreshToken 요청이 AuthService로 전달되고 ApiResponse<TokenResponse>로 감싸지는지 검증한다.
         RefreshTokenRequestDto request = new RefreshTokenRequestDto("old-refresh-token");
         TokenResponse tokenResponse = new TokenResponse("new-access-token", "new-refresh-token");
         when(authService.reissueTokens("old-refresh-token")).thenReturn(tokenResponse);
