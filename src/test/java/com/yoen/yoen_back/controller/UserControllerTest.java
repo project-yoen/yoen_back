@@ -50,6 +50,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class UserControllerTest {
 
+    // UserController의 요청 매핑과 응답 형태만 검증하고 서비스 로직은 mock으로 고정한다.
     @Autowired
     private MockMvc mockMvc;
 
@@ -65,6 +66,7 @@ class UserControllerTest {
     @TestConfiguration
     static class TestSecurityConfig {
 
+        // 테스트에서는 JWT 검증을 제외하고 @AuthenticationPrincipal 주입만 사용할 수 있게 둔다.
         @Bean
         SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {
             http
@@ -76,6 +78,7 @@ class UserControllerTest {
 
     @Test
     void signUp_validRequest_callsUserServiceAndReturnsSuccess() throws Exception {
+        // 회원가입 요청 body가 UserService.register로 전달되는지 검증한다.
         RegisterRequestDto request = new RegisterRequestDto(
                 "password",
                 "Alice",
@@ -100,6 +103,7 @@ class UserControllerTest {
 
     @Test
     void login_validRequest_returnsLoginResponse() throws Exception {
+        // 로그인 요청이 AuthService로 전달되고 토큰 응답이 JSON으로 내려오는지 검증한다.
         LoginRequestDto request = new LoginRequestDto("alice@example.com", "password");
         UserResponseDto userResponse = userResponse();
         LoginResponseDto response = new LoginResponseDto(userResponse, "access-token", "refresh-token");
@@ -122,6 +126,7 @@ class UserControllerTest {
 
     @Test
     void existEmail_validEmail_returnsBoolean() throws Exception {
+        // 이메일 중복 확인 요청 파라미터가 UserService로 전달되는지 검증한다.
         when(userService.validateEmail("alice@example.com")).thenReturn(true);
 
         mockMvc.perform(get("/user/exists")
@@ -136,6 +141,7 @@ class UserControllerTest {
 
     @Test
     void profile_authenticatedUser_returnsUserResponse() throws Exception {
+        // 인증 principal의 userId로 프로필을 조회하는지 검증한다.
         CustomUserDetails userDetails = new CustomUserDetails(userEntity());
         when(userService.findUserResponseById(1L)).thenReturn(userResponse());
 
@@ -153,6 +159,7 @@ class UserControllerTest {
 
     @Test
     void updateUser_authenticatedUser_returnsUpdatedUserResponse() throws Exception {
+        // 인증된 사용자와 수정 DTO가 UserService.updateUser로 전달되는지 검증한다.
         CustomUserDetails userDetails = new CustomUserDetails(userEntity());
         UpdateUserDto request = new UpdateUserDto(1L, "Alice Updated", Gender.FEMALE, "alice-updated", "2000-01-02");
         UserResponseDto response = new UserResponseDto(1L, "Alice Updated", "alice@example.com", Gender.FEMALE, "alice-updated", LocalDate.of(2000, 1, 2), "");
@@ -175,6 +182,7 @@ class UserControllerTest {
 
     @Test
     void setProfileImage_authenticatedUserAndMultipartFile_returnsImageUrl() throws Exception {
+        // multipart profileImage가 프로필 이미지 저장 서비스로 전달되는지 검증한다.
         CustomUserDetails userDetails = new CustomUserDetails(userEntity());
         MockMultipartFile profileImage = new MockMultipartFile("profileImage", "profile.jpg", "image/jpeg", "image".getBytes());
         when(userService.saveProfileUrl(eq(userDetails.user()), any())).thenReturn("https://image.example/profile.jpg");
@@ -192,6 +200,7 @@ class UserControllerTest {
     }
 
     private User userEntity() {
+        // @AuthenticationPrincipal 테스트에 사용할 최소 User fixture.
         return User.builder()
                 .userId(1L)
                 .email("alice@example.com")
@@ -204,10 +213,12 @@ class UserControllerTest {
     }
 
     private UsernamePasswordAuthenticationToken authenticationToken(CustomUserDetails userDetails) {
+        // MockMvc 요청에 CustomUserDetails principal을 넣기 위한 인증 fixture.
         return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
     }
 
     private UserResponseDto userResponse() {
+        // UserController 응답 검증에 재사용하는 사용자 DTO fixture.
         return new UserResponseDto(
                 1L,
                 "Alice",
