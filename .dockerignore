@@ -1,13 +1,18 @@
 .git
 .gradle
-build
 .idea
+build
+out
+bin
 .vscode
 
 .env
 .env.*
-
+secrets
 *.iml
+*.iws
+*.ipr
+HELP.md
 .DS_Store
 **/.DS_Store
 
