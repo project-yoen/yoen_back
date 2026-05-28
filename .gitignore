@@ -4,6 +4,7 @@ build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
+firebase
 
 ### STS ###
 .apt_generated
@@ -36,5 +37,8 @@ out/
 ### VS Code ###
 .vscode/
 .env
+.env.*
+!.env.ec2.example
+secrets/
 .DS_Store
 **/.DS_Store

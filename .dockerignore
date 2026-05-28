@@ -1,0 +1,13 @@
+.git
+.gradle
+.idea
+build
+out
+bin
+.env
+.env.*
+secrets
+*.iml
+*.iws
+*.ipr
+HELP.md
