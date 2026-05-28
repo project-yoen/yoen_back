@@ -1,0 +1,74 @@
+name: Deploy Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Image tag to deploy. Leave empty to deploy main.
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  DEPLOY_SCRIPT: /opt/yoen/deploy.sh
+
+jobs:
+  deploy:
+    name: Deploy to production
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Resolve image tag
+        id: image
+        shell: bash
+        env:
+          REQUESTED_TAG: ${{ inputs.tag }}
+        run: |
+          IMAGE_TAG="${REQUESTED_TAG:-main}"
+
+          if [[ ! "$IMAGE_TAG" =~ ^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$ ]]; then
+            echo "Invalid Docker image tag: $IMAGE_TAG" >&2
+            exit 1
+          fi
+
+          echo "tag=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Configure SSH
+        shell: bash
+        env:
+          PROD_HOST: ${{ secrets.PROD_HOST }}
+          PROD_SSH_KEY: ${{ secrets.PROD_SSH_KEY }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$PROD_SSH_KEY" > ~/.ssh/prod_key
+          chmod 600 ~/.ssh/prod_key
+          ssh-keyscan -H "$PROD_HOST" >> ~/.ssh/known_hosts
+
+      - name: Run deployment
+        shell: bash
+        env:
+          PROD_HOST: ${{ secrets.PROD_HOST }}
+          PROD_USER: ${{ secrets.PROD_USER }}
+          IMAGE_TAG: ${{ steps.image.outputs.tag }}
+        run: |
+          ssh -i ~/.ssh/prod_key "$PROD_USER@$PROD_HOST" "$DEPLOY_SCRIPT $IMAGE_TAG"
+
+      - name: Check production health
+        shell: bash
+        env:
+          PROD_HEALTH_URL: ${{ secrets.PROD_HEALTH_URL }}
+        run: |
+          for attempt in {1..30}; do
+            if curl --fail --silent --show-error --max-time 5 "$PROD_HEALTH_URL"; then
+              echo "Production health check passed."
+              exit 0
+            fi
+
+            echo "Health check failed. Retrying in 5 seconds... ($attempt/30)"
+            sleep 5
+          done
+
+          echo "Production health check failed after deployment." >&2
+          exit 1

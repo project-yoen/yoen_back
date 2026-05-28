@@ -4,6 +4,8 @@
 build
 out
 bin
+.vscode
+
 .env
 .env.*
 secrets
@@ -11,3 +13,8 @@ secrets
 *.iws
 *.ipr
 HELP.md
+.DS_Store
+**/.DS_Store
+
+src/main/resources/firebase
+src/main/resources/firebase/**
