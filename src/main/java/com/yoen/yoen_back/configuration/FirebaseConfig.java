@@ -11,7 +11,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
+import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 @Slf4j
 @Configuration
@@ -29,8 +32,7 @@ public class FirebaseConfig {
             String resourcePath = env.getProperty("firebase.config.path");
             String storageBucket = env.getProperty("firebase.storage.bucket");
 
-            try (InputStream serviceAccount = getClass().getClassLoader().getResourceAsStream(resourcePath)) {
-                assert serviceAccount != null;
+            try (InputStream serviceAccount = openFirebaseConfig(resourcePath)) {
                 FirebaseOptions options = FirebaseOptions.builder()
                         .setCredentials(GoogleCredentials.fromStream(serviceAccount))
                         .setStorageBucket(storageBucket)
@@ -43,6 +45,20 @@ public class FirebaseConfig {
             }
         }
     }
+    private InputStream openFirebaseConfig(String resourcePath) throws Exception {
+        InputStream classpathResource = getClass().getClassLoader().getResourceAsStream(resourcePath);
+        if (classpathResource != null) {
+            return classpathResource;
+        }
+
+        Path filePath = Path.of(resourcePath);
+        if (Files.exists(filePath)) {
+            return Files.newInputStream(filePath);
+        }
+
+        throw new FileNotFoundException("Firebase config not found: " + resourcePath);
+    }
+
     @Bean
     public Bucket bucket() {
         return StorageClient.getInstance().bucket(); // 이걸 Bean으로만 등록
