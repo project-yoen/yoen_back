@@ -1,0 +1,15 @@
+.git
+.gradle
+build
+.idea
+.vscode
+
+.env
+.env.*
+
+*.iml
+.DS_Store
+**/.DS_Store
+
+src/main/resources/firebase
+src/main/resources/firebase/**
