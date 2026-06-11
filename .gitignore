@@ -38,7 +38,7 @@ out/
 .vscode/
 .env
 .env.*
-!.env.ec2.example
+!.env.example
 secrets/
 .DS_Store
 **/.DS_Store
