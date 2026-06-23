@@ -10,4 +10,5 @@ import java.util.Optional;
 public interface DestinationRepository extends JpaRepository<Destination, Long> {
     Optional<Destination> findByDestinationIdAndIsActiveTrue(Long destinationId);
     List<Destination> findByNationAndIsActiveTrue(Nation nation);
+    boolean existsByNationAndName(Nation nation, String name);
 }
