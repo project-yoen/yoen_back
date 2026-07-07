@@ -318,7 +318,7 @@ class TravelServiceTest {
         Image oldImage = image(1L, "https://cdn.example.com/old.png", "old.png");
         Image recordImage = image(2L, "https://cdn.example.com/record.png", "record.png");
         Image copiedImage = image(3L, "https://cdn.example.com/copied.png", "copied.png");
-        // 기존 대표 이미지가 있으면 삭제하고, 기록 이미지 URL을 복사해 새 대표 이미지로 사용한다.
+        // 기존 대표 이미지가 있으면 삭제하고, 기록 이미지 파일을 복사해 새 대표 이미지로 사용한다.
         travel.setTravelImage(oldImage);
         TravelRecordImage travelRecordImage = TravelRecordImage.builder()
                 .travelRecord(TravelRecord.builder().travel(travel).build())
@@ -326,13 +326,13 @@ class TravelServiceTest {
                 .build();
         when(travelRecordImageRepository.findByTravelRecordImageIdAndIsActiveTrue(20L))
                 .thenReturn(Optional.of(travelRecordImage));
-        when(imageService.saveImageByUrl(user, "https://cdn.example.com/record.png")).thenReturn(copiedImage);
+        when(imageService.copyImage(user, recordImage)).thenReturn(copiedImage);
 
         travelService.updateTravelProfileImage(user, travel, new TravelProfileImageDto(10L, 20L), null);
 
         assertThat(travel.getTravelImage()).isSameAs(copiedImage);
         verify(imageService).deleteImage(oldImage);
-        verify(imageService).saveImageByUrl(user, "https://cdn.example.com/record.png");
+        verify(imageService).copyImage(user, recordImage);
     }
 
     @Test

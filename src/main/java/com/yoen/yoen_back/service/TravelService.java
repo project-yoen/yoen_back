@@ -204,7 +204,7 @@ public class TravelService {
             Optional<TravelRecordImage> tri = travelRecordImageRepository.findByTravelRecordImageIdAndIsActiveTrue(request.recordImageId());
             tri.ifPresent(travelRecordImage -> {
                 Image tmpImage = travelRecordImage.getImage();
-                Image profileImage = imageService.saveImageByUrl(user, tmpImage.getImageUrl());
+                Image profileImage = imageService.copyImage(user, tmpImage);
                 tv.setTravelImage(profileImage);
             });
         } else {

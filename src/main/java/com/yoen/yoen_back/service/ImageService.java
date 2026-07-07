@@ -41,6 +41,17 @@ public class ImageService {
         return imageRepository.save(image);
     }
 
+    public Image copyImage(User user, Image sourceImage) {
+        UploadedImage uploadedImage = imageUploadService.copyImage(user, sourceImage.getObjectKey());
+
+        Image image = Image.builder()
+                .imageUrl(uploadedImage.imageUrl())
+                .objectKey(uploadedImage.objectKey())
+                .user(user)
+                .build();
+        return imageRepository.save(image);
+    }
+
     // url 로 다운 받아서 재저장하는 함수
     public Image saveImageByUrl(User user, String imageUrl) {
         DefaultUriBuilderFactory f = new DefaultUriBuilderFactory();

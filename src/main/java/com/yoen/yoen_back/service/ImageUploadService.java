@@ -43,14 +43,31 @@ public class ImageUploadService {
                     .build()
                     .update();
 
-            String encodedName = URLEncoder.encode(blob.getName(), StandardCharsets.UTF_8);
-            String imageUrl = String.format("https://firebasestorage.googleapis.com/v0/b/%s/o/%s?alt=media&token=%s",
-                    bucket.getName(), encodedName, token);
+            String imageUrl = getImageUrl(blob.getName(), token);
             return new UploadedImage(objectKey, imageUrl);
 
         } catch (IOException e) {
             throw new RuntimeException("사진 업로드 실패", e);
         }
+    }
+
+    public UploadedImage copyImage(User user, String sourceObjectKey) {
+        Blob sourceBlob = bucket.get(sourceObjectKey);
+        if (sourceBlob == null) {
+            throw new IllegalStateException("복사할 이미지가 존재하지 않습니다.");
+        }
+
+        String ext = extractExtension(sourceObjectKey);
+        String objectKey = "images/user_" + user.getUserId() + "/" + UUID.randomUUID() + "." + ext;
+        Blob copiedBlob = sourceBlob.copyTo(bucket.getName(), objectKey).getResult();
+        String token = UUID.randomUUID().toString();
+
+        copiedBlob.toBuilder()
+                .setMetadata(Map.of("firebaseStorageDownloadTokens", token))
+                .build()
+                .update();
+
+        return new UploadedImage(objectKey, getImageUrl(objectKey, token));
     }
 
     // 여러 이미지 업로드 처리하는 함수
@@ -72,6 +89,20 @@ public class ImageUploadService {
         if (!deleted) {
             throw new RuntimeException("파일 삭제 실패: " + objectKey);
         }
+    }
+
+    private String extractExtension(String objectKey) {
+        int dotIndex = objectKey.lastIndexOf('.');
+        if (dotIndex == -1 || dotIndex == objectKey.length() - 1) {
+            return "jpg";
+        }
+        return objectKey.substring(dotIndex + 1);
+    }
+
+    private String getImageUrl(String objectKey, String token) {
+        String encodedName = URLEncoder.encode(objectKey, StandardCharsets.UTF_8);
+        return String.format("https://firebasestorage.googleapis.com/v0/b/%s/o/%s?alt=media&token=%s",
+                bucket.getName(), encodedName, token);
     }
 
 }

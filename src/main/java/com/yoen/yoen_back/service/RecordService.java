@@ -92,7 +92,7 @@ public class RecordService {
             // travel 대표이미지 설정 안되어있으면 첫번째로 등록하는걸로 하기
             if (tv.getTravelImage() == null) {
                 log.info(images.get(0).getImageUrl());
-                Image profileImage = imageService.saveImageByUrl(user, images.get(0).getImageUrl());
+                Image profileImage = imageService.copyImage(user, images.get(0));
                 tv.setTravelImage(profileImage);
             }
             // TODO: 여기서부턴 좀 수정이 있어야할거 같음 지금 이미지를 불러다가 응답하는게 좀 복잡함 (왜 세개로 분리했는지 고민)
@@ -136,7 +136,7 @@ public class RecordService {
             // travel 대표이미지 설정 안되어있으면 첫번째로 등록하는걸로 하기
             if (tv.getTravelImage() == null) {
                 log.info(images.get(0).getImageUrl());
-                Image profileImage = imageService.saveImageByUrl(user, images.get(0).getImageUrl());
+                Image profileImage = imageService.copyImage(user, images.get(0));
                 tv.setTravelImage(profileImage);
             }
             // TODO: 여기서부턴 좀 수정이 있어야할거 같음 지금 이미지를 불러다가 응답하는게 좀 복잡함 (왜 세개로 분리했는지 고민)
