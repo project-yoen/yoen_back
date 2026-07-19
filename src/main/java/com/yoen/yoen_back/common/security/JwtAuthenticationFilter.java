@@ -37,12 +37,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             if (token != null && jwtProvider.validateToken(token)) {
                 String userId = jwtProvider.getUserIdFromToken(token);
-                log.info("유저 아이디 {}", userId);
                 User user = userService.findById(Long.parseLong(userId));
 
                 // CustomUserDetails로 wrapping
                 CustomUserDetails userDetails = new CustomUserDetails(user);
-                log.info("유저 정보 {}", user.getName());
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 

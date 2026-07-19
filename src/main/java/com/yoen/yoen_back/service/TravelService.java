@@ -186,7 +186,7 @@ public class TravelService {
     public Boolean decreaseNumOfJoinedPeople(Travel tv) {
         Long numOfJoinedPeople = tv.getNumOfJoinedPeople();
         if (numOfJoinedPeople - 1 >= 0) {
-            log.info(String.valueOf(numOfJoinedPeople - 1));
+            log.debug(String.valueOf(numOfJoinedPeople - 1));
             tv.setNumOfJoinedPeople(numOfJoinedPeople - 1);
             travelRepository.save(tv);
             return true;

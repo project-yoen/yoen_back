@@ -14,7 +14,7 @@ services:
       FIREBASE_PATH: /run/secrets/firebase-service-account
       FIREBASE_BUCKET: ${FIREBASE_BUCKET}
       JWT_SECRET: ${JWT_SECRET}
-      JAVA_OPTS: "-Xms128m -Xmx384m"
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx384m"
     ports:
       - "8080:8080"
     secrets:

@@ -1,0 +1,42 @@
+services:
+  alloy:
+    image: grafana/alloy:v1.16.1
+    container_name: yoen-monitoring-alloy
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    environment:
+      GRAFANA_CLOUD_PROMETHEUS_URL: ${GRAFANA_CLOUD_PROMETHEUS_URL:?required}
+      GRAFANA_CLOUD_PROMETHEUS_USER: ${GRAFANA_CLOUD_PROMETHEUS_USER:?required}
+      GRAFANA_CLOUD_LOKI_URL: ${GRAFANA_CLOUD_LOKI_URL:?required}
+      GRAFANA_CLOUD_LOKI_USER: ${GRAFANA_CLOUD_LOKI_USER:?required}
+      GRAFANA_CLOUD_TOKEN: ${GRAFANA_CLOUD_TOKEN:?required}
+    ports:
+      - "127.0.0.1:12345:12345"
+    volumes:
+      - ./monitoring/alloy/cloud.config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/host/root:ro,rslave
+      - alloy_cloud_data:/var/lib/alloy/data
+    mem_limit: 192m
+    cpus: 0.25
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+    networks:
+      - yoen
+    restart: unless-stopped
+
+networks:
+  yoen:
+    external: true
+    name: yoen_default
+
+volumes:
+  alloy_cloud_data:

@@ -24,14 +24,12 @@ import com.yoen.yoen_back.repository.travel.TravelRecordRepository;
 import com.yoen.yoen_back.repository.travel.TravelRepository;
 import com.yoen.yoen_back.repository.travel.TravelUserRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.http.auth.InvalidCredentialsException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -67,8 +65,6 @@ public class AuthService {
 
         // redis에 토큰 저장
         refreshTokenRedisDao.save(userId, refreshToken);
-        log.info(refreshTokenRedisDao.get(userId));
-
         return new LoginResponseDto(user, accessToken, refreshToken);
     }
 

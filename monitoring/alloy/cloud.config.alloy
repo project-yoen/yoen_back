@@ -1,0 +1,162 @@
+logging {
+  level  = "info"
+  format = "logfmt"
+}
+
+discovery.docker "containers" {
+  host             = "unix:///var/run/docker.sock"
+  refresh_interval = "15s"
+}
+
+discovery.relabel "yoen_backend_metrics" {
+  targets = discovery.docker.containers.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_status"]
+    regex         = "running"
+    action        = "keep"
+  }
+
+  rule {
+    source_labels = [
+      "__meta_docker_container_label_com_docker_compose_service",
+      "__meta_docker_port_private",
+    ]
+    separator = ";"
+    regex     = "app-(blue|green);8080"
+    action    = "keep"
+  }
+
+  rule {
+    replacement = "/actuator/prometheus"
+    target_label = "__metrics_path__"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "instance"
+  }
+
+  rule {
+    replacement  = "yoen-backend"
+    target_label = "service"
+  }
+
+  rule {
+    replacement  = "yoen-backend"
+    target_label = "job"
+  }
+
+  rule {
+    replacement  = "production"
+    target_label = "environment"
+  }
+}
+
+prometheus.scrape "yoen_backend" {
+  targets         = discovery.relabel.yoen_backend_metrics.output
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+  forward_to      = [prometheus.remote_write.grafana_cloud.receiver]
+}
+
+prometheus.exporter.unix "host" {
+  procfs_path = "/host/proc"
+  sysfs_path  = "/host/sys"
+  rootfs_path = "/host/root"
+  set_collectors = [
+    "cpu",
+    "filesystem",
+    "loadavg",
+    "meminfo",
+    "netdev",
+    "stat",
+    "time",
+    "uname",
+    "vmstat",
+  ]
+}
+
+prometheus.scrape "host" {
+  targets         = prometheus.exporter.unix.host.targets
+  scrape_interval = "30s"
+  forward_to      = [prometheus.remote_write.grafana_cloud.receiver]
+}
+
+prometheus.remote_write "grafana_cloud" {
+  external_labels = {
+    environment = "production",
+    project     = "yoen",
+  }
+
+  endpoint {
+    url = sys.env("GRAFANA_CLOUD_PROMETHEUS_URL")
+
+    basic_auth {
+      username = sys.env("GRAFANA_CLOUD_PROMETHEUS_USER")
+      password = sys.env("GRAFANA_CLOUD_TOKEN")
+    }
+
+    queue_config {
+      max_shards           = 2
+      capacity             = 2500
+      max_samples_per_send = 1000
+    }
+  }
+}
+
+discovery.relabel "yoen_logs" {
+  targets = discovery.docker.containers.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_status"]
+    regex         = "running"
+    action        = "keep"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/yoen-back-.*"
+    action        = "keep"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "container"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    target_label  = "service"
+  }
+}
+
+loki.source.docker "yoen" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.relabel.yoen_logs.output
+  forward_to = [loki.process.yoen.receiver]
+}
+
+loki.process "yoen" {
+  stage.static_labels {
+    values = {
+      environment = "production",
+      project     = "yoen",
+    }
+  }
+
+  forward_to = [loki.write.grafana_cloud.receiver]
+}
+
+loki.write "grafana_cloud" {
+  endpoint {
+    url = sys.env("GRAFANA_CLOUD_LOKI_URL")
+
+    basic_auth {
+      username = sys.env("GRAFANA_CLOUD_LOKI_USER")
+      password = sys.env("GRAFANA_CLOUD_TOKEN")
+    }
+  }
+}
