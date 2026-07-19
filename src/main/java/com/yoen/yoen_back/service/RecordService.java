@@ -91,7 +91,7 @@ public class RecordService {
             List<Image> images = imageService.saveImages(user, files); // 클라우드에 업로드 및 image 레포지토리에 저장
             // travel 대표이미지 설정 안되어있으면 첫번째로 등록하는걸로 하기
             if (tv.getTravelImage() == null) {
-                log.info(images.get(0).getImageUrl());
+                log.debug(images.get(0).getImageUrl());
                 Image profileImage = imageService.saveImageByUrl(user, images.get(0).getImageUrl());
                 tv.setTravelImage(profileImage);
             }
@@ -119,7 +119,7 @@ public class RecordService {
         TravelRecord tr = travelRecordRepository.getReferenceById(dto.travelRecordId());
         Travel tv = tr.getTravel();
         TravelUser tu = tr.getTravelUser();
-        log.info(dto.removeImageIds().toString());
+        log.debug(dto.removeImageIds().toString());
         // 이미지 삭제
         dto.removeImageIds().forEach(this::deleteTravelRecordImage);
 
@@ -135,7 +135,7 @@ public class RecordService {
             List<Image> images = imageService.saveImages(user, files); // 클라우드에 업로드 및 image 레포지토리에 저장
             // travel 대표이미지 설정 안되어있으면 첫번째로 등록하는걸로 하기
             if (tv.getTravelImage() == null) {
-                log.info(images.get(0).getImageUrl());
+                log.debug(images.get(0).getImageUrl());
                 Image profileImage = imageService.saveImageByUrl(user, images.get(0).getImageUrl());
                 tv.setTravelImage(profileImage);
             }
