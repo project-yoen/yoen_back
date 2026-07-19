@@ -335,9 +335,9 @@ public class PaymentService {
         travelRepository.save(tv);
 
         List<Settlement> settlements = settlementRepository.findByPaymentAndIsActiveTrue(pm);
-        log.info("PRESETTLEMENTS");
+        log.debug("PRESETTLEMENTS");
         settlements.forEach(settlement -> {
-            log.info(String.valueOf(settlement.getSettlementId()));
+            log.debug(String.valueOf(settlement.getSettlementId()));
         });
         // 기존 settlement들 삭제 후 다시 생성 그리고 settlementResponseDto 반환
         List<SettlementResponseDto> updatedSettlements = updateSettlement(pm, settlements, dto.settlementList());
@@ -485,7 +485,7 @@ public class PaymentService {
         List<SettlementUser> su = settlementUserRepository.findAllBySettlementAndIsActiveTrue(settlement);
 
         su.forEach(stmu -> {
-            log.info("DELETED SETTLEMENTUSER: {}", stmu.getSettlementUserId());
+            log.debug("DELETED SETTLEMENTUSER: {}", stmu.getSettlementUserId());
             // 관련 정산 유저 소프트 삭제
             stmu.setIsActive(false);
             settlementUserRepository.save(stmu);
