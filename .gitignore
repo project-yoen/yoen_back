@@ -39,6 +39,8 @@ out/
 .env
 .env.*
 !.env.example
+!.env.cloud.example
+.env.monitoring
 secrets/
 .DS_Store
 **/.DS_Store
