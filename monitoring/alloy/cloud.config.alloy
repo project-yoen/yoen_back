@@ -5,6 +5,7 @@ logging {
 
 discovery.docker "containers" {
   host             = "unix:///var/run/docker.sock"
+  port             = 8080
   refresh_interval = "15s"
 }
 
@@ -12,19 +13,11 @@ discovery.relabel "yoen_backend_metrics" {
   targets = discovery.docker.containers.targets
 
   rule {
-    source_labels = ["__meta_docker_container_status"]
-    regex         = "running"
-    action        = "keep"
-  }
-
-  rule {
     source_labels = [
       "__meta_docker_container_label_com_docker_compose_service",
-      "__meta_docker_port_private",
     ]
-    separator = ";"
-    regex     = "app-(blue|green);8080"
-    action    = "keep"
+    regex  = "app-(blue|green)"
+    action = "keep"
   }
 
   rule {
@@ -108,12 +101,6 @@ prometheus.remote_write "grafana_cloud" {
 
 discovery.relabel "yoen_logs" {
   targets = discovery.docker.containers.targets
-
-  rule {
-    source_labels = ["__meta_docker_container_status"]
-    regex         = "running"
-    action        = "keep"
-  }
 
   rule {
     source_labels = ["__meta_docker_container_name"]

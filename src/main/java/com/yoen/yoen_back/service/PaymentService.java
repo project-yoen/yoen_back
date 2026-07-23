@@ -273,11 +273,16 @@ public class PaymentService {
                         return new PaymentImageDto(tmp.getPaymentImageId(), image.getImageUrl());
                     }
             ).toList();
+            log.info("event=payment_created travelId={} paymentId={} actorUserId={} paymentType={} settlementCount={} imageCount={}",
+                    payment.getTravel().getTravelId(), payment.getPaymentId(), user.getUserId(), payment.getType(),
+                    settlementResponse.size(), imagesDto.size());
             return new PaymentResponseDto(payment.getTravel().getTravelId(), payment.getPaymentId(), payment.getCategory().getCategoryId(), payment.getCategory().getCategoryName(), payment.getPayerType(), payerDto,
                     payment.getPaymentMethod(), payment.getPaymentName(), payment.getType(), payment.getExchangeRate(), payment.getPayTime(), payment.getPaymentAccount(), payment.getCurrency(), settlementResponse, imagesDto);
         }
 
         // 아미지 파일이 존재 안할시
+        log.info("event=payment_created travelId={} paymentId={} actorUserId={} paymentType={} settlementCount={} imageCount=0",
+                payment.getTravel().getTravelId(), payment.getPaymentId(), user.getUserId(), payment.getType(), settlementResponse.size());
         return new PaymentResponseDto(payment.getTravel().getTravelId(), payment.getPaymentId(), payment.getCategory().getCategoryId(), payment.getCategory().getCategoryName(), payment.getPayerType(), payerDto,
                 payment.getPaymentMethod(), payment.getPaymentName(), payment.getType(), payment.getExchangeRate(), payment.getPayTime(), payment.getPaymentAccount(), payment.getCurrency(), settlementResponse, new ArrayList<>());
 
@@ -382,6 +387,8 @@ public class PaymentService {
                     }
             ).toList();
         }
+        log.info("event=payment_updated travelId={} paymentId={} actorUserId={} paymentType={} settlementCount={}",
+                tv.getTravelId(), newPayment.getPaymentId(), user.getUserId(), newPayment.getType(), updatedSettlements.size());
     }
 
     private static long getShared(PaymentRequestDto dto, Payment pm, Travel tv) {
@@ -531,6 +538,8 @@ public class PaymentService {
         // 찾아온 금액기록 최종 soft delete
         pm.setIsActive(false);
         paymentRepository.save(pm);
+        log.info("event=payment_deleted travelId={} paymentId={} paymentType={}",
+                tv.getTravelId(), paymentId, pm.getType());
     }
 
     //PaymentId로 Payment찾고 settlement 안의 paymentId로 settlement 찾고 travelUser를 찾아서 PaymentResponseDto채워서 보내기
@@ -646,6 +655,8 @@ public class PaymentService {
         doSettlementPaymentTypeDto(settlementList, PaymentType.PREPAYMENT);
         doSettlementPaymentTypeDto(settlementList, PaymentType.PAYMENT);
         doSettlementPaymentTypeDto(settlementList, PaymentType.SHAREDFUND);
+        log.info("event=settlement_completed travelId={} settlementCount={} includePreUseAmount={} includeSharedFund={} includeRecordedAmount={}",
+                tv.getTravelId(), settlementList.size(), includePreUseAmount, includeSharedFund, includeRecordedAmount);
 
     }
 

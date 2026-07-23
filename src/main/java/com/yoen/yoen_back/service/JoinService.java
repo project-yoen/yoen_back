@@ -15,6 +15,7 @@ import com.yoen.yoen_back.repository.travel.TravelJoinRequestRepository;
 import com.yoen.yoen_back.repository.travel.TravelRepository;
 import com.yoen.yoen_back.repository.travel.TravelUserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
@@ -22,6 +23,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class JoinService {
@@ -68,6 +70,7 @@ public class JoinService {
                     .isAccepted(false)
                     .build();
             travelJoinRequestRepository.save(tjr);
+            log.info("event=travel_join_requested travelId={} userId={}", tv.getTravelId(), user.getUserId());
         }
     }
 
@@ -122,6 +125,8 @@ public class JoinService {
                     .travelNickname(tjr.getUser().getNickname())
                     .build();
             travelUserRepository.save(tu);
+            log.info("event=travel_join_accepted travelId={} userId={} role={}",
+                    joinTravel.getTravelId(), joinUser.getUserId(), dto.role());
         } else {
             throw new IllegalStateException("수용인원을 초과하였습니다.");
         }
@@ -133,6 +138,7 @@ public class JoinService {
         tjr.setIsAccepted(false); // 기본값이 null일거같은데 false로 변경
         tjr.setIsActive(false); // 거절했으니까 목록에서 soft delete
         travelJoinRequestRepository.save(tjr);
+        log.info("event=travel_join_rejected travelJoinRequestId={}", travelJoinRequestId);
     }
 
     // 자기 자신이 신청한 여행 리스트를 보기 위한 함수
@@ -155,6 +161,7 @@ public class JoinService {
             travelJoinRequest.setIsActive(false);
             travelJoinRequest.setIsAccepted(false); // 이미 false 일 확률이 더 높음
             travelJoinRequestRepository.save(travelJoinRequest);
+            log.info("event=travel_join_request_cancelled travelJoinRequestId={}", travelJoinRequestId);
         });
     }
 }

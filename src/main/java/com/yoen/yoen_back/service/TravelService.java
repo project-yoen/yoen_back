@@ -81,6 +81,7 @@ public class TravelService {
 //        List<PrePayment> prePayment = paymentRepository.findByTravel_TravelId(travelId);
         tv.setIsActive(false);
         travelRepository.save(tv);
+        log.info("event=travel_deleted travelId={}", tv.getTravelId());
     }
 
     // 여행 객체를 저장 -> 여행 객체와 유저를 매핑 -> 여행 객체에 여행_목적지 객체 매핑 -> 함수 3개를 모은 createTravel 선언
@@ -118,6 +119,7 @@ public class TravelService {
         Travel tv = saveTravelEntity(dto);
         saveTravelUserEntity(tv, user);
         commonService.createTravelDestination(tv, dto.destinationIds());
+        log.info("event=travel_created travelId={} actorUserId={}", tv.getTravelId(), user.getUserId());
         String imageUrl = Optional.ofNullable(tv.getTravelImage()).map(Image::getImageUrl).orElse("");
         return new TravelResponseDto(tv.getTravelId(), tv.getNumOfPeople(), tv.getNumOfJoinedPeople(), tv.getNation(), tv.getSharedFund(),
         tv.getTravelName(), tv.getStartDate(), tv.getEndDate(), imageUrl);
@@ -134,7 +136,9 @@ public class TravelService {
         tv.setNation(dto.nation());
         commonService.createTravelDestination(tv, dto.destinationIds());
 
-        return travelRepository.save(tv);
+        Travel savedTravel = travelRepository.save(tv);
+        log.info("event=travel_updated travelId={}", savedTravel.getTravelId());
+        return savedTravel;
     }
 
 
@@ -219,6 +223,8 @@ public class TravelService {
         if (decreaseNumOfJoinedPeople(tu.getTravel())) {
             tu.setIsActive(false);
             travelUserRepository.save(tu);
+            log.info("event=travel_left travelId={} travelUserId={} userId={}",
+                    tu.getTravel().getTravelId(), tu.getTravelUserId(), tu.getUser().getUserId());
         } else {
             throw new IllegalStateException("지원자가 음수가 될 수 없습니다.");
         }
