@@ -24,12 +24,14 @@ import com.yoen.yoen_back.repository.travel.TravelRecordRepository;
 import com.yoen.yoen_back.repository.travel.TravelRepository;
 import com.yoen.yoen_back.repository.travel.TravelUserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.auth.InvalidCredentialsException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -86,6 +88,7 @@ public class AuthService {
         String newRefreshToken = generateRefreshToken(_userId);
 
         refreshTokenRedisDao.save(userId, newRefreshToken);
+        log.info("event=token_reissued userId={}", userId);
 
         return new TokenResponse(newAccessToken, newRefreshToken);
     }
@@ -135,6 +138,7 @@ public class AuthService {
     public void logout(String accessToken) {
         String userId = jwtProvider.getUserIdFromToken(accessToken);
         refreshTokenRedisDao.delete(userId);
+        log.info("event=user_logged_out userId={}", userId);
     }
 
 }

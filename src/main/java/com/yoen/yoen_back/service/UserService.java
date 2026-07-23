@@ -37,6 +37,7 @@ public class UserService {
                 .birthday(Formatter.getDate(dto.birthday()))
                 .build();
         userRepository.save(user);
+        log.info("event=user_registered userId={}", user.getUserId());
     }
 
     public UserResponseDto login(LoginRequestDto dto) throws InvalidCredentialsException {
@@ -46,6 +47,7 @@ public class UserService {
         if (!bCryptPasswordEncoder.matches(dto.password(), user.getPassword())) {
             throw new InvalidCredentialsException("이메일 또는 비밀번호가 잘못되었습니다.");
         }
+        log.info("event=user_login_succeeded userId={}", user.getUserId());
         Image profileImage = user.getProfileImage();
         String imageUrl = (profileImage != null) ? profileImage.getImageUrl() : "";
 
@@ -70,6 +72,7 @@ public class UserService {
         user.setGender(dto.gender());
         user.setBirthday(Formatter.getDate(dto.birthday()));
         userRepository.save(user);
+        log.info("event=user_profile_updated userId={}", user.getUserId());
         Image image = user.getProfileImage();
         String imageUrl = (image != null) ? image.getImageUrl() : "";
         return new UserResponseDto(user.getUserId(), user.getName(), user.getEmail(), user.getGender(), user.getNickname(), user.getBirthday(), imageUrl);
@@ -83,6 +86,7 @@ public class UserService {
 
         user.setProfileImage(profileImage);
         userRepository.save(user);
+        log.info("event=user_profile_image_updated userId={} imageId={}", user.getUserId(), profileImage.getImageId());
 
         return profileImage.getImageUrl();
     }

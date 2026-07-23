@@ -48,7 +48,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         } catch (Exception e) {
             // 토큰값이 있는데 유저가 없는경우에 대한 에러처리인데 (걍 로그인, 회원가입시 토큰값이있을때 에러방지)
-            log.error(e.getMessage(), e);
+            log.warn("event=authentication_rejected method={} path={} reason={}",
+                    request.getMethod(), request.getRequestURI(), e.getClass().getSimpleName());
         }
 
         filterChain.doFilter(request, response);
@@ -56,7 +57,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private String resolveToken(HttpServletRequest request) {
         String bearer = request.getHeader("Authorization");
-        logger.debug("Bearer token: " + bearer);
         return (bearer != null && bearer.startsWith("Bearer ")) ? bearer.substring(7) : null;
     }
 }

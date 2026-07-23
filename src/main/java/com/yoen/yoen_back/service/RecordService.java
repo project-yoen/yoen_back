@@ -105,10 +105,14 @@ public class RecordService {
                 return new TravelRecordImageDto(tmp.getTravelRecordImageId(), image.getImageUrl());
             }).toList();
 
+            log.info("event=travel_record_created travelId={} travelRecordId={} actorUserId={} imageCount={}",
+                    tv.getTravelId(), tr.getTravelRecordId(), user.getUserId(), imagesDto.size());
             return new TravelRecordResponseDto(tr.getTravelRecordId(), tu.getTravelNickname(), tr.getTitle(), tr.getContent(), tr.getRecordTime(), imagesDto);
         }
         // 이미지 파일이 존재하지 않을 시
 
+        log.info("event=travel_record_created travelId={} travelRecordId={} actorUserId={} imageCount=0",
+                tv.getTravelId(), tr.getTravelRecordId(), user.getUserId());
         return new TravelRecordResponseDto(tr.getTravelRecordId(), tu.getTravelNickname(), tr.getTitle(), tr.getContent(), tr.getRecordTime(), new ArrayList<>());
 
     }
@@ -149,8 +153,12 @@ public class RecordService {
                 return new TravelRecordImageDto(tmp.getTravelRecordImageId(), image.getImageUrl());
             }).toList();
 
+            log.info("event=travel_record_updated travelId={} travelRecordId={} actorUserId={} addedImageCount={}",
+                    tv.getTravelId(), tr.getTravelRecordId(), user.getUserId(), imagesDto.size());
             return new TravelRecordResponseDto(tr.getTravelRecordId(), tu.getTravelNickname(), tr.getTitle(), tr.getContent(), tr.getRecordTime(), imagesDto);
         }
+        log.info("event=travel_record_updated travelId={} travelRecordId={} actorUserId={} addedImageCount=0",
+                tv.getTravelId(), tr.getTravelRecordId(), user.getUserId());
         return new TravelRecordResponseDto(tr.getTravelRecordId(), tr.getTravelUser().getTravelNickname(), tr.getTitle(), tr.getContent(), tr.getRecordTime(), new ArrayList<>());
     }
 
@@ -200,5 +208,7 @@ public class RecordService {
         // 여행 기록 삭제
         travelRecord.setIsActive(false);
         travelRecordRepository.save(travelRecord);
+        log.info("event=travel_record_deleted travelId={} travelRecordId={}",
+                travelRecord.getTravel().getTravelId(), travelRecordId);
     }
 }

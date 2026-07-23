@@ -4,6 +4,7 @@ import com.yoen.yoen_back.common.entity.ApiException;
 import com.yoen.yoen_back.common.entity.InvalidJoinCodeException;
 import com.yoen.yoen_back.common.entity.InvalidTokenException;
 import com.yoen.yoen_back.common.entity.ApiResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.auth.InvalidCredentialsException;
 import org.springframework.http.HttpStatus;
@@ -37,18 +38,16 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(InvalidTokenException.class)
-    public ResponseEntity<ApiResponse<?>> handleInvalidToken(InvalidTokenException ex) {
-        // 로깅 추가 가능
-        log.error("유효하지 않은 토큰", ex);
+    public ResponseEntity<ApiResponse<?>> handleInvalidToken(InvalidTokenException ex, HttpServletRequest request) {
+        log.warn("event=invalid_token method={} path={}", request.getMethod(), request.getRequestURI());
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.failure("유효하지 않은 토큰입니다."));
     }
 
     @ExceptionHandler(InvalidCredentialsException.class)
-    public ResponseEntity<ApiResponse<?>> handleInvalidCredential(InvalidCredentialsException ex) {
-        // 로깅 추가 가능
-        log.error("인증 오류 발생", ex);
+    public ResponseEntity<ApiResponse<?>> handleInvalidCredential(InvalidCredentialsException ex, HttpServletRequest request) {
+        log.warn("event=invalid_credentials method={} path={}", request.getMethod(), request.getRequestURI());
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.failure("인증되지 않은 사용자입니다."));
@@ -80,9 +79,9 @@ public class GlobalExceptionHandler {
 
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<?>> handleOther(Exception ex) {
-        // 로깅 추가 가능
-        log.error("Unhandled exception caught", ex);
+    public ResponseEntity<ApiResponse<?>> handleOther(Exception ex, HttpServletRequest request) {
+        log.error("event=unhandled_exception method={} path={} exception={}",
+                request.getMethod(), request.getRequestURI(), ex.getClass().getSimpleName(), ex);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.failure("서버 내부 오류가 발생했습니다."));
