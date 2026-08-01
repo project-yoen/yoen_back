@@ -1,0 +1,105 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "graphTooltip": 1,
+  "panels": [
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "s", "custom": {"align": "auto", "cellOptions": {"type": "auto"}}, "thresholds": {"mode": "absolute", "steps": [{"color": "green"}, {"color": "yellow", "value": 0.5}, {"color": "red", "value": 1}]}}, "overrides": [{"matcher": {"id": "byName", "options": "Value"}, "properties": [{"id": "displayName", "value": "p95 (5m)"}, {"id": "custom.cellOptions", "value": {"type": "color-text"}}]}]},
+      "gridPos": {"h": 9, "w": 10, "x": 0, "y": 0},
+      "id": 1,
+      "options": {"showHeader": true, "sortBy": [{"desc": true, "displayName": "p95 (5m)"}]},
+      "targets": [{"expr": "topk(10, histogram_quantile(0.95, sum by (le, method, uri) (rate(http_server_requests_seconds_bucket{job=\"yoen-backend\", uri!~\"/actuator.*|UNKNOWN|root|/swagger.*|/v3.*\"}[5m]))))", "format": "table", "instant": true, "refId": "A"}],
+      "title": "Slowest Endpoints (p95, Top 10)",
+      "transformations": [{"id": "organize", "options": {"excludeByName": {"Time": true, "le": true}, "indexByName": {"method": 0, "uri": 1, "Value": 2}}}],
+      "type": "table"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []},
+      "gridPos": {"h": 9, "w": 14, "x": 10, "y": 0},
+      "id": 2,
+      "options": {"legend": {"displayMode": "table", "placement": "right", "showLegend": true, "calcs": ["lastNotNull"], "sortBy": "Last *", "sortDesc": true}, "tooltip": {"mode": "multi", "sort": "desc"}},
+      "targets": [{"expr": "histogram_quantile(0.95, sum by (le, uri) (rate(http_server_requests_seconds_bucket{job=\"yoen-backend\", uri!~\"/actuator.*|UNKNOWN|root|/swagger.*|/v3.*\"}[5m])))", "legendFormat": "{{uri}}", "refId": "A"}],
+      "title": "p95 Latency by URI",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []},
+      "gridPos": {"h": 9, "w": 12, "x": 0, "y": 9},
+      "id": 3,
+      "options": {"legend": {"displayMode": "table", "placement": "right", "showLegend": true, "calcs": ["lastNotNull"], "sortBy": "Last *", "sortDesc": true}, "tooltip": {"mode": "multi", "sort": "desc"}},
+      "targets": [{"expr": "histogram_quantile(0.99, sum by (le, uri) (rate(http_server_requests_seconds_bucket{job=\"yoen-backend\", uri!~\"/actuator.*|UNKNOWN|root|/swagger.*|/v3.*\"}[5m])))", "legendFormat": "{{uri}}", "refId": "A"}],
+      "title": "p99 Latency by URI",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []},
+      "gridPos": {"h": 9, "w": 12, "x": 12, "y": 9},
+      "id": 4,
+      "options": {"legend": {"displayMode": "table", "placement": "right", "showLegend": true, "calcs": ["lastNotNull"], "sortBy": "Last *", "sortDesc": true}, "tooltip": {"mode": "multi", "sort": "desc"}},
+      "targets": [{"expr": "sum by (uri) (rate(http_server_requests_seconds_sum{job=\"yoen-backend\", uri!~\"/actuator.*|UNKNOWN|root|/swagger.*|/v3.*\"}[5m])) / sum by (uri) (rate(http_server_requests_seconds_count{job=\"yoen-backend\", uri!~\"/actuator.*|UNKNOWN|root|/swagger.*|/v3.*\"}[5m]))", "legendFormat": "{{uri}}", "refId": "A"}],
+      "title": "Average Latency by URI",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "reqps"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 18},
+      "id": 5,
+      "options": {"legend": {"displayMode": "table", "placement": "right", "showLegend": true, "calcs": ["lastNotNull"]}, "tooltip": {"mode": "multi", "sort": "desc"}},
+      "targets": [{"expr": "sum by (uri) (rate(http_server_requests_seconds_count{job=\"yoen-backend\", uri!~\"/actuator.*|UNKNOWN|root|/swagger.*|/v3.*\"}[5m]))", "legendFormat": "{{uri}}", "refId": "A"}],
+      "title": "Request Rate by URI",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "reqps", "custom": {"drawStyle": "bars", "fillOpacity": 60}}, "overrides": []},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 18},
+      "id": 6,
+      "options": {"legend": {"displayMode": "table", "placement": "right", "showLegend": true, "calcs": ["lastNotNull"]}, "tooltip": {"mode": "multi", "sort": "desc"}},
+      "targets": [{"expr": "sum by (uri, status) (rate(http_server_requests_seconds_count{job=\"yoen-backend\", status=~\"5..\"}[5m]))", "legendFormat": "{{uri}} ({{status}})", "refId": "A"}],
+      "title": "5xx Error Rate by URI",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "none"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 26},
+      "id": 7,
+      "options": {"legend": {"displayMode": "list", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "multi", "sort": "none"}},
+      "targets": [
+        {"expr": "hikaricp_connections_active{job=\"yoen-backend\"}", "legendFormat": "active", "refId": "A"},
+        {"expr": "hikaricp_connections_idle{job=\"yoen-backend\"}", "legendFormat": "idle", "refId": "B"},
+        {"expr": "hikaricp_connections_pending{job=\"yoen-backend\"}", "legendFormat": "pending (waiting threads)", "refId": "C"},
+        {"expr": "hikaricp_connections_max{job=\"yoen-backend\"}", "legendFormat": "max", "refId": "D"}
+      ],
+      "title": "HikariCP Connections",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 26},
+      "id": 8,
+      "options": {"legend": {"displayMode": "list", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "multi", "sort": "none"}},
+      "targets": [
+        {"expr": "rate(hikaricp_connections_acquire_seconds_sum{job=\"yoen-backend\"}[5m]) / rate(hikaricp_connections_acquire_seconds_count{job=\"yoen-backend\"}[5m])", "legendFormat": "avg acquire time", "refId": "A"},
+        {"expr": "rate(hikaricp_connections_usage_seconds_sum{job=\"yoen-backend\"}[5m]) / rate(hikaricp_connections_usage_seconds_count{job=\"yoen-backend\"}[5m])", "legendFormat": "avg usage time (held per request)", "refId": "B"}
+      ],
+      "title": "HikariCP Acquire / Usage Time",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "15s",
+  "schemaVersion": 41,
+  "tags": ["yoen", "spring-boot", "latency"],
+  "templating": {"list": []},
+  "time": {"from": "now-1h", "to": "now"},
+  "timezone": "browser",
+  "title": "YOEN API Latency",
+  "uid": "yoen-api-latency",
+  "version": 1
+}
