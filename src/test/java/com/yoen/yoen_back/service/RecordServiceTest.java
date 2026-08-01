@@ -101,7 +101,7 @@ class RecordServiceTest {
         TravelRecordImage recordImage = travelRecordImage(300L, record, image);
         LocalDateTime start = LocalDateTime.of(2025, 7, 1, 0, 0);
         when(travelRecordRepository.findAllByTravelAndRecordTimeBetweenAndIsActiveTrue(travel, start, start.plusDays(1))).thenReturn(List.of(record));
-        when(travelRecordImageRepository.findByTravelRecordAndIsActiveTrue(record)).thenReturn(List.of(recordImage));
+        when(travelRecordImageRepository.findAllWithImageByTravelRecordIn(List.of(record))).thenReturn(List.of(recordImage));
 
         List<TravelRecordResponseDto> result = recordService.getTravelRecordsByDate(travel, "2025-07-01T10:30:00");
 

@@ -259,9 +259,9 @@ class PaymentServiceTest {
         SettlementUser settlementUser = settlementUser(400L, settlement, payerTravelUser, 12000L, false);
         PaymentImage paymentImage = paymentImage(500L, payment, image(30L, "https://cdn.example.com/receipt.png", "receipt.png"));
         // 상세 조회는 Payment 기준으로 정산 목록, 정산 참여자, 첨부 이미지를 차례로 조립한다.
-        when(paymentRepository.getReferenceById(300L)).thenReturn(payment);
+        when(paymentRepository.findWithDetailByPaymentIdAndIsActiveTrue(300L)).thenReturn(Optional.of(payment));
         when(settlementRepository.findByPayment_PaymentIdAndIsActiveTrue(300L)).thenReturn(List.of(settlement));
-        when(settlementUserRepository.findBySettlementAndIsActiveTrue(settlement)).thenReturn(List.of(settlementUser));
+        when(settlementUserRepository.findAllWithTravelUserByPaymentId(300L)).thenReturn(List.of(settlementUser));
         when(paymentImageRepository.findByPayment(payment)).thenReturn(List.of(paymentImage));
 
         PaymentResponseDto response = paymentService.getDetailPayment(300L);
@@ -353,7 +353,7 @@ class PaymentServiceTest {
         when(travelUserRepository.findByTravelAndIsActiveTrue(travel)).thenReturn(List.of(payer, member));
         when(travelUserRepository.getReferenceById(100L)).thenReturn(payer);
         when(travelUserRepository.getReferenceById(101L)).thenReturn(member);
-        when(settlementUserRepository.findBySettlementAndIsActiveTrue(settlement)).thenReturn(List.of(paidPayer, unpaidMember));
+        when(settlementUserRepository.findAllWithTravelUserBySettlementIn(List.of(settlement))).thenReturn(List.of(paidPayer, unpaidMember));
 
         SettlementResultResponseDto response = paymentService.getSettlement(
                 travel,

@@ -25,6 +25,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -60,9 +62,15 @@ public class RecordService {
                 .withNano(0);
         List<TravelRecord> tvrList = travelRecordRepository.findAllByTravelAndRecordTimeBetweenAndIsActiveTrue(tv, startDateTime, startDateTime.plusDays(1));
 
+        // 기록별 개별 조회(N+1) 대신 이미지 전체를 한 번에 가져와 기록 ID별로 묶는다
+        Map<Long, List<TravelRecordImageDto>> imagesByRecordId = tvrList.isEmpty() ? Map.of()
+                : travelRecordImageRepository.findAllWithImageByTravelRecordIn(tvrList).stream()
+                        .collect(Collectors.groupingBy(tvri -> tvri.getTravelRecord().getTravelRecordId(),
+                                Collectors.mapping(tvri -> new TravelRecordImageDto(tvri.getTravelRecordImageId(), tvri.getImage().getImageUrl()),
+                                        Collectors.toList())));
+
         return tvrList.stream().map(tvr -> {
-            List<TravelRecordImageDto> trilist = travelRecordImageRepository.findByTravelRecordAndIsActiveTrue(tvr).stream().map(tvri ->
-                    new TravelRecordImageDto(tvri.getTravelRecordImageId(), tvri.getImage().getImageUrl())).toList();
+            List<TravelRecordImageDto> trilist = imagesByRecordId.getOrDefault(tvr.getTravelRecordId(), List.of());
             return new TravelRecordResponseDto(tvr.getTravelRecordId(), tvr.getTravelUser().getTravelNickname(),
                     tvr.getTitle(), tvr.getContent(),  tvr.getRecordTime(), trilist);
         }).toList();

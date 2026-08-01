@@ -163,11 +163,12 @@ public class TravelService {
     }
 
     public List<TravelUserResponseDto> getDetailTravelUser(Travel tv) {
-        List<TravelUser> tuList = travelUserRepository.findByTravelAndIsActiveTrue(tv);
+        // user + 프로필 이미지를 fetch join으로 한 번에 조회 (유저별 개별 조회 N+1 제거)
+        List<TravelUser> tuList = travelUserRepository.findWithUserByTravelAndIsActiveTrue(tv);
         return tuList.stream()
                 .sorted(Comparator.comparing(tu -> tu.getUser().getNickname(), String.CASE_INSENSITIVE_ORDER))
                 .map(traveluser -> {
-            User user = userRepository.getReferenceById(traveluser.getUser().getUserId());
+            User user = traveluser.getUser();
             String imageUrl = "";
             if(user.getProfileImage() != null) {
                 Image image = user.getProfileImage();

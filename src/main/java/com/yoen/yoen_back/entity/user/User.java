@@ -44,6 +44,6 @@ public class User extends BaseEntity {
     @Column(nullable = false)
     private LocalDate birthday;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Image profileImage;
 }

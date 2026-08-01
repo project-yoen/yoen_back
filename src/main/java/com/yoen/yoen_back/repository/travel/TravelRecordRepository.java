@@ -2,6 +2,7 @@ package com.yoen.yoen_back.repository.travel;
 
 import com.yoen.yoen_back.entity.travel.Travel;
 import com.yoen.yoen_back.entity.travel.TravelRecord;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;
@@ -13,6 +14,8 @@ public interface TravelRecordRepository extends JpaRepository<TravelRecord, Long
     List<TravelRecord> findByTravel_TravelIdAndIsActiveTrue(Long travelId);
     Optional<TravelRecord> findByTravelRecordIdAndIsActiveTrue(Long travelRecordId);
 
+    // 목록 DTO 변환에서 travelUser.travelNickname을 쓰므로 N+1 방지용 fetch
+    @EntityGraph(attributePaths = {"travelUser"})
     List<TravelRecord> findAllByTravelAndRecordTimeBetweenAndIsActiveTrue(Travel tv, LocalDateTime start, LocalDateTime end);
 
 }
