@@ -2,6 +2,10 @@
 
 체감상 "EC2에 보내면 훨씬 느리다"의 원인을 경로 단계별로 분해 측정한 결과.
 
+> **[해결됨]** 같은 날 Cloudflare 프록시를 DNS only로 변경 후 재측정:
+> `/actuator/health` TTFB **600~940ms → 37~56ms**, `/user/exists` **~600ms → ~45ms** (약 15배 개선).
+> TLS 핸드셰이크 포함 전체 연결 수립도 ~30ms로 정상화. 아래는 변경 전 분석 기록.
+
 ## 측정 결과 (`/actuator/health` TTFB 기준, 반복 샘플)
 
 | 경로 | TTFB | 비고 |
