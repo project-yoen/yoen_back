@@ -13,7 +13,10 @@ import lombok.*;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
-@Table(name = "paymentimages")
+@Table(name = "paymentimages", indexes = {
+        // 결제별 이미지 조회
+        @Index(name = "idx_paymentimages_payment", columnList = "payment_id")
+})
 public class PaymentImage extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -12,7 +12,10 @@ import lombok.*;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
-@Table(name = "settlements")
+@Table(name = "settlements", indexes = {
+        // 결제별 정산 조회
+        @Index(name = "idx_settlements_payment", columnList = "payment_id")
+})
 public class Settlement extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

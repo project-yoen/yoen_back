@@ -21,7 +21,10 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
-@Table(name = "payments")
+@Table(name = "payments", indexes = {
+        // 목록 조회: WHERE travel_id AND type (+ pay_time 범위)
+        @Index(name = "idx_payments_travel_type_paytime", columnList = "travel_id, type, pay_time")
+})
 public class Payment extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
