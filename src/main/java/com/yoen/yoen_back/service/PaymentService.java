@@ -208,6 +208,9 @@ public class PaymentService {
     // 정산 객체를 저장 -> 정산 객체와 금액기록을 매핑 -> 정산 객체에 정산_유저 객체 매핑 -> 함수 3개를 모은 createPayment 선언
     @Transactional
     public PaymentResponseDto createPayment(User user, PaymentRequestDto dto, List<MultipartFile> files) {
+        // 느린 GCS 업로드를 첫 DB 접근 전에 수행 (커넥션 지연 획득 → 업로드 동안 DB 커넥션 미점유)
+        List<Image> images = (files != null && !files.isEmpty()) ? getSaveImages(user, files) : List.of();
+
         // 금액기록을 빌더 패턴으로 생성하여 저장한다
         Payment payment = savePaymentEntity(dto);
         if (payment.getType().equals(PaymentType.SHAREDFUND)) {
@@ -258,10 +261,7 @@ public class PaymentService {
             payerDto = new TravelUserResponseDto(tu.getTravelUserId(), user.getNickname(), tu.getTravelNickname(), tmpUser.getGender(), tmpUser.getBirthday(), imageUrl);
         }
         // 이미지 파일이 존재할시
-        if (files != null && !files.isEmpty()) {
-            //받은 이미지들을 저장한다
-            List<Image> images = getSaveImages(user, files);
-
+        if (!images.isEmpty()) {
             //이미지 리스트를 하나하나 변환하여 DTO List로 저장한다
             List<PaymentImageDto> imagesDto = images.stream().map(
                     image -> {

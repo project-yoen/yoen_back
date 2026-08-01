@@ -324,13 +324,13 @@ class TravelServiceTest {
                 .build();
         when(travelRecordImageRepository.findByTravelRecordImageIdAndIsActiveTrue(20L))
                 .thenReturn(Optional.of(travelRecordImage));
-        when(imageService.saveImageByUrl(user, "https://cdn.example.com/record.png")).thenReturn(copiedImage);
+        when(imageService.copyImage(user, recordImage)).thenReturn(copiedImage);
 
         travelService.updateTravelProfileImage(user, travel, new TravelProfileImageDto(10L, 20L), null);
 
         assertThat(travel.getTravelImage()).isSameAs(copiedImage);
         verify(imageService).deleteImage(oldImage);
-        verify(imageService).saveImageByUrl(user, "https://cdn.example.com/record.png");
+        verify(imageService).copyImage(user, recordImage);
     }
 
     @Test

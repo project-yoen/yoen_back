@@ -163,7 +163,7 @@ class RecordServiceTest {
         when(travelUserRepository.findByTravelAndUserAndIsActiveTrue(travel, user)).thenReturn(Optional.of(travelUser));
         when(travelRecordRepository.save(org.mockito.ArgumentMatchers.any(TravelRecord.class))).thenReturn(savedRecord);
         when(imageService.saveImages(user, List.of(multipartFile))).thenReturn(List.of(uploadedImage));
-        when(imageService.saveImageByUrl(user, "https://image.example/record.jpg")).thenReturn(travelProfileImage);
+        when(imageService.copyImage(user, uploadedImage)).thenReturn(travelProfileImage);
         when(travelRecordImageRepository.save(org.mockito.ArgumentMatchers.any(TravelRecordImage.class))).thenReturn(savedRecordImage);
 
         TravelRecordResponseDto result = recordService.createTravelRecord(user, dto, List.of(multipartFile));
@@ -172,7 +172,7 @@ class RecordServiceTest {
         assertThat(result.images()).containsExactly(new TravelRecordImageDto(300L, "https://image.example/record.jpg"));
         assertThat(travel.getTravelImage()).isEqualTo(travelProfileImage);
         verify(imageService).saveImages(user, List.of(multipartFile));
-        verify(imageService).saveImageByUrl(user, "https://image.example/record.jpg");
+        verify(imageService).copyImage(user, uploadedImage);
     }
 
     // 이미지 없는 기록 수정 케이스다.
@@ -217,7 +217,7 @@ class RecordServiceTest {
     }
 
     // 수정 시 새 이미지를 추가하는 케이스다.
-    // 이미 여행 대표 이미지가 있는 경우에는 saveImageByUrl을 다시 호출하지 않고 새 기록 이미지 매핑만 저장한다.
+    // 이미 여행 대표 이미지가 있는 경우에는 copyImage를 다시 호출하지 않고 새 기록 이미지 매핑만 저장한다.
     @Test
     void updateTravelRecord_withImages_savesNewImageMappings() {
         User user = user(1L);
@@ -236,7 +236,7 @@ class RecordServiceTest {
 
         assertThat(result.images()).containsExactly(new TravelRecordImageDto(300L, "https://image.example/record.jpg"));
         verify(imageService).saveImages(user, List.of(multipartFile));
-        verify(imageService, never()).saveImageByUrl(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.anyString());
+        verify(imageService, never()).copyImage(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(Image.class));
     }
 
     // 기록 이미지 하나를 삭제하는 정상 케이스다.

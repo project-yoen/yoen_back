@@ -209,7 +209,8 @@ public class TravelService {
             Optional<TravelRecordImage> tri = travelRecordImageRepository.findByTravelRecordImageIdAndIsActiveTrue(request.recordImageId());
             tri.ifPresent(travelRecordImage -> {
                 Image tmpImage = travelRecordImage.getImage();
-                Image profileImage = imageService.saveImageByUrl(user, tmpImage.getImageUrl());
+                // GCS 서버사이드 복사 (재다운로드/재업로드 왕복 제거)
+                Image profileImage = imageService.copyImage(user, tmpImage);
                 tv.setTravelImage(profileImage);
             });
         } else {
