@@ -6,7 +6,7 @@ out
 bin
 .vscode
 
-.env
+secrets/.env
 .env.*
 secrets
 *.iml
