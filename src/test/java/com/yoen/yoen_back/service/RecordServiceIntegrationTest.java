@@ -95,7 +95,7 @@ class RecordServiceIntegrationTest extends PostgresIntegrationTestSupport {
         MultipartFile file = new MockMultipartFile("images", "record.jpg", "image/jpeg", "image".getBytes());
         TravelRecordRequestDto request = new TravelRecordRequestDto(null, travel.getTravelId(), "First day", "Arrived", "2025-07-01T10:30:00");
         when(imageService.saveImages(user, List.of(file))).thenReturn(List.of(uploadedImage));
-        when(imageService.saveImageByUrl(user, "https://image.example/record.jpg")).thenReturn(travelImage);
+        when(imageService.copyImage(user, uploadedImage)).thenReturn(travelImage);
 
         TravelRecordResponseDto response = recordService.createTravelRecord(user, request, List.of(file));
 

@@ -65,6 +65,32 @@ public class ImageUploadService {
     }
 
 
+    // 이미 업로드된 객체를 서버사이드 복사하는 함수 (바이트를 앱으로 내려받지 않음)
+    public UploadedImage copyImage(User user, String sourceObjectKey) {
+        Blob source = bucket.get(sourceObjectKey);
+        if (source == null) {
+            throw new RuntimeException("복사할 원본 이미지가 없습니다: " + sourceObjectKey);
+        }
+
+        String ext = sourceObjectKey.contains(".")
+                ? sourceObjectKey.substring(sourceObjectKey.lastIndexOf('.') + 1)
+                : "jpg";
+        String objectKey = "images/user_" + user.getUserId() + "/" + UUID.randomUUID() + "." + ext;
+
+        Blob copied = source.copyTo(bucket.getName(), objectKey).getResult();
+
+        String token = UUID.randomUUID().toString();
+        copied.toBuilder()
+                .setMetadata(Map.of("firebaseStorageDownloadTokens", token))
+                .build()
+                .update();
+
+        String encodedName = URLEncoder.encode(copied.getName(), StandardCharsets.UTF_8);
+        String imageUrl = String.format("https://firebasestorage.googleapis.com/v0/b/%s/o/%s?alt=media&token=%s",
+                bucket.getName(), encodedName, token);
+        return new UploadedImage(objectKey, imageUrl);
+    }
+
     // objectKey로 업로드된 이미지 삭제하는 함수
     public void delete(String objectKey) {
         boolean deleted = bucket.get(objectKey).delete();

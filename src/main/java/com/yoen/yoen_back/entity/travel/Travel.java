@@ -44,7 +44,7 @@ public class Travel extends BaseEntity {
 
     private Long sharedFund;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Image travelImage;
 
 }

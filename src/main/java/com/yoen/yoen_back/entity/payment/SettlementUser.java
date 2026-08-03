@@ -17,7 +17,10 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
-@Table(name = "settlementusers")
+@Table(name = "settlementusers", indexes = {
+        // 정산별 정산유저 조회
+        @Index(name = "idx_settlementusers_settlement", columnList = "settlement_id")
+})
 public class SettlementUser extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

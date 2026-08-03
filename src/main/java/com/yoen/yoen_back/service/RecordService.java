@@ -25,6 +25,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -60,9 +62,15 @@ public class RecordService {
                 .withNano(0);
         List<TravelRecord> tvrList = travelRecordRepository.findAllByTravelAndRecordTimeBetweenAndIsActiveTrue(tv, startDateTime, startDateTime.plusDays(1));
 
+        // 기록별 개별 조회(N+1) 대신 이미지 전체를 한 번에 가져와 기록 ID별로 묶는다
+        Map<Long, List<TravelRecordImageDto>> imagesByRecordId = tvrList.isEmpty() ? Map.of()
+                : travelRecordImageRepository.findAllWithImageByTravelRecordIn(tvrList).stream()
+                        .collect(Collectors.groupingBy(tvri -> tvri.getTravelRecord().getTravelRecordId(),
+                                Collectors.mapping(tvri -> new TravelRecordImageDto(tvri.getTravelRecordImageId(), tvri.getImage().getImageUrl()),
+                                        Collectors.toList())));
+
         return tvrList.stream().map(tvr -> {
-            List<TravelRecordImageDto> trilist = travelRecordImageRepository.findByTravelRecordAndIsActiveTrue(tvr).stream().map(tvri ->
-                    new TravelRecordImageDto(tvri.getTravelRecordImageId(), tvri.getImage().getImageUrl())).toList();
+            List<TravelRecordImageDto> trilist = imagesByRecordId.getOrDefault(tvr.getTravelRecordId(), List.of());
             return new TravelRecordResponseDto(tvr.getTravelRecordId(), tvr.getTravelUser().getTravelNickname(),
                     tvr.getTitle(), tvr.getContent(),  tvr.getRecordTime(), trilist);
         }).toList();
@@ -74,6 +82,9 @@ public class RecordService {
     // 여행 기록 추가 할시 (한번에 이미지까지 저장) (생성)
     @Transactional
     public TravelRecordResponseDto createTravelRecord(User user, TravelRecordRequestDto dto, List<MultipartFile> files) {
+        // 느린 GCS 업로드를 첫 DB 접근 전에 수행 (커넥션 지연 획득 → 업로드 동안 DB 커넥션 미점유)
+        List<Image> images = (files != null && !files.isEmpty()) ? imageService.saveImages(user, files) : List.of();
+
         Travel tv = travelRepository.getReferenceById(dto.travelId());
         TravelUser tu = travelUserRepository.findByTravelAndUserAndIsActiveTrue(tv, user).orElseThrow(()-> new AccessDeniedException("존재하지 않는 유저입니다."));
         TravelRecord travelRecord = TravelRecord.builder()
@@ -87,12 +98,12 @@ public class RecordService {
         TravelRecord tr = travelRecordRepository.save(travelRecord);
 
         // 이미지 파일이 존재할 시
-        if (files != null && !files.isEmpty()) {
-            List<Image> images = imageService.saveImages(user, files); // 클라우드에 업로드 및 image 레포지토리에 저장
+        if (!images.isEmpty()) {
             // travel 대표이미지 설정 안되어있으면 첫번째로 등록하는걸로 하기
             if (tv.getTravelImage() == null) {
                 log.debug(images.get(0).getImageUrl());
-                Image profileImage = imageService.saveImageByUrl(user, images.get(0).getImageUrl());
+                // GCS 서버사이드 복사 (재다운로드/재업로드 왕복 제거)
+                Image profileImage = imageService.copyImage(user, images.get(0));
                 tv.setTravelImage(profileImage);
             }
             // TODO: 여기서부턴 좀 수정이 있어야할거 같음 지금 이미지를 불러다가 응답하는게 좀 복잡함 (왜 세개로 분리했는지 고민)
@@ -120,6 +131,9 @@ public class RecordService {
     // 사진을 제외한 여행기록을 수정할시 (수정)
     @Transactional
     public TravelRecordResponseDto updateTravelRecord(User user, TravelRecordUpdateDto dto, List<MultipartFile> files) {
+        // 느린 GCS 업로드를 첫 DB 접근 전에 수행 (커넥션 지연 획득 → 업로드 동안 DB 커넥션 미점유)
+        List<Image> images = (files != null && !files.isEmpty()) ? imageService.saveImages(user, files) : List.of();
+
         TravelRecord tr = travelRecordRepository.getReferenceById(dto.travelRecordId());
         Travel tv = tr.getTravel();
         TravelUser tu = tr.getTravelUser();
@@ -135,12 +149,12 @@ public class RecordService {
         travelRecordRepository.save(tr);
 
         // 이미지 파일이 존재할 시
-        if (files != null && !files.isEmpty()) {
-            List<Image> images = imageService.saveImages(user, files); // 클라우드에 업로드 및 image 레포지토리에 저장
+        if (!images.isEmpty()) {
             // travel 대표이미지 설정 안되어있으면 첫번째로 등록하는걸로 하기
             if (tv.getTravelImage() == null) {
                 log.debug(images.get(0).getImageUrl());
-                Image profileImage = imageService.saveImageByUrl(user, images.get(0).getImageUrl());
+                // GCS 서버사이드 복사 (재다운로드/재업로드 왕복 제거)
+                Image profileImage = imageService.copyImage(user, images.get(0));
                 tv.setTravelImage(profileImage);
             }
             // TODO: 여기서부턴 좀 수정이 있어야할거 같음 지금 이미지를 불러다가 응답하는게 좀 복잡함 (왜 세개로 분리했는지 고민)

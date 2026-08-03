@@ -1,5 +1,6 @@
 package com.yoen.yoen_back.service;
 
+import com.yoen.yoen_back.dao.redis.UserCacheRedisDao;
 import com.yoen.yoen_back.dto.user.LoginRequestDto;
 import com.yoen.yoen_back.dto.user.RegisterRequestDto;
 import com.yoen.yoen_back.dto.user.UpdateUserDto;
@@ -37,6 +38,9 @@ class UserServiceTest {
 
     @Mock
     private ImageService imageService;
+
+    @Mock
+    private UserCacheRedisDao userCacheRedisDao;
 
     // @Mock으로 만든 객체들을 UserService 생성자에 주입한다.
     @InjectMocks
@@ -158,6 +162,7 @@ class UserServiceTest {
     void updateUser_updatesUserAndReturnsResponse() {
         User user = userWithEncodedPassword("plain-password");
         UpdateUserDto dto = new UpdateUserDto(1L, "김철수", Gender.FEMALE, "철수", "2000-01-02");
+        when(userRepository.findByUserIdAndIsActiveTrue(user.getUserId())).thenReturn(Optional.of(user));
 
         UserResponseDto response = userService.updateUser(user, dto);
 
@@ -179,6 +184,7 @@ class UserServiceTest {
         Image newImage = image(2L, "https://cdn.example.com/new.png", "new.png");
         MultipartFile multipartFile = mock(MultipartFile.class);
         user.setProfileImage(previousImage);
+        when(userRepository.findByUserIdAndIsActiveTrue(user.getUserId())).thenReturn(Optional.of(user));
         when(imageService.saveImage(user, multipartFile)).thenReturn(newImage);
 
         String imageUrl = userService.saveProfileUrl(user, multipartFile);
@@ -195,6 +201,7 @@ class UserServiceTest {
         User user = userWithEncodedPassword("plain-password");
         Image newImage = image(2L, "https://cdn.example.com/new.png", "new.png");
         MultipartFile multipartFile = mock(MultipartFile.class);
+        when(userRepository.findByUserIdAndIsActiveTrue(user.getUserId())).thenReturn(Optional.of(user));
         when(imageService.saveImage(user, multipartFile)).thenReturn(newImage);
 
         String imageUrl = userService.saveProfileUrl(user, multipartFile);

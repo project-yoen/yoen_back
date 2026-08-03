@@ -224,10 +224,8 @@ class TravelServiceTest {
         TravelUser charlieTravelUser = travelUser(102L, travel, charlie, Role.READER, "찰리");
         TravelUser aliceTravelUser = travelUser(101L, travel, alice, Role.WRITER, "앨리스");
         // 일부러 Charlie, Alice 순서로 반환해서 서비스가 이름 기준 정렬을 하는지 검증한다.
-        when(travelUserRepository.findByTravelAndIsActiveTrue(travel))
+        when(travelUserRepository.findWithUserByTravelAndIsActiveTrue(travel))
                 .thenReturn(List.of(charlieTravelUser, aliceTravelUser));
-        when(userRepository.getReferenceById(1L)).thenReturn(alice);
-        when(userRepository.getReferenceById(2L)).thenReturn(charlie);
 
         List<TravelUserResponseDto> responses = travelService.getDetailTravelUser(travel);
 
@@ -326,13 +324,13 @@ class TravelServiceTest {
                 .build();
         when(travelRecordImageRepository.findByTravelRecordImageIdAndIsActiveTrue(20L))
                 .thenReturn(Optional.of(travelRecordImage));
-        when(imageService.saveImageByUrl(user, "https://cdn.example.com/record.png")).thenReturn(copiedImage);
+        when(imageService.copyImage(user, recordImage)).thenReturn(copiedImage);
 
         travelService.updateTravelProfileImage(user, travel, new TravelProfileImageDto(10L, 20L), null);
 
         assertThat(travel.getTravelImage()).isSameAs(copiedImage);
         verify(imageService).deleteImage(oldImage);
-        verify(imageService).saveImageByUrl(user, "https://cdn.example.com/record.png");
+        verify(imageService).copyImage(user, recordImage);
     }
 
     @Test

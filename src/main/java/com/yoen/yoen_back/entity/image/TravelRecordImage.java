@@ -13,7 +13,10 @@ import lombok.*;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Entity
-@Table(name = "travelrecordimages")
+@Table(name = "travelrecordimages", indexes = {
+        // 기록별 이미지 조회
+        @Index(name = "idx_travelrecordimages_travelrecord", columnList = "travelrecord_id")
+})
 public class TravelRecordImage extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -10,7 +10,10 @@ import lombok.*;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
-@Table(name = "exchangerates")
+@Table(name = "exchangerates", indexes = {
+        // 결제 시점 기준 최신 환율 조회 (created_at 내림차순 top-1)
+        @Index(name = "idx_exchangerates_createdat", columnList = "created_at")
+})
 public class ExchangeRate extends BaseEntity {
 
     @Id

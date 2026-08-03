@@ -52,6 +52,8 @@ dependencies {
 
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
+	// SQL 로깅 (developmentOnly라 bootJar/운영 이미지에는 미포함)
+	developmentOnly 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.9.2'
 	runtimeOnly 'org.postgresql:postgresql'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'

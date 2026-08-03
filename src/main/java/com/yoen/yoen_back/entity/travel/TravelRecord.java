@@ -16,7 +16,10 @@ import java.time.LocalDateTime;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Entity
-@Table(name = "travelrecords")
+@Table(name = "travelrecords", indexes = {
+        // 날짜별 기록 조회: WHERE travel_id AND record_time 범위
+        @Index(name = "idx_travelrecords_travel_recordtime", columnList = "travel_id, record_time")
+})
 public class TravelRecord extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -1,6 +1,7 @@
 package com.yoen.yoen_back.service;
 
 import com.yoen.yoen_back.common.utils.Formatter;
+import com.yoen.yoen_back.dao.redis.UserCacheRedisDao;
 import com.yoen.yoen_back.dto.user.LoginRequestDto;
 import com.yoen.yoen_back.dto.user.RegisterRequestDto;
 import com.yoen.yoen_back.dto.user.UpdateUserDto;
@@ -24,6 +25,7 @@ import java.nio.file.AccessDeniedException;
 public class UserService {
     private final UserRepository userRepository;
     private final ImageService imageService;
+    private final UserCacheRedisDao userCacheRedisDao;
     private final BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
 
 
@@ -67,26 +69,34 @@ public class UserService {
     }
 
     public UserResponseDto updateUser(User user, UpdateUserDto dto) {
-        user.setName(dto.name());
-        user.setNickname(dto.nickname());
-        user.setGender(dto.gender());
-        user.setBirthday(Formatter.getDate(dto.birthday()));
-        userRepository.save(user);
-        log.info("event=user_profile_updated userId={}", user.getUserId());
-        Image image = user.getProfileImage();
+        // 인증 필터에서 온 user는 캐시 복원본(detached)일 수 있으므로 관리 엔티티를 다시 조회해 수정한다
+        User managed = userRepository.findByUserIdAndIsActiveTrue(user.getUserId())
+                .orElseThrow(() -> new IllegalStateException("존재하지 않는 유저입니다."));
+        managed.setName(dto.name());
+        managed.setNickname(dto.nickname());
+        managed.setGender(dto.gender());
+        managed.setBirthday(Formatter.getDate(dto.birthday()));
+        userRepository.save(managed);
+        userCacheRedisDao.evict(managed.getUserId());
+        log.info("event=user_profile_updated userId={}", managed.getUserId());
+        Image image = managed.getProfileImage();
         String imageUrl = (image != null) ? image.getImageUrl() : "";
-        return new UserResponseDto(user.getUserId(), user.getName(), user.getEmail(), user.getGender(), user.getNickname(), user.getBirthday(), imageUrl);
+        return new UserResponseDto(managed.getUserId(), managed.getName(), managed.getEmail(), managed.getGender(), managed.getNickname(), managed.getBirthday(), imageUrl);
     }
 
 
     // 유저 프로필 사진 세팅 함수
     public String saveProfileUrl(User user, MultipartFile file) {
-        Image profileImage = imageService.saveImage(user, file);
-        if (user.getProfileImage() != null) imageService.deleteImage(user.getProfileImage().getImageId());
+        // 인증 필터에서 온 user는 캐시 복원본(detached)일 수 있으므로 관리 엔티티를 다시 조회해 수정한다
+        User managed = userRepository.findByUserIdAndIsActiveTrue(user.getUserId())
+                .orElseThrow(() -> new IllegalStateException("존재하지 않는 유저입니다."));
+        Image profileImage = imageService.saveImage(managed, file);
+        if (managed.getProfileImage() != null) imageService.deleteImage(managed.getProfileImage().getImageId());
 
-        user.setProfileImage(profileImage);
-        userRepository.save(user);
-        log.info("event=user_profile_image_updated userId={} imageId={}", user.getUserId(), profileImage.getImageId());
+        managed.setProfileImage(profileImage);
+        userRepository.save(managed);
+        userCacheRedisDao.evict(managed.getUserId());
+        log.info("event=user_profile_image_updated userId={} imageId={}", managed.getUserId(), profileImage.getImageId());
 
         return profileImage.getImageUrl();
     }

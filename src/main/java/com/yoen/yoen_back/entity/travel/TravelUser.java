@@ -15,7 +15,12 @@ import lombok.*;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Entity
-@Table(name = "travelusers")
+@Table(name = "travelusers", indexes = {
+        // 여행별 참여자 조회 + 여행/유저 매칭 조회
+        @Index(name = "idx_travelusers_travel_user", columnList = "travel_id, user_id"),
+        // 유저의 여행 목록 조회
+        @Index(name = "idx_travelusers_user", columnList = "user_id")
+})
 public class TravelUser extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
