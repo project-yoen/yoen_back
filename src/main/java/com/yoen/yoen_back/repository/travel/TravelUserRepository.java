@@ -25,6 +25,8 @@ public interface TravelUserRepository extends JpaRepository<TravelUser, Long> {
 
     Optional<TravelUser> findByTravelAndUserAndIsActiveTrue(Travel travel, User user);
 
+    List<TravelUser> findByUserAndIsActiveTrue(User user);
+
     @Query("SELECT t FROM TravelUser tu JOIN tu.travel t LEFT JOIN FETCH t.travelImage WHERE tu.user = :user AND t.isActive = true AND tu.isActive = true")
     List<Travel> findActiveTravelsByUser(@Param("user") User user);
 }
