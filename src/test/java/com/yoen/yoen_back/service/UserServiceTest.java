@@ -1,13 +1,19 @@
 package com.yoen.yoen_back.service;
 
+import com.yoen.yoen_back.dao.redis.RefreshTokenRedisDao;
 import com.yoen.yoen_back.dao.redis.UserCacheRedisDao;
 import com.yoen.yoen_back.dto.user.LoginRequestDto;
 import com.yoen.yoen_back.dto.user.RegisterRequestDto;
 import com.yoen.yoen_back.dto.user.UpdateUserDto;
 import com.yoen.yoen_back.dto.user.UserResponseDto;
 import com.yoen.yoen_back.entity.image.Image;
+import com.yoen.yoen_back.entity.travel.TravelUser;
 import com.yoen.yoen_back.entity.user.User;
 import com.yoen.yoen_back.enums.Gender;
+import com.yoen.yoen_back.repository.NotificationRepository;
+import com.yoen.yoen_back.repository.travel.TravelJoinRequestRepository;
+import com.yoen.yoen_back.repository.travel.TravelUserRepository;
+import com.yoen.yoen_back.repository.user.FirebaseTokenRepository;
 import com.yoen.yoen_back.repository.user.UserRepository;
 import org.apache.http.auth.InvalidCredentialsException;
 import org.junit.jupiter.api.DisplayName;
@@ -21,6 +27,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -41,6 +48,21 @@ class UserServiceTest {
 
     @Mock
     private UserCacheRedisDao userCacheRedisDao;
+
+    @Mock
+    private RefreshTokenRedisDao refreshTokenRedisDao;
+
+    @Mock
+    private FirebaseTokenRepository firebaseTokenRepository;
+
+    @Mock
+    private TravelUserRepository travelUserRepository;
+
+    @Mock
+    private TravelJoinRequestRepository travelJoinRequestRepository;
+
+    @Mock
+    private NotificationRepository notificationRepository;
 
     // @Mock으로 만든 객체들을 UserService 생성자에 주입한다.
     @InjectMocks
@@ -220,6 +242,63 @@ class UserServiceTest {
         Boolean exists = userService.validateEmail("hong@example.com");
 
         assertThat(exists).isTrue();
+    }
+
+    @Test
+    @DisplayName("회원탈퇴 시 개인정보와 여행 표시명을 익명화하고 인증 데이터를 폐기한다")
+    void deleteAccount_anonymizesPersonalDataAndRevokesAuthentication() throws InvalidCredentialsException {
+        User user = userWithEncodedPassword("plain-password");
+        user.setProfileImage(image(7L, "https://cdn.example.com/profile.png", "profile.png"));
+        TravelUser travelUser = TravelUser.builder()
+                .travelUserId(10L)
+                .user(user)
+                .travelNickname("길동")
+                .build();
+        when(userRepository.findByUserIdAndIsActiveTrue(1L)).thenReturn(Optional.of(user));
+        when(travelUserRepository.findByUserAndIsActiveTrue(user)).thenReturn(List.of(travelUser));
+
+        userService.deleteAccount(user, "plain-password");
+
+        assertThat(user.getEmail()).startsWith("deleted-1-").endsWith("@deleted.invalid");
+        assertThat(user.getName()).isEqualTo("탈퇴한 사용자");
+        assertThat(user.getNickname()).isEqualTo("탈퇴한 사용자");
+        assertThat(user.getGender()).isEqualTo(Gender.OTHERS);
+        assertThat(user.getBirthday()).isEqualTo(LocalDate.of(1970, 1, 1));
+        assertThat(user.getProfileImage()).isNull();
+        assertThat(user.getIsActive()).isFalse();
+        assertThat(travelUser.getTravelNickname()).isEqualTo("탈퇴한 사용자");
+        assertThat(new BCryptPasswordEncoder().matches("plain-password", user.getPassword())).isFalse();
+
+        verify(travelUserRepository).saveAll(List.of(travelUser));
+        verify(imageService).deleteImage(7L);
+        verify(firebaseTokenRepository).deleteAllByUser_UserId(1L);
+        verify(travelJoinRequestRepository).deleteAllByUser_UserId(1L);
+        verify(notificationRepository).deleteAllByUser_UserId(1L);
+        verify(userRepository).saveAndFlush(user);
+        verify(refreshTokenRedisDao).delete("1");
+        verify(userCacheRedisDao).evict(1L);
+    }
+
+    @Test
+    @DisplayName("회원탈퇴 비밀번호가 틀리면 개인정보를 변경하지 않는다")
+    void deleteAccount_rejectsWrongPassword() {
+        User user = userWithEncodedPassword("plain-password");
+        when(userRepository.findByUserIdAndIsActiveTrue(1L)).thenReturn(Optional.of(user));
+
+        assertThatThrownBy(() -> userService.deleteAccount(user, "wrong-password"))
+                .isInstanceOf(InvalidCredentialsException.class)
+                .hasMessage("비밀번호가 올바르지 않습니다.");
+
+        assertThat(user.getEmail()).isEqualTo("hong@example.com");
+        verify(userRepository, never()).saveAndFlush(any());
+        verifyNoInteractions(
+                travelUserRepository,
+                travelJoinRequestRepository,
+                notificationRepository,
+                firebaseTokenRepository,
+                refreshTokenRedisDao
+        );
+        verify(userCacheRedisDao, never()).evict(any());
     }
 
     private User userWithEncodedPassword(String rawPassword) {

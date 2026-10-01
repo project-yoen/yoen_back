@@ -5,6 +5,7 @@ import com.yoen.yoen_back.common.security.CustomUserDetails;
 import com.yoen.yoen_back.common.security.JwtAuthenticationFilter;
 import com.yoen.yoen_back.dto.user.LoginRequestDto;
 import com.yoen.yoen_back.dto.user.LoginResponseDto;
+import com.yoen.yoen_back.dto.user.DeleteAccountRequestDto;
 import com.yoen.yoen_back.dto.user.RegisterRequestDto;
 import com.yoen.yoen_back.dto.user.UpdateUserDto;
 import com.yoen.yoen_back.dto.user.UserResponseDto;
@@ -38,6 +39,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -197,6 +199,24 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.error").doesNotExist());
 
         verify(userService).saveProfileUrl(eq(userDetails.user()), any());
+    }
+
+    @Test
+    void deleteAccount_authenticatedUserAndPassword_returnsSuccess() throws Exception {
+        CustomUserDetails userDetails = new CustomUserDetails(userEntity());
+        DeleteAccountRequestDto request = new DeleteAccountRequestDto("password");
+
+        mockMvc.perform(delete("/user/account")
+                        .with(csrf())
+                        .with(authentication(authenticationToken(userDetails)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data").value("Account deletion completed"))
+                .andExpect(jsonPath("$.error").doesNotExist());
+
+        verify(userService).deleteAccount(userDetails.user(), "password");
     }
 
     private User userEntity() {

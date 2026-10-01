@@ -6,6 +6,7 @@ import com.yoen.yoen_back.dto.user.*;
 import com.yoen.yoen_back.service.AuthService;
 import com.yoen.yoen_back.service.UserService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.apache.http.auth.InvalidCredentialsException;
 import org.springframework.http.ResponseEntity;
@@ -55,5 +56,14 @@ public class UserController {
     @PostMapping("/profileImage")
     public ResponseEntity<ApiResponse<String>> setProfileImage(@AuthenticationPrincipal CustomUserDetails userDetails, MultipartFile profileImage) {
         return ResponseEntity.ok(ApiResponse.success(userService.saveProfileUrl(userDetails.user(), profileImage)));
+    }
+
+    @DeleteMapping("/account")
+    public ResponseEntity<ApiResponse<String>> deleteAccount(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody DeleteAccountRequestDto dto
+    ) throws InvalidCredentialsException {
+        userService.deleteAccount(userDetails.user(), dto.password());
+        return ResponseEntity.ok(ApiResponse.success("Account deletion completed"));
     }
 }

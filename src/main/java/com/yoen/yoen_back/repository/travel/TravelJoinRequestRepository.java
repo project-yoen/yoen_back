@@ -13,4 +13,6 @@ public interface TravelJoinRequestRepository extends JpaRepository<TravelJoinReq
     List<TravelJoinRequest> findByTravelAndUserAndIsActiveTrue(Travel tv, User user);
 
     Optional<TravelJoinRequest> findByTravelJoinRequestIdAndIsActiveTrue(Long travelJoinRequestId);
+
+    void deleteAllByUser_UserId(Long userId);
 }

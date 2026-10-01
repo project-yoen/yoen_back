@@ -1,13 +1,20 @@
 package com.yoen.yoen_back.service;
 
 import com.yoen.yoen_back.common.utils.Formatter;
+import com.yoen.yoen_back.dao.redis.RefreshTokenRedisDao;
 import com.yoen.yoen_back.dao.redis.UserCacheRedisDao;
 import com.yoen.yoen_back.dto.user.LoginRequestDto;
 import com.yoen.yoen_back.dto.user.RegisterRequestDto;
 import com.yoen.yoen_back.dto.user.UpdateUserDto;
 import com.yoen.yoen_back.dto.user.UserResponseDto;
 import com.yoen.yoen_back.entity.image.Image;
+import com.yoen.yoen_back.entity.travel.TravelUser;
 import com.yoen.yoen_back.entity.user.User;
+import com.yoen.yoen_back.enums.Gender;
+import com.yoen.yoen_back.repository.NotificationRepository;
+import com.yoen.yoen_back.repository.travel.TravelJoinRequestRepository;
+import com.yoen.yoen_back.repository.travel.TravelUserRepository;
+import com.yoen.yoen_back.repository.user.FirebaseTokenRepository;
 import com.yoen.yoen_back.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,9 +22,12 @@ import org.apache.http.auth.InvalidCredentialsException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.nio.file.AccessDeniedException;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -26,7 +36,15 @@ public class UserService {
     private final UserRepository userRepository;
     private final ImageService imageService;
     private final UserCacheRedisDao userCacheRedisDao;
+    private final RefreshTokenRedisDao refreshTokenRedisDao;
+    private final FirebaseTokenRepository firebaseTokenRepository;
+    private final TravelUserRepository travelUserRepository;
+    private final TravelJoinRequestRepository travelJoinRequestRepository;
+    private final NotificationRepository notificationRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
+
+    private static final String DELETED_USER_NAME = "탈퇴한 사용자";
+    private static final LocalDate DELETED_USER_BIRTHDAY = LocalDate.of(1970, 1, 1);
 
 
     public void register(RegisterRequestDto dto) {
@@ -103,5 +121,44 @@ public class UserService {
 
     public Boolean validateEmail(String email) {
         return userRepository.existsByEmailAndIsActiveTrue(email);
+    }
+
+    @Transactional
+    public void deleteAccount(User user, String password) throws InvalidCredentialsException {
+        User managed = userRepository.findByUserIdAndIsActiveTrue(user.getUserId())
+                .orElseThrow(() -> new IllegalStateException("존재하지 않는 유저입니다."));
+
+        if (!bCryptPasswordEncoder.matches(password, managed.getPassword())) {
+            throw new InvalidCredentialsException("비밀번호가 올바르지 않습니다.");
+        }
+
+        Long userId = managed.getUserId();
+        Image profileImage = managed.getProfileImage();
+
+        List<TravelUser> travelUsers = travelUserRepository.findByUserAndIsActiveTrue(managed);
+        travelUsers.forEach(travelUser -> travelUser.setTravelNickname(DELETED_USER_NAME));
+        travelUserRepository.saveAll(travelUsers);
+
+        managed.setProfileImage(null);
+        if (profileImage != null) {
+            imageService.deleteImage(profileImage.getImageId());
+        }
+
+        firebaseTokenRepository.deleteAllByUser_UserId(userId);
+        travelJoinRequestRepository.deleteAllByUser_UserId(userId);
+        notificationRepository.deleteAllByUser_UserId(userId);
+
+        managed.setEmail("deleted-" + userId + "-" + UUID.randomUUID() + "@deleted.invalid");
+        managed.setPassword(bCryptPasswordEncoder.encode(UUID.randomUUID().toString()));
+        managed.setName(DELETED_USER_NAME);
+        managed.setNickname(DELETED_USER_NAME);
+        managed.setGender(Gender.OTHERS);
+        managed.setBirthday(DELETED_USER_BIRTHDAY);
+        managed.setIsActive(false);
+        userRepository.saveAndFlush(managed);
+
+        refreshTokenRedisDao.delete(String.valueOf(userId));
+        userCacheRedisDao.evict(userId);
+        log.info("event=user_account_deleted userId={}", userId);
     }
 }
